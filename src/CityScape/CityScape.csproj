@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>CityScape</AssemblyName>
+    <AssemblyName>CityScape_Managed</AssemblyName>
     <RootNamespace>CityScape</RootNamespace>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net48</TargetFramework>
@@ -27,6 +27,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\CityScape.exe.config" Link="CityScape.exe.config" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\CityScape.exe.config" Link="CityScape_Managed.exe.config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

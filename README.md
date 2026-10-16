@@ -14,7 +14,10 @@ Open-source reconstruction and preservation of **PixelActive CityScape 1.8** (Bu
 Bu depo, PixelActive / Autodesk tarafından 2010 yılında geliştirilen **CityScape 1.8** kentsel modelleme ve 3B şehir simülasyonu yazılımının tersine mühendislik ile açık kaynak hale getirilmiş, modernize edilmiş ve derlenebilir sürümünü içerir:
 - **REA (Reverse Engineer Anything)** ve **ILSpy** kullanılarak tüm .NET kütüphaneleri ve arayüz modülleri decompile edilip modernize edilmiştir.
 - Eski `.NET 2.0` bağımlılıkları güncel **.NET 4.8** hedefine yükseltilmiştir.
-- `CityScape` (uygulama başlatıcı), `palDotNet`, `edEditorDotNet`, `ktKitDotNet`, `gisImageryDotNet` ve `BugReporter` projelerinin tamamı **0 hata** ile derlenmekte ve `bin/Release/net48` dizinine tam bağımlılıklarıyla paketlenmektedir.
+- **İkili Yapı (Dual-Binary Configuration)**:
+  - **`CityScape.exe` (49.07 MB)**: Orijinal hibrit C++/CLI motoru. 25.9 MB saf x86 makine kodlu Direct3D 9 motorunu ve 18.9 MB shader/COLLADA verisini içerir; derlenen açık kaynak .NET 4.8 DLL'lerimizle tam uyumlu çalışır.
+  - **`CityScape_Managed.exe` (127 KB)**: %100 C# açık kaynak başlatıcı. Unmanaged C++ bağımlılığı olmadan Visual Studio'da derlenip hata ayıklanabilir.
+- `palDotNet`, `edEditorDotNet`, `ktKitDotNet`, `gisImageryDotNet` ve `BugReporter` projelerinin tamamı **0 hata** ile derlenmekte ve `bin/Release/net48` dizinine tam bağımlılıklarıyla paketlenmektedir.
 - `.csp` (proje) ve `.cst` (arazi) ikili dosyalarını okuyabilen Python araçları eklenmiştir.
 
 ---

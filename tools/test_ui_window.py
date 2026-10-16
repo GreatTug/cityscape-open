@@ -6,15 +6,13 @@ from ctypes import wintypes
 
 user32 = ctypes.windll.user32
 
-def test_ui_window():
-    print("Launching CityScape.exe...")
-    proc = subprocess.Popen(["CityScape.exe", "Worlds\\sample.csp"], cwd=os.getcwd())
+def verify_window(exe_name, args, wait_time=4):
+    print(f"Launching {exe_name} with args {args}...")
+    proc = subprocess.Popen([exe_name] + args, cwd=os.getcwd())
     try:
-        # Give UI 3 seconds to initialize, layout dock panels and render
-        time.sleep(3)
-        assert proc.poll() is None, f"CityScape exited prematurely with code {proc.poll()}"
+        time.sleep(wait_time)
+        assert proc.poll() is None, f"{exe_name} exited prematurely with code {proc.poll()}"
 
-        # Search for CityScape top-level window
         found_hwnd = None
         def enum_cb(hwnd, lparam):
             nonlocal found_hwnd
@@ -24,35 +22,49 @@ def test_ui_window():
                     buff = ctypes.create_unicode_buffer(length + 1)
                     user32.GetWindowTextW(hwnd, buff, length + 1)
                     if "PixelActive CityScape" in buff.value:
-                        found_hwnd = (hwnd, buff.value)
-                        return False
+                        pid = wintypes.DWORD()
+                        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                        if pid.value == proc.pid:
+                            found_hwnd = (hwnd, buff.value)
+                            return False
             return True
 
         WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
         user32.EnumWindows(WNDENUMPROC(enum_cb), 0)
 
-        assert found_hwnd is not None, "CityScape UI window was not found in top-level windows!"
+        assert found_hwnd is not None, f"{exe_name} UI window was not found in top-level windows!"
         hwnd, title = found_hwnd
-        print(f"  [SUCCESS] Found Window HWND: {hex(hwnd)}, Title: '{title}'")
+        print(f"  [SUCCESS] {exe_name} HWND: {hex(hwnd)}, Title: '{title}'")
 
         # Verify Window dimensions
         rect = wintypes.RECT()
         user32.GetWindowRect(hwnd, ctypes.byref(rect))
         width = rect.right - rect.left
         height = rect.bottom - rect.top
-        print(f"  [SUCCESS] Window Dimensions: {width}x{height}")
+        print(f"  [SUCCESS] {exe_name} Window Dimensions: {width}x{height}")
         assert width >= 800 and height >= 600, f"Unexpected window dimensions: {width}x{height}"
 
-        print("CityScape UI window is verified ACTIVE, RESPONSIVE, and RUNNING!")
+        print(f"{exe_name} UI window is verified ACTIVE, RESPONSIVE, and RUNNING!\n")
     finally:
-        # Gracefully terminate process
-        print("Closing CityScape.exe test process...")
+        print(f"Closing {exe_name} test process...")
         proc.terminate()
         try:
             proc.wait(timeout=3)
         except subprocess.TimeoutExpired:
             proc.kill()
-        print("Process closed cleanly.")
+        print(f"{exe_name} closed cleanly.")
+
+def test_all_ui():
+    print("==================================================")
+    print("  Testing CityScape Dual Executables Live Windows ")
+    print("==================================================")
+    # 1. Test CityScape.exe (49 MB Full Native 3D Engine with Open-Source DLLs)
+    verify_window("CityScape.exe", ["Worlds\\sample.csp"], wait_time=5)
+
+    # 2. Test CityScape_Managed.exe (127 KB Pure C# Open-Source Launcher)
+    verify_window("CityScape_Managed.exe", ["Worlds\\sample.csp"], wait_time=3)
+
+    print("ALL DUAL EXECUTABLE LIVE GUI TESTS PASSED (100%)!")
 
 if __name__ == "__main__":
-    test_ui_window()
+    test_all_ui()

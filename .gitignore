@@ -21,8 +21,14 @@ cache/
 assets/extracted/
 # Root staged binaries (mirroring C:\CityScape 1.8 Autodesk Promo layout)
 /CityScape.exe
+/CityScape_Managed.exe
+/CityScape_Managed.exe.config
+/CityScape_Managed.exe.response.txt
+/CityScape_Native.exe*
 /BugReporter.exe
 /test_subsystems.exe
 /test_lifecycle.exe
 /*.dll
 /*.pdb
+/lib/CityScape.exe
+

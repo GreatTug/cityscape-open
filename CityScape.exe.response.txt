@@ -1,6 +1,6 @@
 [CommandLine]
--path="assets\"
--archives="assets\assets.parc"
--archiveMountPaths="assets\"
+-path="C:\CityScape 1.8 Autodesk Promo\assets\"
+-archives="C:\CityScape 1.8 Autodesk Promo\assets\assets.parc"
+-archiveMountPaths="C:\CityScape 1.8 Autodesk Promo\assets\"
 -OutputToFileTemp=true
--Project="Worlds\sample.csp"
+-Project="C:\CityScape 1.8 Autodesk Promo\Worlds\sample.csp"

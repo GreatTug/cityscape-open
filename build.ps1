@@ -92,9 +92,13 @@ foreach ($proj in $projects) {
 # Copy main application configuration and response file
 if (Test-Path "CityScape.exe.config") {
     Copy-Item "CityScape.exe.config" -Destination "$binDist\CityScape.exe.config" -Force
+    Copy-Item "CityScape.exe.config" -Destination "$binDist\CityScape_Managed.exe.config" -Force
+    Copy-Item "CityScape.exe.config" -Destination "CityScape_Managed.exe.config" -Force
 }
 if (Test-Path "CityScape.exe.response.txt") {
     Copy-Item "CityScape.exe.response.txt" -Destination "$binDist\CityScape.exe.response.txt" -Force
+    Copy-Item "CityScape.exe.response.txt" -Destination "$binDist\CityScape_Managed.exe.response.txt" -Force
+    Copy-Item "CityScape.exe.response.txt" -Destination "CityScape_Managed.exe.response.txt" -Force
 }
 
 # Copy sample worlds and data directories to make binDist completely self-contained
