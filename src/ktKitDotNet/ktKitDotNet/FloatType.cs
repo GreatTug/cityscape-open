@@ -76,7 +76,7 @@ public class FloatType : UserControl
 
 	private void FloatValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && FloatChanged != null)
 		{
 			FloatChanged(decimal.ToSingle(FloatValue.Value));
 		}
@@ -84,7 +84,7 @@ public class FloatType : UserControl
 
 	private void MinValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && MinChanged != null)
 		{
 			MinChanged(decimal.ToSingle(MinValue.Value));
 		}
@@ -92,7 +92,7 @@ public class FloatType : UserControl
 
 	private void MaxValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && MaxChanged != null)
 		{
 			MaxChanged(decimal.ToSingle(MaxValue.Value));
 		}
@@ -100,7 +100,7 @@ public class FloatType : UserControl
 
 	private void StepValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && StepChanged != null)
 		{
 			StepChanged(decimal.ToSingle(StepValue.Value));
 		}
@@ -108,7 +108,7 @@ public class FloatType : UserControl
 
 	private void UnitsValue_SelectedValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && UnitsChanged != null)
 		{
 			switch (UnitsValue.SelectedIndex)
 			{

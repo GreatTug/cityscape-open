@@ -56,26 +56,20 @@ public class CommandBar : UserControl
 		WidgetCommandBar.ShowHideDelegate = delegate(bool show)
 		{
 			SplitterPanel splitterPanel = base.Parent as SplitterPanel;
-			bool flag = false;
 			if (splitterPanel != null)
 			{
 				SplitContainer splitContainer = splitterPanel.Parent as SplitContainer;
-				if (splitContainer.Panel1 == splitterPanel)
+				if (splitContainer != null)
 				{
-					splitContainer.Panel1Collapsed = !show;
+					if (splitContainer.Panel1 == splitterPanel)
+					{
+						splitContainer.Panel1Collapsed = !show;
+					}
+					else if (splitContainer.Panel2 == splitterPanel)
+					{
+						splitContainer.Panel2Collapsed = !show;
+					}
 				}
-				else if (splitContainer.Panel2 == splitterPanel)
-				{
-					splitContainer.Panel2Collapsed = !show;
-				}
-				else
-				{
-					flag = true;
-				}
-			}
-			else
-			{
-				flag = true;
 			}
 		};
 	}

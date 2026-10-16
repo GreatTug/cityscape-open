@@ -248,7 +248,7 @@ public class Vector2Type : UserControl
 
 	private void Value_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && Vector2Changed != null)
 		{
 			Vector2Changed(decimal.ToSingle(XValue.Value), decimal.ToSingle(YValue.Value));
 		}
@@ -256,7 +256,7 @@ public class Vector2Type : UserControl
 
 	private void MinValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && MinChanged != null)
 		{
 			MinChanged(decimal.ToSingle(MinValue.Value));
 		}
@@ -264,23 +264,23 @@ public class Vector2Type : UserControl
 
 	private void MaxValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && MaxChanged != null)
 		{
-			MaxChanged(decimal.ToSingle(MinValue.Value));
+			MaxChanged(decimal.ToSingle(MaxValue.Value));
 		}
 	}
 
 	private void StepValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && StepChanged != null)
 		{
-			StepChanged(decimal.ToSingle(MinValue.Value));
+			StepChanged(decimal.ToSingle(StepValue.Value));
 		}
 	}
 
 	private void UnitsValue_SelectedValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && UnitsChanged != null)
 		{
 			switch (UnitsValue.SelectedIndex)
 			{

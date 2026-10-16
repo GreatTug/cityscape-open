@@ -164,7 +164,7 @@ public class IntegerType : UserControl
 
 	private void IntValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && IntChanged != null)
 		{
 			IntChanged(decimal.ToInt32(IntValue.Value));
 		}
@@ -172,7 +172,7 @@ public class IntegerType : UserControl
 
 	private void MinValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && MinChanged != null)
 		{
 			MinChanged(decimal.ToInt32(MinValue.Value));
 		}
@@ -180,7 +180,7 @@ public class IntegerType : UserControl
 
 	private void MaxValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && MaxChanged != null)
 		{
 			MaxChanged(decimal.ToInt32(MaxValue.Value));
 		}
@@ -188,7 +188,7 @@ public class IntegerType : UserControl
 
 	private void StepValue_ValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && StepChanged != null)
 		{
 			StepChanged(decimal.ToInt32(StepValue.Value));
 		}

@@ -32,7 +32,7 @@ public class BooleanType : UserControl
 
 	private void BoolValue_CheckedChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && BoolChanged != null)
 		{
 			BoolChanged(BoolValue.Checked);
 		}

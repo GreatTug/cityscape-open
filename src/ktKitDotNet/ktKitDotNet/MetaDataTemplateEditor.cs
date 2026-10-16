@@ -244,7 +244,7 @@ public class MetaDataTemplateEditor : DialogBoxBase
 			EnumControl.Size = ElementPanel.Size;
 			break;
 		}
-		if (!InitializingType)
+		if (!InitializingType && TypeChanged != null)
 		{
 			TypeChanged(dataType);
 		}
@@ -299,7 +299,10 @@ public class MetaDataTemplateEditor : DialogBoxBase
 		}
 		if (count == 1)
 		{
-			LoadElement(ElementList.SelectedIndices[0]);
+			if (LoadElement != null)
+			{
+				LoadElement(ElementList.SelectedIndices[0]);
+			}
 			ElementType.Enabled = true;
 		}
 		else
@@ -355,7 +358,10 @@ public class MetaDataTemplateEditor : DialogBoxBase
 				break;
 			}
 			num = ((listViewItem.Index >= num) ? (index + j) : (num + 1));
-			ElementMoved(listViewItem.Index, num);
+			if (ElementMoved != null)
+			{
+				ElementMoved(listViewItem.Index, num);
+			}
 			ListViewItem item = (ListViewItem)listViewItem.Clone();
 			items.Insert(num, item);
 			items.Remove(listViewItem);

@@ -159,7 +159,7 @@ public class EnumerationType : UserControl
 
 	private void EnumValue_SelectedValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing && EnumValue.SelectedIndex != -1)
+		if (!Initializing && EnumValue.SelectedIndex != -1 && EnumChanged != null)
 		{
 			EnumChanged(EnumValue.SelectedIndex);
 		}
@@ -167,7 +167,7 @@ public class EnumerationType : UserControl
 
 	private void DisplayValue_SelectedValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && DisplayTypeChanged != null)
 		{
 			switch (DisplayValue.SelectedIndex)
 			{
@@ -210,7 +210,7 @@ public class EnumerationType : UserControl
 			num = 0;
 		}
 		EnumValue.SelectedIndex = num;
-		if (!Initializing)
+		if (!Initializing && EnumListChanged != null)
 		{
 			EnumListChanged(array);
 		}

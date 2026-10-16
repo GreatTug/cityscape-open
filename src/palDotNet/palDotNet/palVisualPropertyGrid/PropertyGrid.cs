@@ -677,7 +677,6 @@ public class PropertyGrid : VisualHint.SmartPropertyGrid.PropertyGrid
 		base.OnMouseUp(e);
 		if (e.Button == MouseButtons.Right)
 		{
-			WidgetBase widgetBase = null;
 			Point point = new Point(e.X, e.Y);
 			PropertyEnumerator propertyEnumerator = PropertyItemFromPoint(point, out var _);
 			if (propertyEnumerator != null && propertyEnumerator.Property != null && propertyEnumerator.Property.Tag is WidgetBase widgetBase2)

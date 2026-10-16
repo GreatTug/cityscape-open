@@ -33,6 +33,7 @@ public class StringType : UserControl
 
 	public void Initialize(string value, KitCommon.StringDisplayType display)
 	{
+		Initializing = true;
 		StringValue.Text = value;
 		switch (display)
 		{
@@ -43,11 +44,12 @@ public class StringType : UserControl
 			DisplayValue.SelectedIndex = 1;
 			break;
 		}
+		Initializing = false;
 	}
 
 	private void StringValue_TextChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && StringChanged != null)
 		{
 			StringChanged(StringValue.Text);
 		}
@@ -55,7 +57,7 @@ public class StringType : UserControl
 
 	private void DisplayValue_SelectedValueChanged(object sender, EventArgs e)
 	{
-		if (!Initializing)
+		if (!Initializing && DisplayChanged != null)
 		{
 			switch (DisplayValue.SelectedIndex)
 			{

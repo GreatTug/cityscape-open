@@ -5,6 +5,12 @@
     Restores and builds all managed assemblies for CityScape using MSBuild.
 #>
 
+[CmdletBinding()]
+param(
+    [switch]$Clean,
+    [switch]$Rebuild
+)
+
 $ErrorActionPreference = "Stop"
 
 Write-Host "========================================" -ForegroundColor Cyan
@@ -30,18 +36,33 @@ $projects = @(
     "src\ktKitDotNet\ktKitDotNet.csproj",
     "src\edEditorDotNet\edEditorDotNet.csproj",
     "src\BugReporter\BugReporter.csproj",
-    "src\CityScape\CityScape.csproj"
+    "src\CityScape\CityScape.csproj",
+    "tools\test_subsystems\test_subsystems.csproj"
 )
 
+if ($Clean) {
+    Write-Host "`n---> Cleaning all projects..." -ForegroundColor Yellow
+    foreach ($proj in $projects) {
+        & $msbuild $proj -t:Clean -p:Configuration=Release
+    }
+    if (Test-Path "bin\Release\net48") {
+        Remove-Item "bin\Release\net48\*" -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "[OK] Clean completed successfully!" -ForegroundColor Green
+    if (-not $Rebuild) { exit 0 }
+}
+
+$buildTarget = if ($Rebuild) { "Rebuild" } else { "Build" }
+
 foreach ($proj in $projects) {
-    Write-Host "`n---> Building $proj..." -ForegroundColor Yellow
+    Write-Host "`n---> Building ($buildTarget) $proj..." -ForegroundColor Yellow
     & $msbuild -t:Restore $proj -p:Configuration=Release
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Restore failed for $proj"
         exit $LASTEXITCODE
     }
 
-    & $msbuild $proj -p:Configuration=Release
+    & $msbuild $proj -t:$buildTarget -p:Configuration=Release
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Build failed for $proj"
         exit $LASTEXITCODE
@@ -71,6 +92,16 @@ foreach ($proj in $projects) {
 # Copy main application configuration
 if (Test-Path "CityScape.exe.config") {
     Copy-Item "CityScape.exe.config" -Destination "$binDist\CityScape.exe.config" -Force
+}
+
+# Compile standalone lifecycle test tool
+$csc = "${env:windir}\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+if (Test-Path $csc) {
+    Write-Host "`n---> Compiling tools\test_lifecycle.cs..." -ForegroundColor Yellow
+    & $csc /nologo /target:exe /out:"$binDist\test_lifecycle.exe" /reference:"$binDist\palDotNet.dll","$binDist\SmartPropertyGrid.dll","$binDist\WeifenLuo.WinFormsUI.Docking.dll" tools\test_lifecycle.cs
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "[OK] tools\test_lifecycle.cs compiled successfully!" -ForegroundColor Green
+    }
 }
 
 Write-Host "[OK] Staged all distribution binaries to $binDist" -ForegroundColor Green

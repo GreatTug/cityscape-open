@@ -62,6 +62,7 @@ public class DialogPathLoader : UserControl, IDialogValue
 		set
 		{
 			mTextBox.Text = value;
+			PathChangedHandler();
 		}
 	}
 

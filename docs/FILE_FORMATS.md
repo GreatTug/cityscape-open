@@ -39,17 +39,23 @@ This document outlines the reverse-engineered binary specifications for CityScap
 ## 3. PixelActive Archive (`.parc`)
 
 * **Role**: High-speed packed asset bundle for engine runtime.
-* **Header**:
+* **Header Structure**:
   * `uint32_t Version` (e.g., `0x00000002`)
-  * `uint32_t EntryCount` (Number of records)
-* **Entry Record**:
+  * `uint32_t FolderCount` (e.g., `0x00000002`)
+  * Array of folder path records:
+    * `uint16_t PathLength`
+    * `char Path[PathLength]` (Null-terminated relative folder path, e.g. `textures\moon\0`, `win_3_0\0`)
+  * `uint32_t FileCount` (Total records, e.g., `110` = `0x0000006E`)
+* **File Record Table (1..FileCount)**:
+  * `uint64_t FileTime` (8-byte Windows `FILETIME` timestamp)
+  * `uint32_t CompressedSize` (Size of compressed stream on disk)
+  * `uint32_t UncompressedSize` (Size of payload after zlib decompression)
+  * `uint32_t DataOffset` (Absolute byte offset in archive file)
   * `uint16_t NameLength`
-  * `char Name[NameLength]` (Relative path, e.g. `textures/moon/moon_phase01.dds`)
-  * `uint32_t Flags`
-  * `uint32_t Offset`
-  * `uint32_t CompressedSize`
-  * `uint32_t UncompressedSize`
-* **Contents**:
-  * Compiled Direct3D 9 HLSL shaders (`.fxo` - ambient occlusion, calibration, blending).
+  * `char Name[NameLength]` (Null-terminated file path relative to root, e.g. `textures\moon\moon_phase01.dds\0`)
+* **Payloads**:
+  * Stored starting at `DataOffset` up to `DataOffset + CompressedSize`.
+  * Decompressed via standard `zlib.decompress` (RFC 1950 header `0x789C`).
   * DirectDraw Surface textures (`.dds` - sky dome, lunar phases, lens flares).
+  * Compiled Direct3D 9 HLSL shaders (`.fxo` - ambient occlusion, calibration, blending).
   * Text databases (`BrightStarCatalog.txt` for stellar sky positioning).

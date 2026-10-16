@@ -16,5 +16,4 @@ using System.Security.Permissions;
 [assembly: AssemblyCopyright("Copyright © Pixelactive Inc 2008")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyProduct("palDotNet")]
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, ControlThread = true)]
 [assembly: AssemblyVersion("1.0.3688.35786")]

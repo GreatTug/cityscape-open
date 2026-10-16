@@ -238,9 +238,6 @@ public class MapiMailMessage
 
 	private void _LogErrorMapi(int errorCode)
 	{
-		_ = string.Empty;
-		switch (errorCode)
-		{
-		}
+		// No-op error logging stub
 	}
 }
