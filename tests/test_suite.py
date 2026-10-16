@@ -73,9 +73,18 @@ def test_all():
     assert "Form created successfully:  TestApp" in res.stdout, f"Unexpected output: {res.stdout}"
     print("  [PASS] FormApp and WidgetMgr runtime instantiation verified with 0 exceptions")
 
+    # 6. Test Full FormApp Lifecycle (DefaultLayout, InitializeWidgetView, LoadLayout)
+    print("\n[TEST 6] Verifying FormApp Full Lifecycle (Layout, WidgetView, PropertyGrid)...")
+    lifecycle_exe = os.path.join(dist_dir, "test_lifecycle.exe")
+    res = subprocess.run([lifecycle_exe], capture_output=True, text=True)
+    assert res.returncode == 0, f"Lifecycle test failed with exit code {res.returncode}:\n{res.stdout}\n{res.stderr}"
+    assert "SUCCESS: ALL LIFECYCLE STEPS COMPLETED CLEANLY!" in res.stdout, f"Unexpected lifecycle output: {res.stdout}"
+    print("  [PASS] Full lifecycle (Layout, WidgetView, PropertyGrid) passed with 0 exceptions")
+
     print("\n========================================")
-    print("  ALL 5 TEST SUITES PASSED SUCCESSFULLY")
+    print("  ALL 6 TEST SUITES PASSED SUCCESSFULLY")
     print("========================================")
 
 if __name__ == "__main__":
     test_all()
+

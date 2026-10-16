@@ -25,7 +25,7 @@ public class ViewPropertyGrid : ViewTool, IPersistComponentSettings
 	{
 		InitializeComponent();
 		TheGuid = guid;
-		PalDockContent.DockContents.Add(guid, this);
+		PalDockContent.DockContents[guid] = this;
 	}
 
 	public override void RemoveFromDockContents(WidgetPanel panel)

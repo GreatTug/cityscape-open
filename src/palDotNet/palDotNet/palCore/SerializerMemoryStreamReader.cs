@@ -14,14 +14,34 @@ public class SerializerMemoryStreamReader : SerializerReader
 
 	public unsafe byte** Buffer = null;
 
+	private IntPtr _defaultBuffer = IntPtr.Zero;
+	private IntPtr _defaultBufferPtr = IntPtr.Zero;
+	private IntPtr _defaultCurrentIndex = IntPtr.Zero;
+
 	private int TheEnterCount;
 
-	public unsafe override bool AtEnd => ReadIndex >= *CurrentIndex;
+	public unsafe SerializerMemoryStreamReader()
+	{
+		_defaultBuffer = Marshal.AllocHGlobal(65536);
+		_defaultBufferPtr = Marshal.AllocHGlobal(IntPtr.Size);
+		Marshal.WriteIntPtr(_defaultBufferPtr, _defaultBuffer);
+		Buffer = (byte**)(void*)_defaultBufferPtr;
+
+		_defaultCurrentIndex = Marshal.AllocHGlobal(sizeof(uint));
+		*(uint*)(void*)_defaultCurrentIndex = 0u;
+		CurrentIndex = (uint*)(void*)_defaultCurrentIndex;
+	}
+
+	public unsafe override bool AtEnd => CurrentIndex == null || ReadIndex >= *CurrentIndex;
 
 	public override int EnterCount => TheEnterCount;
 
 	protected unsafe override byte[] ReadBytes(int numBytes)
 	{
+		if (Buffer == null || *Buffer == null || CurrentIndex == null)
+		{
+			return new byte[numBytes];
+		}
 		byte[] array = new byte[numBytes];
 		byte* buffer = *Buffer;
 		Marshal.Copy((IntPtr)(buffer + ReadIndex), array, 0, array.Length);
@@ -31,6 +51,11 @@ public class SerializerMemoryStreamReader : SerializerReader
 
 	public unsafe override void Serialize(ref string inst)
 	{
+		if (Buffer == null || *Buffer == null || CurrentIndex == null)
+		{
+			inst = string.Empty;
+			return;
+		}
 		List<byte> list = new List<byte>();
 		byte[] array = new byte[1];
 		byte* buffer = *Buffer;
@@ -52,6 +77,10 @@ public class SerializerMemoryStreamReader : SerializerReader
 	{
 		Monitor.Enter(this);
 		TheEnterCount++;
+		if (CurrentIndex == null)
+		{
+			return false;
+		}
 		return *CurrentIndex != 0;
 	}
 
@@ -60,7 +89,10 @@ public class SerializerMemoryStreamReader : SerializerReader
 		if (clearIndex)
 		{
 			ReadIndex = 0;
-			*CurrentIndex = 0u;
+			if (CurrentIndex != null)
+			{
+				*CurrentIndex = 0u;
+			}
 		}
 		TheEnterCount--;
 		Monitor.Exit(this);

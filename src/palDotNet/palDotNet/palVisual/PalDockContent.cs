@@ -143,7 +143,7 @@ public class PalDockContent : DockContent, ISupportsToolStrip, IPersistComponent
 	internal void Init(DockPanel dockPanel, WidgetPanel widgetPanel, ISupportsToolStrip toolStripSupporter)
 	{
 		TheWidgetPanel = widgetPanel;
-		TheDockContents.Add(widgetPanel.Guid, this);
+		TheDockContents[widgetPanel.Guid] = this;
 		ToolStrip.RegisterToolStripSupporter(widgetPanel, toolStripSupporter);
 		base.TabText = widgetPanel.Name;
 		widgetPanel.EventHide += HandleEvent;
