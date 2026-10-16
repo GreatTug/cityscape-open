@@ -140,8 +140,15 @@ def test_all():
     assert "ALL 169 DEEP VERIFICATION ASSERTIONS PASSED (100%)" in res.stdout, f"Subsystem suite failed:\n{res.stdout}"
     print("  [PASS] All 169 deep verification assertions passed across all 6 core modules")
 
+    # 8. Test Live CityScape UI Window & Layout Rendering
+    print("\n[TEST 8] Verifying Live CityScape GUI Window, Layout & Viewport...")
+    ui_test = subprocess.run([sys.executable, "tools/test_ui_window.py"], capture_output=True, text=True)
+    assert ui_test.returncode == 0, f"Live UI window test failed:\n{ui_test.stderr}\n{ui_test.stdout}"
+    assert "CityScape UI window is verified ACTIVE, RESPONSIVE, and RUNNING!" in ui_test.stdout, f"Unexpected UI test output: {ui_test.stdout}"
+    print("  [PASS] Live CityScape GUI window verified active, titled, responsive and rendering")
+
     print("\n=================================================");
-    print("  ALL 7 COMPREHENSIVE TEST SUITES PASSED (100%)  ");
+    print("  ALL 8 COMPREHENSIVE TEST SUITES PASSED (100%)  ");
     print("=================================================");
 
 if __name__ == "__main__":

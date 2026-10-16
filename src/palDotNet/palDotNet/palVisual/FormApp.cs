@@ -87,6 +87,12 @@ public class FormApp : FormAppBase
 
 	public override System.Windows.Forms.Timer Timer => timer1;
 
+	public DockPanel DockPanel => dockPanel1;
+
+	public ViewTool ToolWidgets => TheToolWidgets;
+
+	public ViewOutput ToolOutput => TheToolOutput as ViewOutput;
+
 	public override bool MenuVisible
 	{
 		set
@@ -608,6 +614,10 @@ public class FormApp : FormAppBase
 		}
 		Settings.Loaded = true;
 		DefaultLayout();
+		if (!LoadLayoutCalled)
+		{
+			LoadLayout();
+		}
 		LastLocation = base.Location;
 		try
 		{

@@ -23,6 +23,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Configuration" />
+    <Reference Include="..\..\lib\WeifenLuo.WinFormsUI.Docking.dll" />
   </ItemGroup>
 
   <ItemGroup>

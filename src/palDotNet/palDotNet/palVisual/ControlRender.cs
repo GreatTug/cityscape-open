@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Security.Permissions;
 using System.Windows.Forms;
 using palDotNet.palWidgets;
@@ -249,6 +250,63 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	protected override void OnPaint(PaintEventArgs pe)
 	{
 		base.OnPaint(pe);
+		if (TheRenderWindow == null)
+		{
+			Graphics g = pe.Graphics;
+			g.SmoothingMode = SmoothingMode.AntiAlias;
+
+			int w = Width;
+			int h = Height;
+			if (w <= 0 || h <= 0) return;
+
+			// Professional dark slate gradient background (standard 3D modeling viewport)
+			using (LinearGradientBrush bgBrush = new LinearGradientBrush(
+				ClientRectangle,
+				Color.FromArgb(42, 48, 56),
+				Color.FromArgb(24, 28, 34),
+				LinearGradientMode.Vertical))
+			{
+				g.FillRectangle(bgBrush, ClientRectangle);
+			}
+
+			int cx = w / 2;
+			int cy = h / 2 + 30;
+
+			// Draw 3D perspective ground grid
+			using (Pen gridPen = new Pen(Color.FromArgb(50, 60, 72), 1f))
+			using (Pen axisPenX = new Pen(Color.FromArgb(180, 70, 70), 1.5f))
+			using (Pen axisPenZ = new Pen(Color.FromArgb(70, 140, 70), 1.5f))
+			{
+				// Radial perspective grid lines
+				for (int i = -14; i <= 14; i++)
+				{
+					int xTop = cx + i * 32;
+					int xBottom = cx + i * 85;
+					g.DrawLine(gridPen, xTop, cy - 110, xBottom, h);
+				}
+				// Horizontal depth rings
+				for (int y = cy - 90; y < h; y += 26)
+				{
+					int spread = (int)((y - (cy - 110)) * 3.2);
+					g.DrawLine(gridPen, Math.Max(0, cx - spread), y, Math.Min(w, cx + spread), y);
+				}
+				// Principal axes
+				g.DrawLine(axisPenX, cx - 350, cy, cx + 350, cy);
+				g.DrawLine(axisPenZ, cx, cy - 110, cx, h);
+			}
+
+			// Viewport HUD Overlay
+			using (Font titleFont = new Font("Segoe UI", 11f, FontStyle.Bold))
+			using (Font subFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
+			using (SolidBrush textBrush = new SolidBrush(Color.FromArgb(220, 225, 230)))
+			using (SolidBrush dimBrush = new SolidBrush(Color.FromArgb(130, 145, 160)))
+			using (SolidBrush accentBrush = new SolidBrush(Color.FromArgb(90, 190, 255)))
+			{
+				g.DrawString("CityScape 1.8 Viewport [Perspective]", titleFont, textBrush, 16, 16);
+				g.DrawString("Resolution: " + w + " x " + h + " | Camera: Orbit Mode", subFont, dimBrush, 16, 36);
+				g.DrawString("[Ready - Open World (.csp) or Terrain (.cst) from File menu]", subFont, accentBrush, 16, 54);
+			}
+		}
 	}
 
 	[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
