@@ -89,9 +89,20 @@ foreach ($proj in $projects) {
     }
 }
 
-# Copy main application configuration
+# Copy main application configuration and response file
 if (Test-Path "CityScape.exe.config") {
     Copy-Item "CityScape.exe.config" -Destination "$binDist\CityScape.exe.config" -Force
+}
+if (Test-Path "CityScape.exe.response.txt") {
+    Copy-Item "CityScape.exe.response.txt" -Destination "$binDist\CityScape.exe.response.txt" -Force
+}
+
+# Copy sample worlds and data directories to make binDist completely self-contained
+$dataItems = @("assets", "icons", "Worlds", "1-grids", "2-grids", "docs", "cache", "1.cst", "2.cst", "pro.csp")
+foreach ($item in $dataItems) {
+    if (Test-Path $item) {
+        Copy-Item -Path $item -Destination $binDist -Recurse -Force
+    }
 }
 
 # Compile standalone lifecycle test tool
@@ -104,7 +115,13 @@ if (Test-Path $csc) {
     }
 }
 
-Write-Host "[OK] Staged all distribution binaries to $binDist" -ForegroundColor Green
+# Mirror executables and DLLs to workspace root matching original CityScape 1.8 layout
+Write-Host "`n---> Mirroring executables and libraries to root (matching original layout)..." -ForegroundColor Yellow
+Get-ChildItem -Path $binDist -Filter "*.dll" | Copy-Item -Destination "." -Force
+Get-ChildItem -Path $binDist -Filter "*.exe" | Copy-Item -Destination "." -Force
+Get-ChildItem -Path $binDist -Filter "*.pdb" | Copy-Item -Destination "." -Force
+
+Write-Host "[OK] Staged all distribution binaries to $binDist and workspace root" -ForegroundColor Green
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  All CityScape assemblies built successfully!" -ForegroundColor Green

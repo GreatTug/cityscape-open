@@ -17,6 +17,12 @@ __pycache__/
 # Crash dumps & temp files
 *.dmp
 *.tmp
-*.log
 cache/
 assets/extracted/
+# Root staged binaries (mirroring C:\CityScape 1.8 Autodesk Promo layout)
+/CityScape.exe
+/BugReporter.exe
+/test_subsystems.exe
+/test_lifecycle.exe
+/*.dll
+/*.pdb
