@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 4)]
+[NativeCppClass]
+[MiscellaneousBits(64)]
+[DebugInfoInPDB]
+internal static struct arStaticInitListItem_003CarIoRegistrar_003CgisVector3d_003E_0020_003E
+{
+}

@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 8)]
+[MiscellaneousBits(64)]
+[DebugInfoInPDB]
+[NativeCppClass]
+internal struct arPair_003CarTree_003CarPair_003CarGuid_0020const_0020_002CprNetworkNode_0020_002A_003E_002CarGuid_0020const_0020_002CarPairKey_003CarGuid_0020const_0020_002CprNetworkNode_0020_002A_003E_002CarLess_003CarGuid_0020const_0020_003E_002CarAllocator_003E_003A_003AIterator_002Cbool_003E
+{
+}

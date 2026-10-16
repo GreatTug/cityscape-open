@@ -1,0 +1,13 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+namespace boost.serialization;
+
+[StructLayout(LayoutKind.Sequential, Size = 1)]
+[MiscellaneousBits(64)]
+[DebugInfoInPDB]
+[NativeCppClass]
+internal struct singleton_module
+{
+}

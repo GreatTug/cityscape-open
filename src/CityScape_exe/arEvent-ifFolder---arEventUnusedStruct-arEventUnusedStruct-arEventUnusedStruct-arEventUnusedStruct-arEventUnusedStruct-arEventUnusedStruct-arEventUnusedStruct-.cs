@@ -1,0 +1,18 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 16)]
+[NativeCppClass]
+[MiscellaneousBits(64)]
+[DebugInfoInPDB]
+internal struct arEvent_003CifFolder_0020_002A_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_003E
+{
+}
+[StructLayout(LayoutKind.Sequential, Size = 16)]
+[NativeCppClass]
+[DebugInfoInPDB]
+[MiscellaneousBits(64)]
+internal struct arEvent_003CifFolder_0020_0026_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_003E
+{
+}

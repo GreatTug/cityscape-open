@@ -1,0 +1,21 @@
+# Visual Studio & MSBuild
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Python Virtual Environments & Cache
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Crash dumps & temp files
+*.dmp
+*.tmp
+*.log
+cache/

@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 12)]
+[DebugInfoInPDB]
+[MiscellaneousBits(65)]
+[NativeCppClass]
+internal struct arForEachAnyType_003CarHashTable_003CktMetaDataTemplate_0020const_0020_002A_002CktMetaDataTemplate_0020const_0020_002A_002CarIdentity_003CktMetaDataTemplate_0020const_0020_002A_003E_002CarHash_003CktMetaDataTemplate_0020const_0020_002A_003E_002CarHashKeyEqual_003CktMetaDataTemplate_0020const_0020_002A_003E_002CarAllocator_003E_003A_003AConstIterator_003E
+{
+}

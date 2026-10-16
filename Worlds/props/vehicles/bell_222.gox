@@ -1,0 +1,495 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Document>
+<vhVehicleType>
+    <Name>
+      <![CDATA[bell_222]]>
+    </Name>
+    <AssetFileName>
+      <![CDATA[props\vehicles\bell_222]]>
+    </AssetFileName>
+    <UpdateRequired>
+      1
+    </UpdateRequired>
+    <CompositeData>
+      <phCompositeData>
+        <StaticBodyDatas Count='0'>
+
+        </StaticBodyDatas>
+        <RigidBodyDatas Count='1'>
+          <_Inst Value='1' />
+          <phRigidBodyData>
+            <Mass>
+              2500
+            </Mass>
+            <CenterOfMass>
+              0 1.5 -0.166
+            </CenterOfMass>
+            <Gravity>
+              -9.8
+            </Gravity>
+            <MaxSpeed>
+              1000
+            </MaxSpeed>
+            <MaxAngSpeed>
+              25
+            </MaxAngSpeed>
+            <RigidShape>
+              1
+            </RigidShape>
+            <AngInertia>
+              0 0 0
+            </AngInertia>
+            <BoxDimensions>
+              2 2 6
+            </BoxDimensions>
+            <SphereRadius>
+              0
+            </SphereRadius>
+            <CylinderRadius>
+              0
+            </CylinderRadius>
+            <CylinderLength>
+              0
+            </CylinderLength>
+            <CylinderAxis>
+              -1
+            </CylinderAxis>
+            <ComponentDatas Count='9'>
+              <_Inst Value='2' />
+              <vhRetractableWheelData>
+                <Name>
+                  <![CDATA[wheel1]]>
+                </Name>
+                <RestPosition>
+                  0 0.185096 -3.02085
+                </RestPosition>
+                <Upward>
+                  0 1 -0.006
+                </Upward>
+                <MaxUp>
+                  0.5
+                </MaxUp>
+                <MaxDown>
+                  0.15
+                </MaxDown>
+                <Height>
+                  0.2
+                </Height>
+                <SupportPercentage>
+                  0.333
+                </SupportPercentage>
+                <SpringCoefficient>
+                  10
+                </SpringCoefficient>
+                <DampingCoefficient>
+                  0.3
+                </DampingCoefficient>
+                <Powered>
+                  0
+                </Powered>
+                <Radius>
+                  0.2
+                </Radius>
+                <Width>
+                  0.25
+                </Width>
+                <SteeringScale>
+                  0.5
+                </SteeringScale>
+                <MaxSteerSpeed>
+                  30
+                </MaxSteerSpeed>
+                <MinSteerScale>
+                  0.1
+                </MinSteerScale>
+                <EmergencyBrakeScale>
+                  0
+                </EmergencyBrakeScale>
+                <FrictionCoefficient>
+                  0.4
+                </FrictionCoefficient>
+                <MinThrottleFrictionDropPercenta>
+                  0.8
+                </MinThrottleFrictionDropPercenta>
+                <CaliperName>
+                  <![CDATA[]]>
+                </CaliperName>
+                <GearName>
+                  <![CDATA[gear_f]]>
+                </GearName>
+                <RetractTime>
+                  2
+                </RetractTime>
+                <RetractDisplacement>
+                  0 0 0
+                </RetractDisplacement>
+                <RetractAngularDisplacement>
+                  1.9 0 0
+                </RetractAngularDisplacement>
+                
+              </vhRetractableWheelData>
+              
+              <_Inst Value='3' />
+              <vhRetractableWheelData>
+                <Name>
+                  <![CDATA[wheel2]]>
+                </Name>
+                <RestPosition>
+                  -1.50174 0.217902 0.726028
+                </RestPosition>
+                <Upward>
+                  0 1 -0.006
+                </Upward>
+                <MaxUp>
+                  0.5
+                </MaxUp>
+                <MaxDown>
+                  0.15
+                </MaxDown>
+                <Height>
+                  0.23
+                </Height>
+                <SupportPercentage>
+                  0.333
+                </SupportPercentage>
+                <SpringCoefficient>
+                  10
+                </SpringCoefficient>
+                <DampingCoefficient>
+                  0.3
+                </DampingCoefficient>
+                <Powered>
+                  0
+                </Powered>
+                <Radius>
+                  0.23
+                </Radius>
+                <Width>
+                  0.25
+                </Width>
+                <SteeringScale>
+                  0
+                </SteeringScale>
+                <MaxSteerSpeed>
+                  30
+                </MaxSteerSpeed>
+                <MinSteerScale>
+                  0.1
+                </MinSteerScale>
+                <EmergencyBrakeScale>
+                  0
+                </EmergencyBrakeScale>
+                <FrictionCoefficient>
+                  0.4
+                </FrictionCoefficient>
+                <MinThrottleFrictionDropPercenta>
+                  0.8
+                </MinThrottleFrictionDropPercenta>
+                <CaliperName>
+                  <![CDATA[]]>
+                </CaliperName>
+                <GearName>
+                  <![CDATA[gear_l]]>
+                </GearName>
+                <RetractTime>
+                  2
+                </RetractTime>
+                <RetractDisplacement>
+                  0 0 0
+                </RetractDisplacement>
+                <RetractAngularDisplacement>
+                  1.75 0 1.57
+                </RetractAngularDisplacement>
+                
+              </vhRetractableWheelData>
+              
+              <_Inst Value='4' />
+              <vhRetractableWheelData>
+                <Name>
+                  <![CDATA[wheel3]]>
+                </Name>
+                <RestPosition>
+                  1.502 0.217902 0.726028
+                </RestPosition>
+                <Upward>
+                  0 1 -0.006
+                </Upward>
+                <MaxUp>
+                  0.5
+                </MaxUp>
+                <MaxDown>
+                  0.15
+                </MaxDown>
+                <Height>
+                  0.23
+                </Height>
+                <SupportPercentage>
+                  0.333
+                </SupportPercentage>
+                <SpringCoefficient>
+                  10
+                </SpringCoefficient>
+                <DampingCoefficient>
+                  0.3
+                </DampingCoefficient>
+                <Powered>
+                  0
+                </Powered>
+                <Radius>
+                  0.23
+                </Radius>
+                <Width>
+                  0.25
+                </Width>
+                <SteeringScale>
+                  0
+                </SteeringScale>
+                <MaxSteerSpeed>
+                  30
+                </MaxSteerSpeed>
+                <MinSteerScale>
+                  0.1
+                </MinSteerScale>
+                <EmergencyBrakeScale>
+                  0
+                </EmergencyBrakeScale>
+                <FrictionCoefficient>
+                  0.4
+                </FrictionCoefficient>
+                <MinThrottleFrictionDropPercenta>
+                  0.8
+                </MinThrottleFrictionDropPercenta>
+                <CaliperName>
+                  <![CDATA[]]>
+                </CaliperName>
+                <GearName>
+                  <![CDATA[gear_r]]>
+                </GearName>
+                <RetractTime>
+                  2
+                </RetractTime>
+                <RetractDisplacement>
+                  0 0 0
+                </RetractDisplacement>
+                <RetractAngularDisplacement>
+                  1.75 0 -1.57
+                </RetractAngularDisplacement>
+                
+              </vhRetractableWheelData>
+              
+              <_Inst Value='5' />
+              <vhEngineData>
+                <Name>
+                  <![CDATA[propeller_engine]]>
+                </Name>
+                <IdleRPM>
+                  1000
+                </IdleRPM>
+                <PeakRPM>
+                  4500
+                </PeakRPM>
+                <MaxRPM>
+                  8000
+                </MaxRPM>
+                <IdlePower>
+                  5
+                </IdlePower>
+                <PeakPower>
+                  15
+                </PeakPower>
+                <MaxPower>
+                  5
+                </MaxPower>
+                <Friction>
+                  0.1
+                </Friction>
+                <RotInertia>
+                  1.75
+                </RotInertia>
+                <PowerScalar>
+                  1
+                </PowerScalar>
+                
+              </vhEngineData>
+              
+              <_Inst Value='6' />
+              <vhPropellerData>
+                <Name>
+                  <![CDATA[propeller]]>
+                </Name>
+                <Radius>
+                  1
+                </Radius>
+                <SpinRate>
+                  40
+                </SpinRate>
+                <MaxThrust>
+                  -0.05
+                </MaxThrust>
+                <EngineIndex>
+                  3
+                </EngineIndex>
+                <IdleSpinRate>
+                  0.4
+                </IdleSpinRate>
+                
+              </vhPropellerData>
+              
+              <_Inst Value='7' />
+              <vhEngineData>
+                <Name>
+                  <![CDATA[rotor_engine]]>
+                </Name>
+                <IdleRPM>
+                  1000
+                </IdleRPM>
+                <PeakRPM>
+                  4500
+                </PeakRPM>
+                <MaxRPM>
+                  8000
+                </MaxRPM>
+                <IdlePower>
+                  5
+                </IdlePower>
+                <PeakPower>
+                  15
+                </PeakPower>
+                <MaxPower>
+                  5
+                </MaxPower>
+                <Friction>
+                  0.1
+                </Friction>
+                <RotInertia>
+                  1.75
+                </RotInertia>
+                <PowerScalar>
+                  1
+                </PowerScalar>
+                
+              </vhEngineData>
+              
+              <_Inst Value='8' />
+              <vhRotorData>
+                <Name>
+                  <![CDATA[rotor]]>
+                </Name>
+                <Radius>
+                  4
+                </Radius>
+                <SpinRate>
+                  40
+                </SpinRate>
+                <MaxThrust>
+                  1.2
+                </MaxThrust>
+                <EngineIndex>
+                  5
+                </EngineIndex>
+                <IdleSpinRate>
+                  0.4
+                </IdleSpinRate>
+                <MaxRoll>
+                  1
+                </MaxRoll>
+                <MaxPitch>
+                  1
+                </MaxPitch>
+                <MaxYaw>
+                  0
+                </MaxYaw>
+                
+              </vhRotorData>
+              
+              <_Inst Value='9' />
+              <phDampingData>
+                <Name>
+                  <![CDATA[vehicle_damping]]>
+                </Name>
+                <LinearV2>
+                  0.001 0.001 0.0005
+                </LinearV2>
+                <LinearV>
+                  0.1 0.1 0.05
+                </LinearV>
+                <LinearC>
+                  0.1 0.1 0.1
+                </LinearC>
+                <AngularV2>
+                  0.2 0.2 0.2
+                </AngularV2>
+                <AngularV>
+                  0.5 0.5 0.5
+                </AngularV>
+                <AngularC>
+                  0.1 0.1 0.1
+                </AngularC>
+                
+              </phDampingData>
+              
+              <_Inst Value='10' />
+              <phBuoyancyData>
+                <Name>
+                  <![CDATA[vehicle_buoyancy]]>
+                </Name>
+                
+              </phBuoyancyData>
+              
+            </ComponentDatas>
+            
+          </phRigidBodyData>
+          
+        </RigidBodyDatas>
+        <KinematicBodyDatas Count='0'>
+
+        </KinematicBodyDatas>
+        
+      </phCompositeData>
+      
+    </CompositeData>
+    <CameraData>
+      <gmCameraData>
+        <PointOfViewOffset>
+          0 1.9 -2.6
+        </PointOfViewOffset>
+        <PointOfInterestOffset>
+          0 1.5 -1.5
+        </PointOfInterestOffset>
+        <Distance>
+          18
+        </Distance>
+        <DistanceMin>
+          12
+        </DistanceMin>
+        <DistanceMax>
+          20
+        </DistanceMax>
+        <AzimuthMin>
+          0
+        </AzimuthMin>
+        <AzimuthMax>
+          6.28319
+        </AzimuthMax>
+        <InclineMin>
+          0
+        </InclineMin>
+        <InclineMax>
+          1.53938
+        </InclineMax>
+        <StayAboveGround>
+          0
+        </StayAboveGround>
+        <CameraSpeed>
+          3
+        </CameraSpeed>
+        
+      </gmCameraData>
+      
+    </CameraData>
+    <ControllerType>
+      1
+    </ControllerType>
+    
+  </vhVehicleType>
+</Document>

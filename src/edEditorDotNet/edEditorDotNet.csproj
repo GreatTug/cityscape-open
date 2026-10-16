@@ -1,0 +1,94 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>edEditorDotNet</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>net48</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace />
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="edEditorDotNet.MainToolBarIcons.WaterGlobal.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.RoadHeight.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.MaterialPaint.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.Lot.png" />
+    <None Remove="edEditorDotNet.OpenStreetMap.ico" />
+    <None Remove="edEditorDotNet.Library.ico" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.LOD.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.AbstractPoints.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.RoadRoad.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.WaterPolygon.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.GeographyPolygon.png" />
+    <None Remove="edEditorDotNet.AppIcon.ico" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.Measure.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.GeographyGrid.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.SkyClouds.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.SkySky.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.Powerline.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.Physics.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.GeographyCircle.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.Building.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.AbstractGraph.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.PropPoint.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.RoadTangent.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.PropCircle.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.PropBlock.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.GeographyGridPaint.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.GeographyGlobalPaint.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.Fence.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.AbstractPolygons.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.PropPolygon.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.MaterialSeed.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.WaterGraph.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.PropRange.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.navteq.png" />
+    <None Remove="edEditorDotNet.MainToolBarIcons.Traffic.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.WaterGlobal.png" LogicalName="edEditorDotNet.MainToolBarIcons.WaterGlobal.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.RoadHeight.png" LogicalName="edEditorDotNet.MainToolBarIcons.RoadHeight.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.MaterialPaint.png" LogicalName="edEditorDotNet.MainToolBarIcons.MaterialPaint.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.Lot.png" LogicalName="edEditorDotNet.MainToolBarIcons.Lot.png" />
+    <EmbeddedResource Include="edEditorDotNet.OpenStreetMap.ico" LogicalName="edEditorDotNet.OpenStreetMap.ico" />
+    <EmbeddedResource Include="edEditorDotNet.Library.ico" LogicalName="edEditorDotNet.Library.ico" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.LOD.png" LogicalName="edEditorDotNet.MainToolBarIcons.LOD.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.AbstractPoints.png" LogicalName="edEditorDotNet.MainToolBarIcons.AbstractPoints.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.RoadRoad.png" LogicalName="edEditorDotNet.MainToolBarIcons.RoadRoad.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.WaterPolygon.png" LogicalName="edEditorDotNet.MainToolBarIcons.WaterPolygon.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.GeographyPolygon.png" LogicalName="edEditorDotNet.MainToolBarIcons.GeographyPolygon.png" />
+    <EmbeddedResource Include="edEditorDotNet.AppIcon.ico" LogicalName="edEditorDotNet.AppIcon.ico" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.Measure.png" LogicalName="edEditorDotNet.MainToolBarIcons.Measure.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.GeographyGrid.png" LogicalName="edEditorDotNet.MainToolBarIcons.GeographyGrid.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.SkyClouds.png" LogicalName="edEditorDotNet.MainToolBarIcons.SkyClouds.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.SkySky.png" LogicalName="edEditorDotNet.MainToolBarIcons.SkySky.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.Powerline.png" LogicalName="edEditorDotNet.MainToolBarIcons.Powerline.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.Physics.png" LogicalName="edEditorDotNet.MainToolBarIcons.Physics.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.GeographyCircle.png" LogicalName="edEditorDotNet.MainToolBarIcons.GeographyCircle.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.Building.png" LogicalName="edEditorDotNet.MainToolBarIcons.Building.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.AbstractGraph.png" LogicalName="edEditorDotNet.MainToolBarIcons.AbstractGraph.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.PropPoint.png" LogicalName="edEditorDotNet.MainToolBarIcons.PropPoint.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.RoadTangent.png" LogicalName="edEditorDotNet.MainToolBarIcons.RoadTangent.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.PropCircle.png" LogicalName="edEditorDotNet.MainToolBarIcons.PropCircle.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.PropBlock.png" LogicalName="edEditorDotNet.MainToolBarIcons.PropBlock.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.GeographyGridPaint.png" LogicalName="edEditorDotNet.MainToolBarIcons.GeographyGridPaint.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.GeographyGlobalPaint.png" LogicalName="edEditorDotNet.MainToolBarIcons.GeographyGlobalPaint.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.Fence.png" LogicalName="edEditorDotNet.MainToolBarIcons.Fence.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.AbstractPolygons.png" LogicalName="edEditorDotNet.MainToolBarIcons.AbstractPolygons.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.PropPolygon.png" LogicalName="edEditorDotNet.MainToolBarIcons.PropPolygon.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.MaterialSeed.png" LogicalName="edEditorDotNet.MainToolBarIcons.MaterialSeed.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.WaterGraph.png" LogicalName="edEditorDotNet.MainToolBarIcons.WaterGraph.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.PropRange.png" LogicalName="edEditorDotNet.MainToolBarIcons.PropRange.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.navteq.png" LogicalName="edEditorDotNet.MainToolBarIcons.navteq.png" />
+    <EmbeddedResource Include="edEditorDotNet.MainToolBarIcons.Traffic.png" LogicalName="edEditorDotNet.MainToolBarIcons.Traffic.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="palDotNet">
+      <HintPath>..\..\lib\palDotNet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

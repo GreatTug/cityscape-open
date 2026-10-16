@@ -1,0 +1,129 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>palDotNet</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <TargetFramework>net48</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RootNamespace />
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="palDotNet.Icons.EditInformationHS.png" />
+    <None Remove="palDotNet.Icons.go-up.png" />
+    <None Remove="palDotNet.Icons.OpenFolder16.png" />
+    <None Remove="palDotNet.Icons.media-seek-forward.png" />
+    <None Remove="palDotNet.Icons.media-record.png" />
+    <None Remove="palDotNet.Icons.Export16.png" />
+    <None Remove="palDotNet.Cursors.zoomout.cur" />
+    <None Remove="palDotNet.Cursors.pan.cur" />
+    <None Remove="palDotNet.Icons.Help16.png" />
+    <None Remove="palDotNet.Icons.go-bottom.png" />
+    <None Remove="palDotNet.Icons.media-playback-start.png" />
+    <None Remove="palDotNet.palVisual.DefaultLayout.xml" />
+    <None Remove="palDotNet.Icons.folder.ico" />
+    <None Remove="palDotNet.Icons.go-parent.png" />
+    <None Remove="palDotNet.Icons.go-top.png" />
+    <None Remove="palDotNet.Icons.go-first.png" />
+    <None Remove="palDotNet.Icons.media-skip-backward.png" />
+    <None Remove="palDotNet.Icons.Undo16.png" />
+    <None Remove="palDotNet.Icons.Redo16.png" />
+    <None Remove="palDotNet.Icons.go-next.png" />
+    <None Remove="palDotNet.Icons.go-home.png" />
+    <None Remove="palDotNet.Icons.Save-all16.png" />
+    <None Remove="palDotNet.Icons.NewFolder16.png" />
+    <None Remove="palDotNet.Icons.Save16.png" />
+    <None Remove="palDotNet.Icons.Save-as16.png" />
+    <None Remove="palDotNet.Icons.Open16.png" />
+    <None Remove="palDotNet.Icons.ImportFolder16.png" />
+    <None Remove="palDotNet.Icons.Copy16.png" />
+    <None Remove="palDotNet.Icons.Exit16.png" />
+    <None Remove="palDotNet.Icons.Cut16.png" />
+    <None Remove="palDotNet.Cursors.zoomin.cur" />
+    <None Remove="palDotNet.Icons.go-previous.png" />
+    <None Remove="palDotNet.Icons.file.ico" />
+    <None Remove="palDotNet.Icons.media-seek-backward.png" />
+    <None Remove="palDotNet.Icons.trash_16.png" />
+    <None Remove="palDotNet.Icons.go-last.png" />
+    <None Remove="palDotNet.Icons.New16.png" />
+    <None Remove="palDotNet.Icons.add_16.png" />
+    <None Remove="palDotNet.Icons.Paste16.png" />
+    <None Remove="palDotNet.Cursors.pandown.cur" />
+    <None Remove="palDotNet.Icons.Refresh16.png" />
+    <None Remove="palDotNet.Icons.go-down.png" />
+    <None Remove="palDotNet.Icons.Back16.png" />
+    <None Remove="palDotNet.Icons.media-playback-pause.png" />
+    <None Remove="palDotNet.Icons.delete_16.png" />
+    <None Remove="palDotNet.Icons.go-jump.png" />
+    <None Remove="palDotNet.Icons.media-skip-forward.png" />
+    <None Remove="palDotNet.Icons.media-playback-stop.png" />
+    <None Remove="palDotNet.Icons.Delete16.png" />
+    <None Remove="palDotNet.ColorPicker.ColorFieldPanelCursor.cur" />
+    <EmbeddedResource Include="palDotNet.Icons.EditInformationHS.png" LogicalName="palDotNet.Icons.EditInformationHS.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-up.png" LogicalName="palDotNet.Icons.go-up.png" />
+    <EmbeddedResource Include="palDotNet.Icons.OpenFolder16.png" LogicalName="palDotNet.Icons.OpenFolder16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.media-seek-forward.png" LogicalName="palDotNet.Icons.media-seek-forward.png" />
+    <EmbeddedResource Include="palDotNet.Icons.media-record.png" LogicalName="palDotNet.Icons.media-record.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Export16.png" LogicalName="palDotNet.Icons.Export16.png" />
+    <EmbeddedResource Include="palDotNet.Cursors.zoomout.cur" LogicalName="palDotNet.Cursors.zoomout.cur" />
+    <EmbeddedResource Include="palDotNet.Cursors.pan.cur" LogicalName="palDotNet.Cursors.pan.cur" />
+    <EmbeddedResource Include="palDotNet.Icons.Help16.png" LogicalName="palDotNet.Icons.Help16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-bottom.png" LogicalName="palDotNet.Icons.go-bottom.png" />
+    <EmbeddedResource Include="palDotNet.Icons.media-playback-start.png" LogicalName="palDotNet.Icons.media-playback-start.png" />
+    <EmbeddedResource Include="palDotNet.palVisual.DefaultLayout.xml" LogicalName="palDotNet.palVisual.DefaultLayout.xml" />
+    <EmbeddedResource Include="palDotNet.Icons.folder.ico" LogicalName="palDotNet.Icons.folder.ico" />
+    <EmbeddedResource Include="palDotNet.Icons.go-parent.png" LogicalName="palDotNet.Icons.go-parent.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-top.png" LogicalName="palDotNet.Icons.go-top.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-first.png" LogicalName="palDotNet.Icons.go-first.png" />
+    <EmbeddedResource Include="palDotNet.Icons.media-skip-backward.png" LogicalName="palDotNet.Icons.media-skip-backward.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Undo16.png" LogicalName="palDotNet.Icons.Undo16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Redo16.png" LogicalName="palDotNet.Icons.Redo16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-next.png" LogicalName="palDotNet.Icons.go-next.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-home.png" LogicalName="palDotNet.Icons.go-home.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Save-all16.png" LogicalName="palDotNet.Icons.Save-all16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.NewFolder16.png" LogicalName="palDotNet.Icons.NewFolder16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Save16.png" LogicalName="palDotNet.Icons.Save16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Save-as16.png" LogicalName="palDotNet.Icons.Save-as16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Open16.png" LogicalName="palDotNet.Icons.Open16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.ImportFolder16.png" LogicalName="palDotNet.Icons.ImportFolder16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Copy16.png" LogicalName="palDotNet.Icons.Copy16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Exit16.png" LogicalName="palDotNet.Icons.Exit16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Cut16.png" LogicalName="palDotNet.Icons.Cut16.png" />
+    <EmbeddedResource Include="palDotNet.Cursors.zoomin.cur" LogicalName="palDotNet.Cursors.zoomin.cur" />
+    <EmbeddedResource Include="palDotNet.Icons.go-previous.png" LogicalName="palDotNet.Icons.go-previous.png" />
+    <EmbeddedResource Include="palDotNet.Icons.file.ico" LogicalName="palDotNet.Icons.file.ico" />
+    <EmbeddedResource Include="palDotNet.Icons.media-seek-backward.png" LogicalName="palDotNet.Icons.media-seek-backward.png" />
+    <EmbeddedResource Include="palDotNet.Icons.trash_16.png" LogicalName="palDotNet.Icons.trash_16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-last.png" LogicalName="palDotNet.Icons.go-last.png" />
+    <EmbeddedResource Include="palDotNet.Icons.New16.png" LogicalName="palDotNet.Icons.New16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.add_16.png" LogicalName="palDotNet.Icons.add_16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Paste16.png" LogicalName="palDotNet.Icons.Paste16.png" />
+    <EmbeddedResource Include="palDotNet.Cursors.pandown.cur" LogicalName="palDotNet.Cursors.pandown.cur" />
+    <EmbeddedResource Include="palDotNet.Icons.Refresh16.png" LogicalName="palDotNet.Icons.Refresh16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-down.png" LogicalName="palDotNet.Icons.go-down.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Back16.png" LogicalName="palDotNet.Icons.Back16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.media-playback-pause.png" LogicalName="palDotNet.Icons.media-playback-pause.png" />
+    <EmbeddedResource Include="palDotNet.Icons.delete_16.png" LogicalName="palDotNet.Icons.delete_16.png" />
+    <EmbeddedResource Include="palDotNet.Icons.go-jump.png" LogicalName="palDotNet.Icons.go-jump.png" />
+    <EmbeddedResource Include="palDotNet.Icons.media-skip-forward.png" LogicalName="palDotNet.Icons.media-skip-forward.png" />
+    <EmbeddedResource Include="palDotNet.Icons.media-playback-stop.png" LogicalName="palDotNet.Icons.media-playback-stop.png" />
+    <EmbeddedResource Include="palDotNet.Icons.Delete16.png" LogicalName="palDotNet.Icons.Delete16.png" />
+    <EmbeddedResource Include="palDotNet.ColorPicker.ColorFieldPanelCursor.cur" LogicalName="palDotNet.ColorPicker.ColorFieldPanelCursor.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="SmartPropertyGrid">
+      <HintPath>..\..\lib\SmartPropertyGrid.dll</HintPath>
+    </Reference>
+    <Reference Include="WeifenLuo.WinFormsUI.Docking">
+      <HintPath>..\..\lib\WeifenLuo.WinFormsUI.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+</Project>

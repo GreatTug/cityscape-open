@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 24)]
+[MiscellaneousBits(64)]
+[NativeCppClass]
+[DebugInfoInPDB]
+internal struct arHashMap_003CarBasicString_003Cchar_002CarAllocator_003E_002CpalDialogBox_003A_003AItem_002CarHash_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarHashKeyEqual_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E
+{
+}

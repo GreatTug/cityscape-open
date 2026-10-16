@@ -1,0 +1,18 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 96)]
+[DebugInfoInPDB]
+[NativeCppClass]
+[MiscellaneousBits(64)]
+internal struct palBank
+{
+	[DebugInfoInPDB]
+	[MiscellaneousBits(64)]
+	[NativeCppClass]
+	internal enum EnumBankMessages
+	{
+
+	}
+}

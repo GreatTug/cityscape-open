@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>CityScape</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="palDotNet">
+      <HintPath>..\..\lib\palDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="ktKitDotNet">
+      <HintPath>..\..\lib\ktKitDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="edEditorDotNet">
+      <HintPath>..\..\lib\edEditorDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualC" />
+  </ItemGroup>
+</Project>

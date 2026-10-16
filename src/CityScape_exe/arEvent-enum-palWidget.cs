@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 16)]
+[NativeCppClass]
+[MiscellaneousBits(64)]
+[DebugInfoInPDB]
+internal struct arEvent_003Cenum_0020palWidget_003A_003AEnumEditingState_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_002CarEventUnusedStruct_003E
+{
+}

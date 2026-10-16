@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 4)]
+[MiscellaneousBits(65)]
+[DebugInfoInPDB]
+[NativeCppClass]
+internal struct arForEachAnyType_003CarTree_003CarPair_003Ctype_info_0020const_0020_002A_0020const_002CktObject_0020_002A_003E_002Ctype_info_0020const_0020_002A_0020const_002CarPairKey_003Ctype_info_0020const_0020_002A_0020const_002CktObject_0020_002A_003E_002CarInstanceTable_003CktObject_002CarAllocator_003E_003A_003ATypeInfoCompare_002CarAllocator_003E_003A_003AIterator_003E
+{
+}

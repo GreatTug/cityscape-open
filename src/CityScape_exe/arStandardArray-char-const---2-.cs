@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 8)]
+[MiscellaneousBits(64)]
+[DebugInfoInPDB]
+[NativeCppClass]
+internal struct arStandardArray_003Cchar_0020const_0020_002A_002C2_003E
+{
+}

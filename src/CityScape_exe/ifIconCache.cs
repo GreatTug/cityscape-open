@@ -1,0 +1,18 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 152)]
+[NativeCppClass]
+[MiscellaneousBits(64)]
+[DebugInfoInPDB]
+internal struct ifIconCache
+{
+	[StructLayout(LayoutKind.Sequential, Size = 12)]
+	[NativeCppClass]
+	[MiscellaneousBits(65)]
+	[DebugInfoInPDB]
+	internal struct CacheInfo
+	{
+	}
+}

@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+<resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>1.3</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><data name="$this.Icon" mimetype="application/x-microsoft.net.object.binary.base64"><value>AAEAAAD/////AQAAAAAAAAAMAgAAAFFTeXN0ZW0uRHJhd2luZywgVmVyc2lvbj0yLjAuMC4wLCBD
+dWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWIwM2Y1ZjdmMTFkNTBhM2EFAQAAABNTeXN0
+ZW0uRHJhd2luZy5JY29uAgAAAAhJY29uRGF0YQhJY29uU2l6ZQcEAhNTeXN0ZW0uRHJhd2luZy5T
+aXplAgAAAAIAAAAJAwAAAAX8////E1N5c3RlbS5EcmF3aW5nLlNpemUCAAAABXdpZHRoBmhlaWdo
+dAAACAgCAAAAAAAAAAAAAAAPAwAAAH4EAAACAAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAA
+IAAAAAEAIAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAaVx36G1Uc8QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAdYSLHHl4h/x1XHSMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAJnMqoSJtJ/whaST/IGYj/x9iIMUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAKnkuwSp5Lv9ooW//a6Jz/ypxLv8haCT/IWUmZB9iI0EcXR/wHVwg/x1XHSMA
+AAAAAAAAAAAAAAAAAAAAL4UzwSB0I/+UwJ3/bK+C/02eZ/9wsIT/daZ6/yJrJf8haCT/HmMh+B5i
+IHQAAAAAAAAAAAAAAAAAAAAANJE6hy2MMv93tYL/TZ5U/3mzjP9NoWr/Rppg/3GwhP82fTn/I24m
+/yNrJmQAAAAAAAAAAAAAAAAAAAAAAAAAADCTN/VirWj/d76R/0SgXf9Ln1P/eLSM/06iav9HnGL/
+cbGF/2qgb/8kcSf/HHEqEgAAAAAgZiJ8AAAAAAAAAAAznDb4UqlZ/228jP9NqnD/Qp9c/0yiVP+D
+v5b/UaNt/0edY/+Jvpn/Jncq/yRzKP4jcCf/Imwm/wAAAAA0pDjHM6E4/zOeOP+Uz6z/XLR+/06s
+cv9BoV3/TqZX/4XBmP9XqHP/hr6Z/yp+Lf8keSj0JXQqbQAAAAA3rTz6Nqo7/zWlOqI2oz7qUK1W
+/43Mpf9etYD/T61z/0KjXf9Rqln/msup/46/lf8pgy7/JFc6rwAAAAAAAAAAOK8+8TquOiMAAAAA
+AAAAADSkOv45pT//kM6o/2K5hP9Ysnv/YLJ2/ziXPv8piS3/V6Ri/yZQQ9sAAAAAAAAAAAAAAAAA
+AAAAAAAAADasPkE2qzz/OKc88EWsS/+e1K3/pNe4/4XDjv8ojy3/T7df/5fIqv8sjTH/K4kw/yqF
+Lv8AAAAAAAAAAAAAAAA4sjzwNq87+AAAAAA4rD3xNag6/zSlOf80oTn/csJ+/6/jwv9fjHj/MmRM
+dQAAAAAAAAAAAAAAAAAAAAAAAAAAOrdA/zm0P3QAAAAAAAAAADarOvg0qDvtRX5kpTiGT/czmzr+
+O3FXiQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADq9QSMAAAAAAAAAAAAAAAA4sj7/Nq09skuOaSI1
+qTplMqY48gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOrc//zq0
+PkEAAAAAN64+UjSsOvcAAAAAAAAAAAAAAAAAAAAA/58AAP8/AAD4PwAA8DMAAOAHAADADwAAwAcA
+AMAAAACAAwAAAAMAAHADAADwAAAA5AcAAO4HAAD+bwAA/u8AAAs=</value></data><data name="label6.Text" xml:space="preserve"><value>Bug Reporter will attempt to email information about this bug to PixelActive. 
+It will also send information about your computer for debugging purposes.
+Press "Cancel" if you do not want this information sent to PixelActive.</value></data>
+  </root>

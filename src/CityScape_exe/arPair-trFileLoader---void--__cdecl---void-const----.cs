@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using Microsoft.VisualC;
+
+[StructLayout(LayoutKind.Sequential, Size = 8)]
+[DebugInfoInPDB]
+[MiscellaneousBits(64)]
+[NativeCppClass]
+internal struct arPair_003CtrFileLoader_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E
+{
+}
