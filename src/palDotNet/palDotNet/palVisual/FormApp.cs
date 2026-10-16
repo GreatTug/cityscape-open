@@ -292,8 +292,14 @@ public class FormApp : FormAppBase
 			Invoke(new theDelNoArgs(LoadLayout));
 			return;
 		}
+		if (LoadLayoutCalled || (dockPanel1 != null && dockPanel1.Contents.Count > 0))
+		{
+			return;
+		}
+		LoadLayoutCalled = true;
+
 		bool flag = false;
-		if (LoadedSettings)
+		if (LoadedSettings && !string.IsNullOrEmpty(Settings.DockPanelLayout))
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes(Settings.DockPanelLayout);
 			MemoryStream stream = new MemoryStream(bytes);
@@ -316,7 +322,7 @@ public class FormApp : FormAppBase
 				}
 				catch
 				{
-					MessageBox.Show("Failed to load window layout file - reverting to default layout", "Layout File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+					flag = false;
 				}
 			}
 		}
@@ -326,34 +332,43 @@ public class FormApp : FormAppBase
 			string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(Application.ExecutablePath);
 			fileNameWithoutExtension += ".DefaultLayout.xml";
 			bool flag2 = File.Exists(fileNameWithoutExtension);
-			if (flag2)
+			if (flag2 && dockPanel1.Contents.Count == 0)
 			{
 				try
 				{
 					using StreamReader streamReader = new StreamReader(fileNameWithoutExtension);
 					dockPanel1.LoadFromXml(streamReader.BaseStream, GetContentFromPersistString);
+					flag2 = true;
 				}
 				catch
 				{
 					flag2 = false;
 				}
 			}
-			if (!flag2)
+			if (!flag2 && dockPanel1.Contents.Count == 0)
 			{
-				Assembly assembly = typeof(FormApp).Assembly;
-				Stream manifestResourceStream = assembly.GetManifestResourceStream("palDotNet.palVisual.DefaultLayout.xml");
-				dockPanel1.LoadFromXml(manifestResourceStream, GetContentFromPersistString);
+				try
+				{
+					Assembly assembly = typeof(FormApp).Assembly;
+					Stream manifestResourceStream = assembly.GetManifestResourceStream("palDotNet.palVisual.DefaultLayout.xml");
+					if (manifestResourceStream != null)
+					{
+						dockPanel1.LoadFromXml(manifestResourceStream, GetContentFromPersistString);
+					}
+				}
+				catch
+				{
+				}
 			}
 			if (TheViewDocument.IsFloat)
 			{
-				throw new NotImplementedException();
+				TheViewDocument.IsFloat = false;
 			}
 			Size size = new Size(StartupXRes - TheViewDocument.Size.Width, StartupYRes - TheViewDocument.Size.Height);
 			base.Size = new Size(base.Width + size.Width, base.Height + size.Height);
 		}
 		WidgetMgr.Instance.SendMsg(WidgetBase.CoreMessages.eLoadLayout);
 		TheViewDocument.Focus();
-		LoadLayoutCalled = true;
 	}
 
 	private void Update(object sender, EventArgs e)
@@ -614,10 +629,6 @@ public class FormApp : FormAppBase
 		}
 		Settings.Loaded = true;
 		DefaultLayout();
-		if (!LoadLayoutCalled)
-		{
-			LoadLayout();
-		}
 		LastLocation = base.Location;
 		try
 		{
@@ -628,6 +639,10 @@ public class FormApp : FormAppBase
 		}
 		catch
 		{
+		}
+		if (!LoadLayoutCalled)
+		{
+			LoadLayout();
 		}
 		TheViewDocument.Render.Focus();
 		Interlocked.Add(ref FormAppBase.Initialized, 1);
