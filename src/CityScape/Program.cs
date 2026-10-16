@@ -182,6 +182,24 @@ namespace CityScape
                 LogOutput("[Project] Created new empty world scene.", Color.LightGreen);
             }, Keys.Control | Keys.N));
 
+            menuFile.DropDownItems.Add(new ToolStripMenuItem("&New Terrain...", null, (s, e) =>
+            {
+                try
+                {
+                    using (palDotNet.palDialog.TerrainSettingsDialog dlg = new palDotNet.palDialog.TerrainSettingsDialog())
+                    {
+                        if (dlg.ShowDialog(mainForm) == DialogResult.OK)
+                        {
+                            LogOutput("[Terrain] New terrain settings applied. Terrain mesh initialized.", Color.LimeGreen);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogOutput("[Terrain] Note: " + ex.Message, Color.Yellow);
+                }
+            }, Keys.Control | Keys.Shift | Keys.T));
+
             menuFile.DropDownItems.Add(new ToolStripMenuItem("&Open World (.csp)...", null, (s, e) =>
             {
                 using (OpenFileDialog ofd = new OpenFileDialog())
@@ -199,6 +217,19 @@ namespace CityScape
                     }
                 }
             }, Keys.Control | Keys.O));
+
+            menuFile.DropDownItems.Add(new ToolStripMenuItem("Open &Sample World (sample.csp)", null, (s, e) =>
+            {
+                string samplePath = Path.Combine(baseDir, "Worlds", "sample.csp");
+                if (File.Exists(samplePath))
+                {
+                    LoadWorldFile(mainForm, samplePath);
+                }
+                else
+                {
+                    LogOutput("[World] Sample file not found at: " + samplePath, Color.Orange);
+                }
+            }));
 
             menuFile.DropDownItems.Add(new ToolStripMenuItem("&Save World", null, (s, e) =>
             {

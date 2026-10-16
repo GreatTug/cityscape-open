@@ -37,9 +37,13 @@ public class DocumentRenderView : DocumentView
 		}
 	}
 
+	public static readonly Guid DefaultRenderGuid = new Guid("9aac009e-f759-44c1-a6b1-8637a180760d");
+
 	[Browsable(false)]
 	[ReadOnly(true)]
-	public override Guid Guid => (ControlRender?.RenderWindow != null) ? ControlRender.RenderWindow.Guid : Guid.Empty;
+	public override Guid Guid => (ControlRender?.RenderWindow != null && ControlRender.RenderWindow.Guid != Guid.Empty)
+		? ControlRender.RenderWindow.Guid
+		: DefaultRenderGuid;
 
 	public DocumentRenderView()
 	{
@@ -61,15 +65,47 @@ public class DocumentRenderView : DocumentView
 
 	public static void Register(DockPanel dockPanel)
 	{
-		WidgetBase.EventCreate += delegate(object s, EventArgs e)
+		WidgetMgr.Instance.RenderWindowDelegate = delegate(bool adding, string title, uint id)
 		{
-			if (s is RenderWindow renderWindow)
+			if (adding)
 			{
-				if (renderWindow.IsMainRenderWindow)
+				RenderWindow renderWindow = WidgetMgr.Instance.GetWidgetById(id) as RenderWindow;
+				if (renderWindow == null)
+				{
+					foreach (WidgetBase wb in WidgetMgr.Instance.AllWidgets)
+					{
+						if (wb is RenderWindow rw)
+						{
+							renderWindow = rw;
+							break;
+						}
+					}
+				}
+				if (renderWindow != null && TheMainViewDocument != null)
 				{
 					TheMainViewDocument.ControlRender.RenderWindow = renderWindow;
 					TheMainViewDocument.ControlRender.SendResize();
 					TheMainViewDocument.Init(null, renderWindow, TheMainViewDocument);
+					if (!string.IsNullOrEmpty(title))
+					{
+						TheMainViewDocument.TabText = title;
+					}
+				}
+			}
+		};
+
+		WidgetBase.EventCreate += delegate(object s, EventArgs e)
+		{
+			if (s is RenderWindow renderWindow)
+			{
+				if (renderWindow.IsMainRenderWindow || TheMainViewDocument?.ControlRender?.RenderWindow == null)
+				{
+					if (TheMainViewDocument != null)
+					{
+						TheMainViewDocument.ControlRender.RenderWindow = renderWindow;
+						TheMainViewDocument.ControlRender.SendResize();
+						TheMainViewDocument.Init(null, renderWindow, TheMainViewDocument);
+					}
 				}
 				else
 				{

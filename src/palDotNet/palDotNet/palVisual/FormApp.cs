@@ -367,6 +367,10 @@ public class FormApp : FormAppBase
 			Size size = new Size(StartupXRes - TheViewDocument.Size.Width, StartupYRes - TheViewDocument.Size.Height);
 			base.Size = new Size(base.Width + size.Width, base.Height + size.Height);
 		}
+		if (TheViewDocument != null && (TheViewDocument.DockPanel == null || !dockPanel1.Contents.Contains(TheViewDocument)))
+		{
+			TheViewDocument.Show(dockPanel1, DockState.Document);
+		}
 		WidgetMgr.Instance.SendMsg(WidgetBase.CoreMessages.eLoadLayout);
 		TheViewDocument.Focus();
 	}
@@ -507,7 +511,7 @@ public class FormApp : FormAppBase
 						{
 							return TheToolOutput;
 						}
-						if (guid == TheViewDocument.Guid)
+						if (guid == TheViewDocument.Guid || guid == DocumentRenderView.DefaultRenderGuid)
 						{
 							return TheViewDocument;
 						}

@@ -218,6 +218,8 @@ public abstract class WidgetBase : ISupportsMenus
 		return (int)RemoteId;
 	}
 
+	public uint Id => RemoteId;
+
 	public WidgetBase(uint newId)
 	{
 		RemoteId = newId;

@@ -671,6 +671,18 @@ public class WidgetMgr
 		}
 	}
 
+	public IEnumerable<WidgetBase> AllWidgets => LocalToRemote.Keys;
+
+	public WidgetBase GetWidgetById(uint id)
+	{
+		foreach (WidgetBase w in LocalToRemote.Keys)
+		{
+			if (w.Id == id)
+				return w;
+		}
+		return null;
+	}
+
 	public WidgetBase MapRemoteToLocal(RemotePtr remotePtr)
 	{
 		RemoteToLocal.TryGetValue(remotePtr, out var value);
