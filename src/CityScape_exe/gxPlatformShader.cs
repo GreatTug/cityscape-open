@@ -26,7 +26,7 @@ internal struct gxPlatformShader
 	public struct ShaderHandle
 	{
 		[CLSCompliant(false)]
-		[NativeCppClass]
+		
 		[DebugInfoInPDB]
 		[MiscellaneousBits(64)]
 		public enum EnumShaderType

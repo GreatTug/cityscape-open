@@ -6,55 +6,55 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003AAnchor_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003AAnchor_003E
 {
 }
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003ACircleAnchor_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003ACircleAnchor_003E
 {
 }
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 [NativeCppClass]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003AProp_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003AProp_003E
 {
 }
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003AFileGxProp_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003AFileGxProp_003E
 {
 }
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 [NativeCppClass]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003APointAnchor_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003APointAnchor_003E
 {
 }
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003APolygonAnchor_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003APolygonAnchor_003E
 {
 }
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003ARangeAnchor_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003ARangeAnchor_003E
 {
 }
 [StructLayout(LayoutKind.Sequential, Size = 4)]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct arTypeVisitor_003CtrLegacyProp_003A_003ASimpleGxAnchor_003E
+internal struct arTypeVisitor_003CtrLegacyProp_003A_003ASimpleGxAnchor_003E
 {
 }

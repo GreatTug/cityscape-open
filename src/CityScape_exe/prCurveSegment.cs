@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 internal struct prCurveSegment
 {
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]

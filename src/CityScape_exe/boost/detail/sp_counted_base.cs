@@ -8,6 +8,6 @@ namespace boost.detail;
 [DebugInfoInPDB]
 [NativeCppClass]
 [MiscellaneousBits(64)]
-internal static struct sp_counted_base
+internal struct sp_counted_base
 {
 }

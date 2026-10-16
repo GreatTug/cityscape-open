@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [NativeCppClass]
 [MiscellaneousBits(64)]
-internal static struct arPropertyGroup
+internal struct arPropertyGroup
 {
 }

@@ -7,11 +7,11 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct muSharedMessage
+internal struct muSharedMessage
 {
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumMessageTypes
 	{

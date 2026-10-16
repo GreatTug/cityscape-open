@@ -7,10 +7,10 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
-internal static struct edEditorComponent
+internal struct edEditorComponent
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumComponentLevel

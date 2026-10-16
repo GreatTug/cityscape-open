@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct edLodInfo
 {
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	public enum EnumOverheadResolution

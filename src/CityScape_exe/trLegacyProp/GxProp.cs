@@ -8,6 +8,6 @@ namespace trLegacyProp;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct GxProp
+internal struct GxProp
 {
 }

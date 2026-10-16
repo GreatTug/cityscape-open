@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct prLineArc
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	public enum EnumArcDirection

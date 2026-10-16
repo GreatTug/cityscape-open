@@ -12,7 +12,6 @@ internal struct palWidget
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum EnumMsg
 	{
 
@@ -28,7 +27,7 @@ internal struct palWidget
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	public enum EnumEditingState
@@ -37,7 +36,7 @@ internal struct palWidget
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	public enum EnumFocus

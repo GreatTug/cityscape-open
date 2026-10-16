@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [NativeCppClass]
 internal struct ifResult
 {
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]

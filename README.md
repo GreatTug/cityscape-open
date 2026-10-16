@@ -14,7 +14,7 @@ Open-source reconstruction and preservation of **PixelActive CityScape 1.8** (Bu
 Bu depo, PixelActive / Autodesk tarafından 2010 yılında geliştirilen **CityScape 1.8** kentsel modelleme ve 3B şehir simülasyonu yazılımının tersine mühendislik ile açık kaynak hale getirilmiş, modernize edilmiş ve derlenebilir sürümünü içerir:
 - **REA (Reverse Engineer Anything)** ve **ILSpy** kullanılarak tüm .NET kütüphaneleri ve arayüz modülleri decompile edilip modernize edilmiştir.
 - Eski `.NET 2.0` bağımlılıkları güncel **.NET 4.8** hedefine yükseltilmiştir.
-- `palDotNet`, `edEditorDotNet`, `ktKitDotNet`, `gisImageryDotNet` ve `BugReporter` projelerinin tamamı **0 hata** ile derlenmektedir.
+- `CityScape` (uygulama başlatıcı), `palDotNet`, `edEditorDotNet`, `ktKitDotNet`, `gisImageryDotNet` ve `BugReporter` projelerinin tamamı **0 hata** ile derlenmekte ve `bin/Release/net48` dizinine tam bağımlılıklarıyla paketlenmektedir.
 - `.csp` (proje) ve `.cst` (arazi) ikili dosyalarını okuyabilen Python araçları eklenmiştir.
 
 ---
@@ -27,6 +27,7 @@ c:\cityscape-open
 ├── CityScape.slnx                # Modern Visual Studio / .NET 10 Solution
 ├── build.ps1 / build.bat         # Automated build scripts
 ├── src/
+│   ├── CityScape/                # Application Entry Point & Modern Launcher (.NET 4.8 x86)
 │   ├── palDotNet/                # PixelActive Core Library (Docking, Custom Property Grid, Math, GIS)
 │   ├── edEditorDotNet/           # CityScape Editor Suite (Roads, Buildings, Lots, Weather, Terrain)
 │   ├── ktKitDotNet/              # Architectural Kit & Template System
@@ -66,7 +67,7 @@ Or with Windows command prompt:
 build.bat
 ```
 
-All 5 core managed libraries will be compiled and outputs placed in `bin/Release/net48/`.
+All 6 assemblies (including `CityScape.exe` launcher) will be compiled and staged with all 3rd-party dependencies in `bin/Release/net48/`.
 
 ---
 

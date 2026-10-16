@@ -217,7 +217,7 @@ internal class edActivationHelpers
 				num++;
 			}
 			while (*ptr != 0);
-			global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_01LFCBOECM_0040_003F4_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY01_0024_0024CBD, _003F>(ref global::_003CModule_003E._003F_003F_C_0040_01LFCBOECM_0040_003F4_003F_0024AA_0040))));
+			global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_01LFCBOECM_0040_003F4_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_01LFCBOECM_0040_003F4_003F_0024AA_0040) + num));
 			try
 			{
 				global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002ESplit_003Cclass_0020arVector_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_002Cclass_0020arAllocator_003E_0020_003E(csVersion, &obj, &obj2, false);
@@ -875,7 +875,7 @@ internal class edActivationHelpers
 					num2++;
 				}
 				while (*ptr != 0);
-				global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040IJHAAJON_0040PixelActive_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num2) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0M_0040_0024_0024CBD, _003F>(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040IJHAAJON_0040PixelActive_003F_0024AA_0040))));
+				global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040IJHAAJON_0040PixelActive_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040IJHAAJON_0040PixelActive_003F_0024AA_0040) + num2));
 				try
 				{
 					global::_003CModule_003E.arPath_002ECombineNormalizePath(P_0, &obj, &obj2);
@@ -1013,7 +1013,7 @@ internal class edActivationHelpers
 					num2++;
 				}
 				while (*ptr != 0);
-				global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040GOGGKJBG_0040activation_003F4csk_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num2) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0P_0040_0024_0024CBD, _003F>(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040GOGGKJBG_0040activation_003F4csk_003F_0024AA_0040))));
+				global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040GOGGKJBG_0040activation_003F4csk_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040GOGGKJBG_0040activation_003F4csk_003F_0024AA_0040) + num2));
 				try
 				{
 					global::_003CModule_003E.arPath_002ECombineNormalizePath(P_0, &obj, &obj2);
@@ -1295,7 +1295,7 @@ internal class edActivationHelpers
 					num2++;
 				}
 				while (*ptr != 0);
-				global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040CEDANKPP_0040activation_003F4tsd_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num2) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0P_0040_0024_0024CBD, _003F>(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040CEDANKPP_0040activation_003F4tsd_003F_0024AA_0040))));
+				global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040CEDANKPP_0040activation_003F4tsd_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0P_0040CEDANKPP_0040activation_003F4tsd_003F_0024AA_0040) + num2));
 				try
 				{
 					global::_003CModule_003E.arPath_002ECombineNormalizePath(P_0, &obj, &obj2);

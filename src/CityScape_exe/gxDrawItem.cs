@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [MiscellaneousBits(65)]
 internal struct gxDrawItem
 {
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]

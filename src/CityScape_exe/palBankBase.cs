@@ -10,7 +10,6 @@ internal struct palBankBase
 {
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	internal enum EnumBankBaseMessages
 	{
 

@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-internal static struct arStaticInitListItem_003CarIoTypeRelationRegistrar_003CprLineArc_002CprCurve_003E_0020_003E
+internal struct arStaticInitListItem_003CarIoTypeRelationRegistrar_003CprLineArc_002CprCurve_003E_0020_003E
 {
 }

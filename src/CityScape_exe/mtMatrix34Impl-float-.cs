@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct mtMatrix34Impl_003Cfloat_003E
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	public enum EnumEulerOrder

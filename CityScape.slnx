@@ -1,12 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/BugReporter/BugReporter.csproj" />
-    <Project Path="src/edEditorDotNet/edEditorDotNet.csproj" />
-    <Project Path="src/gisImageryDotNet/gisImageryDotNet.csproj" />
-    <Project Path="src/ktKitDotNet/ktKitDotNet.csproj" />
+    <Project Path="src/CityScape/CityScape.csproj" />
     <Project Path="src/palDotNet/palDotNet.csproj" />
-  </Folder>
-  <Folder Name="/src/CityScape_exe/">
-    <Project Path="src/CityScape_exe/CityScape.csproj" />
+    <Project Path="src/edEditorDotNet/edEditorDotNet.csproj" />
+    <Project Path="src/ktKitDotNet/ktKitDotNet.csproj" />
+    <Project Path="src/gisImageryDotNet/gisImageryDotNet.csproj" />
+    <Project Path="src/BugReporter/BugReporter.csproj" />
   </Folder>
 </Solution>

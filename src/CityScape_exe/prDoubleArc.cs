@@ -10,7 +10,6 @@ internal struct prDoubleArc
 {
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	internal enum EnumArcLocation
 	{
 

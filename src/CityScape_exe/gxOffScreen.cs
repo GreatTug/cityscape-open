@@ -12,7 +12,6 @@ internal struct gxOffScreen
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	public enum EnumDepthBuffer
 	{
 

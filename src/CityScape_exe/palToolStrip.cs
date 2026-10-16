@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct palToolStrip
 {
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	public enum EnumPosition
@@ -20,7 +20,7 @@ internal struct palToolStrip
 
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumLayoutStyle
 	{

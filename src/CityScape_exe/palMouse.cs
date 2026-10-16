@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct palMouse
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	public enum EnumButtons

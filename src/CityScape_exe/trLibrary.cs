@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 internal struct trLibrary
 {
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]

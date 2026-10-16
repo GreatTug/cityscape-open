@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct gxShaderVariableData
 {
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	public enum EnumDataType
@@ -19,7 +19,7 @@ internal struct gxShaderVariableData
 	}
 
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumCommitType

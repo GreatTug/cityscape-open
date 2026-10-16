@@ -11,7 +11,7 @@ internal struct gxProjection
 {
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumShadowMapType
 	{

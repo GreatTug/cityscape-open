@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [NativeCppClass]
 [MiscellaneousBits(64)]
-internal static struct ifVisitor_003CtrPolygonHill_003E
+internal struct ifVisitor_003CtrPolygonHill_003E
 {
 }

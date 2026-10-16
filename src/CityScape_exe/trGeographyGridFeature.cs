@@ -12,7 +12,6 @@ internal struct trGeographyGridFeature
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum EnumGridModified
 	{
 

@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
 [NativeCppClass]
-internal static struct arTrackedEventInterface
+internal struct arTrackedEventInterface
 {
 }

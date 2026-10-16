@@ -72,7 +72,6 @@ internal struct arStringFormatter_003CarBasicString_003Cchar_002CarAllocator_003
 		[DebugInfoInPDB]
 		[MiscellaneousBits(64)]
 		[CLSCompliant(false)]
-		[NativeCppClass]
 		public enum EnumType
 		{
 

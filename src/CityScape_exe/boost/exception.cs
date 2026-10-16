@@ -8,6 +8,6 @@ namespace boost;
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct exception
+internal struct exception
 {
 }

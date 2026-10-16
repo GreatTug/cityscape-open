@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct gxShaderGroup
 {
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	public enum EnumPrimitiveType
@@ -19,7 +19,7 @@ internal struct gxShaderGroup
 	}
 
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumFlags

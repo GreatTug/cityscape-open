@@ -8,6 +8,6 @@ namespace boost.serialization;
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct extended_type_info
+internal struct extended_type_info
 {
 }

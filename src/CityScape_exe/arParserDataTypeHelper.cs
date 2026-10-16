@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 internal struct arParserDataTypeHelper
 {
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]

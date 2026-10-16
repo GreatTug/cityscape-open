@@ -8,6 +8,6 @@ namespace boost.serialization.void_cast_detail;
 [DebugInfoInPDB]
 [NativeCppClass]
 [MiscellaneousBits(64)]
-internal static struct void_caster
+internal struct void_caster
 {
 }

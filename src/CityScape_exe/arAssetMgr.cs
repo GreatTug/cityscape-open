@@ -12,7 +12,6 @@ internal struct arAssetMgr
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum EnumCompare
 	{
 

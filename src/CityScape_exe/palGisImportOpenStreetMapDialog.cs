@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct palGisImportOpenStreetMapDialog
+internal struct palGisImportOpenStreetMapDialog
 {
 }

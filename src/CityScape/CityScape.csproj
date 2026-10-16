@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>CityScape</AssemblyName>
+    <RootNamespace>CityScape</RootNamespace>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <PlatformTarget>x86</PlatformTarget>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\palDotNet\palDotNet.csproj" />
+    <ProjectReference Include="..\gisImageryDotNet\gisImageryDotNet.csproj" />
+    <ProjectReference Include="..\ktKitDotNet\ktKitDotNet.csproj" />
+    <ProjectReference Include="..\edEditorDotNet\edEditorDotNet.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\CityScape.exe.config" Link="CityScape.exe.config" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

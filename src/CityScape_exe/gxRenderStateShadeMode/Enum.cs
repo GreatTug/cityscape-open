@@ -5,7 +5,6 @@ namespace gxRenderStateShadeMode;
 
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
-[NativeCppClass]
 internal enum Enum
 {
 

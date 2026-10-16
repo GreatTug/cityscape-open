@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct arCallback3_003CprNetworkModifiable_0020_0026_002Cenum_0020prNetworkModifiable_003A_003AEnumModifyType_002Cunsigned_0020int_003E
+internal struct arCallback3_003CprNetworkModifiable_0020_0026_002Cenum_0020prNetworkModifiable_003A_003AEnumModifyType_002Cunsigned_0020int_003E
 {
 }

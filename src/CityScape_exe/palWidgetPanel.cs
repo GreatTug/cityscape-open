@@ -11,7 +11,7 @@ internal struct palWidgetPanel
 {
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumDockingType
 	{

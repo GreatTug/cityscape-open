@@ -11,7 +11,7 @@ internal struct palMessageBox
 {
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumResult
 	{
@@ -19,7 +19,7 @@ internal struct palMessageBox
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	public enum EnumButtons
@@ -29,7 +29,7 @@ internal struct palMessageBox
 
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumIcon
 	{

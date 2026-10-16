@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct arStaticInitListItem_003CarSingleton_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_003E_003A_003AInitializer_003E
+internal struct arStaticInitListItem_003CarSingleton_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_003E_003A_003AInitializer_003E
 {
 }

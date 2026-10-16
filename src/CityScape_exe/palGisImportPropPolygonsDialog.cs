@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
-internal static struct palGisImportPropPolygonsDialog
+internal struct palGisImportPropPolygonsDialog
 {
 }

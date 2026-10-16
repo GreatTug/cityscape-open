@@ -9,7 +9,7 @@ namespace trLegacyProp.Road;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct ICurveHelper
+internal struct ICurveHelper
 {
 	[StructLayout(LayoutKind.Sequential, Size = 72)]
 	[DebugInfoInPDB]

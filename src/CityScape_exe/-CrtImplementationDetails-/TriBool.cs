@@ -12,7 +12,7 @@ namespace _003CCrtImplementationDetails_003E;
 internal struct TriBool
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	public enum State

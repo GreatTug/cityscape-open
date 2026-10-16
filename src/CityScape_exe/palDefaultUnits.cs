@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct palDefaultUnits
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	public enum EnumScientificNot

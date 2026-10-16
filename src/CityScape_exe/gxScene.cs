@@ -20,14 +20,13 @@ internal struct gxScene
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	public enum EnumDrawFlag
 	{
 
 	}
 
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumQueueType

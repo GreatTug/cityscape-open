@@ -3,7 +3,6 @@ using Microsoft.VisualC;
 
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-[NativeCppClass]
 internal enum _MEMORY_RESOURCE_NOTIFICATION_TYPE
 {
 

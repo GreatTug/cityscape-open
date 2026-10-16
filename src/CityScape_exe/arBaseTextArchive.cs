@@ -18,7 +18,7 @@ internal struct arBaseTextArchive
 	{
 	}
 
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	internal enum EnumHeaderState

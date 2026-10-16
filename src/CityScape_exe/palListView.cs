@@ -11,7 +11,7 @@ internal struct palListView
 {
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumViewMode
 	{

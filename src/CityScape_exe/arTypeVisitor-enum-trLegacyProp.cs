@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [NativeCppClass]
 [MiscellaneousBits(64)]
-internal static struct arTypeVisitor_003Cenum_0020trLegacyProp_003A_003AProp_003A_003AEnumLodMode_003E
+internal struct arTypeVisitor_003Cenum_0020trLegacyProp_003A_003AProp_003A_003AEnumLodMode_003E
 {
 }

@@ -7,7 +7,7 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct trTerrainExporter
+internal struct trTerrainExporter
 {
 	[StructLayout(LayoutKind.Sequential, Size = 104)]
 	[MiscellaneousBits(65)]
@@ -17,7 +17,7 @@ internal static struct trTerrainExporter
 	public struct ExportOptions
 	{
 		[CLSCompliant(false)]
-		[NativeCppClass]
+		
 		[DebugInfoInPDB]
 		[MiscellaneousBits(64)]
 		public enum EnumLodExport
@@ -25,7 +25,7 @@ internal static struct trTerrainExporter
 
 		}
 
-		[NativeCppClass]
+		
 		[MiscellaneousBits(64)]
 		[DebugInfoInPDB]
 		[CLSCompliant(false)]
@@ -37,7 +37,6 @@ internal static struct trTerrainExporter
 		[DebugInfoInPDB]
 		[CLSCompliant(false)]
 		[MiscellaneousBits(64)]
-		[NativeCppClass]
 		public enum EnumPropExport
 		{
 
@@ -56,7 +55,6 @@ internal static struct trTerrainExporter
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	public enum EnumExporterAttributes
 	{
 
@@ -64,7 +62,7 @@ internal static struct trTerrainExporter
 
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumSupportedOptions
 	{

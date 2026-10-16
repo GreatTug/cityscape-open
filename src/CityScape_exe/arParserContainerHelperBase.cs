@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct arParserContainerHelperBase
+internal struct arParserContainerHelperBase
 {
 }

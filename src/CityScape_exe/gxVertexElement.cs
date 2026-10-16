@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 internal struct gxVertexElement
 {
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
@@ -19,7 +19,7 @@ internal struct gxVertexElement
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	public enum EnumType

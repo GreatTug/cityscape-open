@@ -13,7 +13,7 @@ internal struct gxPostProcessElement
 	[MiscellaneousBits(64)]
 	[NativeCppClass]
 	[DebugInfoInPDB]
-	internal static struct ElementInput
+	internal struct ElementInput
 	{
 		[StructLayout(LayoutKind.Explicit, Size = 4)]
 		[MiscellaneousBits(66)]

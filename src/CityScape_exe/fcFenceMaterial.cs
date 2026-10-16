@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [NativeCppClass]
 internal struct fcFenceMaterial
 {
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
@@ -18,7 +18,7 @@ internal struct fcFenceMaterial
 
 	}
 
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]

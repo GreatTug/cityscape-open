@@ -20,7 +20,7 @@ internal struct arOutput
 
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumPrintMode
 	{

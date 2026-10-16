@@ -22017,7 +22017,7 @@ internal class _003CModule_003E
 
 	public static arCmdLineArg_003Cbool_003E ARG_RefRast/*Field data (rva=0x2d12068) could not be found in any section!*/;
 
-	public unsafe static delegate* unmanaged[Cdecl, Cdecl]<sbyte*, void> _003FExceptionHandler_0040arDebug_0040_00402P6AXPBD_0040ZA/*Field data (rva=0x2d16fe0) could not be found in any section!*/;
+	public unsafe static delegate*<sbyte*, void> _003FExceptionHandler_0040arDebug_0040_00402P6AXPBD_0040ZA/*Field data (rva=0x2d16fe0) could not be found in any section!*/;
 
 	public static arCmdLineArg_003Cbool_003E ARG_AlphaSort/*Field data (rva=0x2d07ce0) could not be found in any section!*/;
 
@@ -22347,10 +22347,7 @@ internal class _003CModule_003E
 		((int*)P_0)[1] = (int)str;
 	}
 
-	internal unsafe static void arSerializeTextWriter_002ESerialize(arSerializeTextWriter* P_0, arBasicString_003Cchar_002CarAllocator_003E* @string)
-	{
-		global::_003CModule_003E.arSerializeTextWriter_002ESerialize(P_0, @string);
-	}
+// removed self-calling duplicate arSerializeTextWriter_002ESerialize
 
 	internal unsafe static void arSerializeTextWriter_002ESerialize(arSerializeTextWriter* P_0, arBasicString_003Cchar_002CarAllocator_003E* @string)
 	{
@@ -22473,7 +22470,7 @@ internal class _003CModule_003E
 	internal unsafe static void arSerializeBinaryReader_002ESerialize(arSerializeBinaryReader* P_0, uint* inst)
 	{
 		int num = ((int*)P_0)[1];
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)num + 44)))((IntPtr)num, inst, 4u);
+		((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)num + 44)))((IntPtr)num, inst, 4u);
 	}
 
 	[return: MarshalAs(UnmanagedType.U1)]
@@ -22532,7 +22529,7 @@ internal class _003CModule_003E
 	internal unsafe static void arSerializeBinaryWriter_002ESerialize(arSerializeBinaryWriter* P_0, uint inst)
 	{
 		int num = ((int*)P_0)[1];
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)num + 40)))((IntPtr)num, &inst, 4u);
+		((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)num + 40)))((IntPtr)num, &inst, 4u);
 	}
 
 	[return: MarshalAs(UnmanagedType.U1)]
@@ -22991,7 +22988,7 @@ internal class _003CModule_003E
 			num++;
 		}
 		while (*ptr != 0);
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0CD_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040) + num));
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arBasicString_003Cchar_002CarAllocator_003E obj2);
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out palActivationFormDialog palActivationFormDialog2);
 		try
@@ -23005,7 +23002,7 @@ internal class _003CModule_003E
 				num2++;
 			}
 			while (*ptr2 != 0);
-			arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CF_0040LFFEICEC_004093851EF8_003F904F3_003F94e2f_003F9AD1F_003F95118B88B_0040), (sbyte*)((ref *(_003F*)num2) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0CF_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0CF_0040LFFEICEC_004093851EF8_003F904F3_003F94e2f_003F9AD1F_003F95118B88B_0040))));
+			arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CF_0040LFFEICEC_004093851EF8_003F904F3_003F94e2f_003F9AD1F_003F95118B88B_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CF_0040LFFEICEC_004093851EF8_003F904F3_003F94e2f_003F9AD1F_003F95118B88B_0040) + num2));
 			try
 			{
 				sbyte* ptr3 = ((*(int*)(&obj2) == 0) ? ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003FEmptyString_0040_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_00400PADA)) : ((sbyte*)(int)(*(uint*)(int)(*(uint*)(&obj2)))));
@@ -23037,7 +23034,7 @@ internal class _003CModule_003E
 								num4++;
 							}
 							while (*ptr6 != 0);
-							arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(&obj3, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0JM_0040EOBHCGOH_0040You_003F5are_003F5using_003F5an_003F5unregistered_003F5ve_0040), (sbyte*)((ref *(_003F*)num4) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0JM_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0JM_0040EOBHCGOH_0040You_003F5are_003F5using_003F5an_003F5unregistered_003F5ve_0040))));
+							arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(&obj3, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0JM_0040EOBHCGOH_0040You_003F5are_003F5using_003F5an_003F5unregistered_003F5ve_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0JM_0040EOBHCGOH_0040You_003F5are_003F5using_003F5an_003F5unregistered_003F5ve_0040) + num4));
 						}
 						else
 						{
@@ -23049,7 +23046,7 @@ internal class _003CModule_003E
 								num5++;
 							}
 							while (*ptr7 != 0);
-							arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(&obj3, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0HI_0040KECOCMPF_0040Register_003F5your_003F5copy_003F5of_003F5CityScape_003F5_0040), (sbyte*)((ref *(_003F*)num5) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0HI_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0HI_0040KECOCMPF_0040Register_003F5your_003F5copy_003F5of_003F5CityScape_003F5_0040))));
+							arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(&obj3, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0HI_0040KECOCMPF_0040Register_003F5your_003F5copy_003F5of_003F5CityScape_003F5_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0HI_0040KECOCMPF_0040Register_003F5your_003F5copy_003F5of_003F5CityScape_003F5_0040) + num5));
 						}
 						sbyte* ptr8 = ((*(int*)(&obj3) == 0) ? ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003FEmptyString_0040_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_00400PADA)) : ((sbyte*)(int)(*(uint*)(int)(*(uint*)(&obj3)))));
 						palActivationFormDialog_002ESetInfoLabel(&palActivationFormDialog2, ptr8, false);
@@ -23300,7 +23297,7 @@ internal class _003CModule_003E
 			num++;
 		}
 		while (*ptr != 0);
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0CD_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CD_0040KPLOMLDO_0040PixelActive_003F5CityScape_003F5Registrati_0040) + num));
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arBasicString_003Cchar_002CarAllocator_003E obj2);
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out edActivationKeyDialogManaged edActivationKeyDialogManaged2);
 		try
@@ -23314,7 +23311,7 @@ internal class _003CModule_003E
 				num2++;
 			}
 			while (*ptr2 != 0);
-			arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CF_0040FELNPFKH_004020538040_003F9608F_003F948b5_003F995C3_003F9A44CFAC4_0040), (sbyte*)((ref *(_003F*)num2) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0CF_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0CF_0040FELNPFKH_004020538040_003F9608F_003F948b5_003F995C3_003F9A44CFAC4_0040))));
+			arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj2, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CF_0040FELNPFKH_004020538040_003F9608F_003F948b5_003F995C3_003F9A44CFAC4_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0CF_0040FELNPFKH_004020538040_003F9608F_003F948b5_003F995C3_003F9A44CFAC4_0040) + num2));
 			try
 			{
 				sbyte* ptr3 = ((*(int*)(&obj2) == 0) ? ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003FEmptyString_0040_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_00400PADA)) : ((sbyte*)(int)(*(uint*)(int)(*(uint*)(&obj2)))));
@@ -23570,10 +23567,8 @@ internal class _003CModule_003E
 		return (arCallback**)(int)(n * 4 + (uint)(*(int*)P_0));
 	}
 
-	internal unsafe static arCallback** arVector_003CarCallback_0020_002A_002CarAllocator_003E_002E_005B_005D(arVector_003CarCallback_0020_002A_002CarAllocator_003E* P_0, uint n)
-	{
-		return (arCallback**)(int)(n * 4 + (uint)(*(int*)P_0));
-	}
+	// Removed duplicate arVector_003CarCallback_0020_002A_002CarAllocator_003E_002E_005B_005D
+
 
 	[DebuggerStepThrough]
 	internal unsafe static void gcroot_003CpalDotNet_003A_003ApalDialog_003A_003ADialogBoxBase_0020_005E_003E_002E_007Bdtor_007D(gcroot_003CpalDotNet_003A_003ApalDialog_003A_003ADialogBoxBase_0020_005E_003E* P_0)
@@ -23873,7 +23868,7 @@ internal class _003CModule_003E
 		do
 		{
 			num = *(uint*)source;
-			if (num == 0 || ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, &b, 1u) != 1)
+			if (num == 0 || ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, &b, 1u) != 1)
 			{
 				return false;
 			}
@@ -23892,7 +23887,7 @@ internal class _003CModule_003E
 			arVector_003Cchar_002CarAllocator_003E_002EPushBack((arVector_003Cchar_002CarAllocator_003E*)(int)(*(uint*)sink), 0);
 			num = *(uint*)source;
 		}
-		while (num != 0 && ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, &b, 1u) == 1 && isspace(b) == 0);
+		while (num != 0 && ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, &b, 1u) == 1 && isspace(b) == 0);
 		return true;
 	}
 
@@ -23901,7 +23896,7 @@ internal class _003CModule_003E
 	{
 		sbyte b = 34;
 		uint num = *(uint*)sink;
-		if (num == 0 || ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 40)))((IntPtr)(int)num, &b, 1u) != 1)
+		if (num == 0 || ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 40)))((IntPtr)(int)num, &b, 1u) != 1)
 		{
 			return false;
 		}
@@ -23911,7 +23906,7 @@ internal class _003CModule_003E
 		}
 		sbyte b2 = 34;
 		num = *(uint*)sink;
-		if (num == 0 || ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 40)))((IntPtr)(int)num, &b2, 1u) != 1)
+		if (num == 0 || ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 40)))((IntPtr)(int)num, &b2, 1u) != 1)
 		{
 			return false;
 		}
@@ -24306,7 +24301,7 @@ internal class _003CModule_003E
 		{
 			return false;
 		}
-		return ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, outChar, 1u) == 1;
+		return ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, outChar, 1u) == 1;
 	}
 
 	[return: MarshalAs(UnmanagedType.U1)]
@@ -24327,7 +24322,7 @@ internal class _003CModule_003E
 		{
 			return false;
 		}
-		return ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 40)))((IntPtr)(int)num, &inChar, 1u) == 1;
+		return ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 40)))((IntPtr)(int)num, &inChar, 1u) == 1;
 	}
 
 	internal unsafe static arBasicString_003Cchar_002CarAllocator_003E.StringData* arBasicString_003Cchar_002CarAllocator_003E_002EStringData_002E_007Bctor_007D(arBasicString_003Cchar_002CarAllocator_003E.StringData* P_0, arAllocator* allocator)
@@ -25126,7 +25121,7 @@ internal class _003CModule_003E
 			try
 			{
 				uint num = *(uint*)source;
-				if (num == 0 || ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, &b, 1u) != 1)
+				if (num == 0 || ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num + 44)))((IntPtr)(int)num, &b, 1u) != 1)
 				{
 					break;
 				}
@@ -25426,7 +25421,7 @@ internal class _003CModule_003E
 							{
 								sbyte b2 = *(sbyte*)(int)(*(uint*)(&obj2));
 								uint num2 = *(uint*)sink;
-								if (num2 == 0 || ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num2 + 40)))((IntPtr)(int)num2, &b2, 1u) != 1)
+								if (num2 == 0 || ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num2 + 40)))((IntPtr)(int)num2, &b2, 1u) != 1)
 								{
 									break;
 								}
@@ -25462,7 +25457,7 @@ internal class _003CModule_003E
 							}
 							sbyte b3 = b;
 							uint num4 = *(uint*)sink;
-							if (num4 == 0 || ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num4 + 40)))((IntPtr)(int)num4, &b3, 1u) != 1)
+							if (num4 == 0 || ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num4 + 40)))((IntPtr)(int)num4, &b3, 1u) != 1)
 							{
 								goto IL_032e;
 							}
@@ -25508,7 +25503,7 @@ internal class _003CModule_003E
 						{
 							sbyte b4 = *(sbyte*)(int)(*(uint*)(&obj3));
 							uint num5 = *(uint*)sink;
-							if (num5 == 0 || ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num5 + 40)))((IntPtr)(int)num5, &b4, 1u) != 1)
+							if (num5 == 0 || ((delegate*<IntPtr, void*, uint, int>)(int)(*(uint*)(*(int*)(int)num5 + 40)))((IntPtr)(int)num5, &b4, 1u) != 1)
 							{
 								break;
 							}
@@ -25894,27 +25889,11 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static sbyte* arBasicString_003Cchar_002CarAllocator_003E_002EBegin(arBasicString_003Cchar_002CarAllocator_003E* P_0)
-	{
-		uint num = *(uint*)P_0;
-		return (sbyte*)(int)((num != 0) ? (*(uint*)(int)num) : 0u);
-	}
+	// Removed duplicate arBasicString_003Cchar_002CarAllocator_003E_002EBegin
 
-	internal unsafe static sbyte* arBasicString_003Cchar_002CarAllocator_003E_002EEnd(arBasicString_003Cchar_002CarAllocator_003E* P_0)
-	{
-		uint num = *(uint*)P_0;
-		int num2;
-		if (num != 0)
-		{
-			arVector_003Cchar_002CarAllocator_003E* ptr = (arVector_003Cchar_002CarAllocator_003E*)(int)num;
-			num2 = *(int*)ptr + ((int*)ptr)[1] - 1;
-		}
-		else
-		{
-			num2 = 0;
-		}
-		return (sbyte*)num2;
-	}
+
+	// Removed duplicate arBasicString_003Cchar_002CarAllocator_003E_002EEnd
+
 
 	internal unsafe static arBasicString_003Cchar_002CarAllocator_003E.StringData* arBasicString_003Cchar_002CarAllocator_003E_002ECreateCopyForEditSafe(arBasicString_003Cchar_002CarAllocator_003E* P_0, uint numWillInsert)
 	{
@@ -27599,7 +27578,7 @@ internal class _003CModule_003E
 			}
 			while (*ptr != 0);
 		}
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), (sbyte*)((ref *(_003F*)num2) + (ref *(_003F*)(&obj))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), ((sbyte*)(&obj) + num2));
 		try
 		{
 			num = 1u;
@@ -27637,7 +27616,7 @@ internal class _003CModule_003E
 			}
 			while (*ptr != 0);
 		}
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), (sbyte*)((ref *(_003F*)num2) + (ref *(_003F*)(&obj))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), ((sbyte*)(&obj) + num2));
 		try
 		{
 			num = 1u;
@@ -27713,7 +27692,7 @@ internal class _003CModule_003E
 			}
 			while (*ptr != 0);
 		}
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), (sbyte*)((ref *(_003F*)num2) + (ref *(_003F*)(&obj))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), ((sbyte*)(&obj) + num2));
 		try
 		{
 			num = 1u;
@@ -27748,7 +27727,7 @@ internal class _003CModule_003E
 			}
 			while (*ptr != 0);
 		}
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), (sbyte*)((ref *(_003F*)num2) + (ref *(_003F*)(&obj))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), ((sbyte*)(&obj) + num2));
 		try
 		{
 			num = 1u;
@@ -27783,7 +27762,7 @@ internal class _003CModule_003E
 			}
 			while (*ptr != 0);
 		}
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), (sbyte*)((ref *(_003F*)num2) + (ref *(_003F*)(&obj))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), ((sbyte*)(&obj) + num2));
 		try
 		{
 			num = 1u;
@@ -27818,7 +27797,7 @@ internal class _003CModule_003E
 			}
 			while (*ptr != 0);
 		}
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), (sbyte*)((ref *(_003F*)num2) + (ref *(_003F*)(&obj))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), ((sbyte*)(&obj) + num2));
 		try
 		{
 			num = 1u;
@@ -27853,7 +27832,7 @@ internal class _003CModule_003E
 			}
 			while (*ptr != 0);
 		}
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), (sbyte*)((ref *(_003F*)num2) + (ref *(_003F*)(&obj))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(P_0, null, (sbyte*)(&obj), ((sbyte*)(&obj) + num2));
 		try
 		{
 			num = 1u;
@@ -28074,7 +28053,7 @@ internal class _003CModule_003E
 		uint num = ((uint*)P_0)[1];
 		if (num != 0)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
+			((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
 		}
 	}
 
@@ -28538,7 +28517,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)x;
 		if (num != 0)
 		{
-			*(int*)P_0 = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
+			*(int*)P_0 = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
 		}
 		return P_0;
 	}
@@ -29112,7 +29091,7 @@ internal class _003CModule_003E
 							num7++;
 						}
 						while (*ptr4 != 0);
-						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num7) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY09_0024_0024CBD, _003F>(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040))));
+						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040) + num7));
 						bool flag;
 						try
 						{
@@ -29430,7 +29409,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cvoid_003E* ptr = (arTypeVisitor_003Cvoid_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040X_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cvoid_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cvoid_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -29439,7 +29418,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)P_0;
 		if (num != 0)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
+			((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
 		}
 	}
 
@@ -29466,7 +29445,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cint_003E* ptr = (arTypeVisitor_003Cint_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040H_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cint_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cint_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -30730,14 +30709,14 @@ internal class _003CModule_003E
 			return;
 		}
 		int num = ((int*)P_0)[1];
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
 		int num2 = ((int*)P_0)[1];
-		if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
+		if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
 		{
 			arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 			if (ptr != null)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+				((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 			}
 		}
 	}
@@ -30749,14 +30728,14 @@ internal class _003CModule_003E
 			return;
 		}
 		int num = ((int*)P_0)[1];
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
 		int num2 = ((int*)P_0)[1];
-		if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
+		if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
 		{
 			arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 			if (ptr != null)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+				((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 			}
 		}
 	}
@@ -30777,14 +30756,14 @@ internal class _003CModule_003E
 			return;
 		}
 		int num = ((int*)P_0)[1];
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
 		int num2 = ((int*)P_0)[1];
-		if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
+		if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
 		{
 			arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 			if (ptr != null)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+				((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 			}
 		}
 	}
@@ -30805,14 +30784,14 @@ internal class _003CModule_003E
 			return;
 		}
 		int num = ((int*)P_0)[1];
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)num + 4)))((IntPtr)num);
 		int num2 = ((int*)P_0)[1];
-		if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
+		if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)num2 + 12)))((IntPtr)num2) == 0)
 		{
 			arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 			if (ptr != null)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+				((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 			}
 		}
 	}
@@ -31652,7 +31631,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)P_0;
 		if (num != 0)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
+			((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
 		}
 	}
 
@@ -31754,22 +31733,22 @@ internal class _003CModule_003E
 			if (num != 0)
 			{
 				uint num2 = num;
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
 				num = ((uint*)P_0)[1];
 				uint num3 = num;
-				if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
+				if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
 				{
 					arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 					if (ptr != null)
 					{
-						((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+						((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 					}
 				}
 			}
 			uint num4 = (uint)(((int*)P_0)[1] = ((int*)r)[1]);
 			if (num4 != 0)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
 			}
 		}
 		return P_0;
@@ -31784,22 +31763,22 @@ internal class _003CModule_003E
 			if (num != 0)
 			{
 				uint num2 = num;
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
 				num = ((uint*)P_0)[1];
 				uint num3 = num;
-				if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
+				if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
 				{
 					arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 					if (ptr != null)
 					{
-						((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+						((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 					}
 				}
 			}
 			uint num4 = (uint)(((int*)P_0)[1] = ((int*)r)[1]);
 			if (num4 != 0)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
 			}
 		}
 		return P_0;
@@ -32008,7 +31987,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E* ptr = (arTypeVisitor_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040V_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32077,7 +32056,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cunsigned_0020int_003E* ptr = (arTypeVisitor_003Cunsigned_0020int_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040I_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cunsigned_0020int_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cunsigned_0020int_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32125,7 +32104,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cbool_003E* ptr = (arTypeVisitor_003Cbool_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040_N_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cbool_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cbool_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32173,7 +32152,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cchar_003E* ptr = (arTypeVisitor_003Cchar_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040D_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cchar_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cchar_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32221,7 +32200,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cunsigned_0020char_003E* ptr = (arTypeVisitor_003Cunsigned_0020char_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040E_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cunsigned_0020char_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cunsigned_0020char_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32269,7 +32248,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cshort_003E* ptr = (arTypeVisitor_003Cshort_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040F_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cshort_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cshort_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32317,7 +32296,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cunsigned_0020short_003E* ptr = (arTypeVisitor_003Cunsigned_0020short_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040G_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cunsigned_0020short_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cunsigned_0020short_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32365,7 +32344,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cfloat_003E* ptr = (arTypeVisitor_003Cfloat_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040M_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cfloat_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cfloat_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32413,7 +32392,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003Cdouble_003E* ptr = (arTypeVisitor_003Cdouble_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040N_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003Cdouble_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003Cdouble_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32461,7 +32440,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CarGuid_003E* ptr = (arTypeVisitor_003CarGuid_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040VarGuid_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CarGuid_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CarGuid_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32509,7 +32488,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CarVector4Impl_003Cfloat_003E_0020_003E* ptr = (arTypeVisitor_003CarVector4Impl_003Cfloat_003E_0020_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040V_003F_0024arVector4Impl_0040M_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CarVector4Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CarVector4Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32557,7 +32536,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CarVector3Impl_003Cfloat_003E_0020_003E* ptr = (arTypeVisitor_003CarVector3Impl_003Cfloat_003E_0020_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040V_003F_0024arVector3Impl_0040M_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CarVector3Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CarVector3Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32605,7 +32584,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CarVector2Impl_003Cfloat_003E_0020_003E* ptr = (arTypeVisitor_003CarVector2Impl_003Cfloat_003E_0020_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040V_003F_0024arVector2Impl_0040M_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CarVector2Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CarVector2Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32653,7 +32632,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CarColor32Template_003CarColor32Base_003E_0020_003E* ptr = (arTypeVisitor_003CarColor32Template_003CarColor32Base_003E_0020_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040V_003F_0024arColor32Template_0040VarColor32Base_0040_0040_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CarColor32Template_003CarColor32Base_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CarColor32Template_003CarColor32Base_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -32744,7 +32723,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)P_0;
 		if (num != 0)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 	}
 
@@ -32805,7 +32784,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -35714,7 +35693,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -35768,7 +35747,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -35822,7 +35801,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -35876,7 +35855,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -35930,7 +35909,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -35984,7 +35963,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36038,7 +36017,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36092,7 +36071,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36146,7 +36125,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36200,7 +36179,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36254,7 +36233,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36307,7 +36286,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36360,7 +36339,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36413,7 +36392,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -36471,7 +36450,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -40488,7 +40467,7 @@ internal class _003CModule_003E
 		int num = (((int*)P_0)[1] = ((int*)P_1)[1]);
 		if (num != 0)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)num + 12)))((IntPtr)num);
+			((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)num + 12)))((IntPtr)num);
 		}
 		try
 		{
@@ -41217,7 +41196,7 @@ internal class _003CModule_003E
 		int num = (*(int*)P_0 = *(int*)x);
 		if (num != 0)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)num + 12)))((IntPtr)num);
+			((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)num + 12)))((IntPtr)num);
 		}
 		return P_0;
 	}
@@ -42231,7 +42210,7 @@ internal class _003CModule_003E
 			uint num = ((uint*)ptr2)[1];
 			if (num != 0)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num + 16)))((IntPtr)(int)num);
 			}
 		}
 		catch
@@ -44723,22 +44702,22 @@ internal class _003CModule_003E
 			if (num != 0)
 			{
 				uint num2 = num;
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
 				num = ((uint*)P_0)[1];
 				uint num3 = num;
-				if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
+				if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
 				{
 					arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 					if (ptr != null)
 					{
-						((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+						((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 					}
 				}
 			}
 			uint num4 = (uint)(((int*)P_0)[1] = ((int*)r)[1]);
 			if (num4 != 0)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
 			}
 		}
 		return P_0;
@@ -44753,22 +44732,22 @@ internal class _003CModule_003E
 			if (num != 0)
 			{
 				uint num2 = num;
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
 				num = ((uint*)P_0)[1];
 				uint num3 = num;
-				if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
+				if (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3) == 0)
 				{
 					arSharedPtrHelperBase* ptr = (arSharedPtrHelperBase*)(int)((uint*)P_0)[1];
 					if (ptr != null)
 					{
-						((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+						((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 					}
 				}
 			}
 			uint num4 = (uint)(((int*)P_0)[1] = ((int*)r)[1]);
 			if (num4 != 0)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
+				((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
 			}
 		}
 		return P_0;
@@ -45852,7 +45831,7 @@ internal class _003CModule_003E
 			arValueStorageBase* ptr = (arValueStorageBase*)(int)(*(uint*)inst);
 			if (ptr != null)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+				((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 			}
 			delete(inst);
 		}
@@ -45896,7 +45875,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(*(int*)inst + 8)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(*(int*)inst + 8)))((nint)inst, 1u);
 		}
 	}
 
@@ -47208,7 +47187,7 @@ internal class _003CModule_003E
 		*(int*)P_1 = 0;
 	}
 
-	internal unsafe static arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020gisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, gisGisBlackboard* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020gisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, gisGisBlackboard* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -47222,7 +47201,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020arValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, arValueConversionTable* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020arValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, arValueConversionTable* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -47396,14 +47375,14 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, gisGisBlackboard** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CgisGisBlackboard_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, gisGisBlackboard** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, arValueConversionTable** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CarValueConversionTable_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, arValueConversionTable** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
@@ -48361,7 +48340,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -48461,7 +48440,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector2Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -48524,7 +48503,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -48675,7 +48654,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector3Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -48730,7 +48709,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -48934,7 +48913,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarVector4Impl_003Cfloat_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -48989,7 +48968,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arColor32Template_003Cclass_0020arColor32Base_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arColor32Template_003Cclass_0020arColor32Base_003E_0020_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -49077,7 +49056,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarColor32Template_003CarColor32Base_003E_0020_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -49132,7 +49111,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arGuid_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020arGuid_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -49202,7 +49181,7 @@ internal class _003CModule_003E
 				throw;
 			}
 		}
-		delegate* unmanaged[Cdecl, Cdecl]<void> obj = (delegate* unmanaged[Cdecl, Cdecl]<void>)__unep_0040_003F_003F_0024arExtractAndConvert_0040_NV_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_0040_0040_0040_0024_0024FYA_003FAV_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_0040ABVarValue_0040_0040_0040Z;
+		delegate*<void> obj = (delegate*<void>)__unep_0040_003F_003F_0024arExtractAndConvert_0040_NV_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_0040_0040_0040_0024_0024FYA_003FAV_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_0040ABVarValue_0040_0040_0040Z;
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arPair_003CarPair_003CarTypeElement_0020const_0020_002A_002CarTypeElement_0020const_0020_002A_003E_0020const_0020_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E obj2);
 		*(int*)(&obj2) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003FId_0040_003F_0024arType_0040_N_0040_00402V1_0040B);
 		System.Runtime.CompilerServices.Unsafe.As<arPair_003CarPair_003CarTypeElement_0020const_0020_002A_002CarTypeElement_0020const_0020_002A_003E_0020const_0020_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E, int>(ref System.Runtime.CompilerServices.Unsafe.AddByteOffset(ref obj2, 4)) = (int)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003FId_0040_003F_0024arType_0040V_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_0040_0040_00402V1_0040B);
@@ -49240,7 +49219,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CarGuid_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -49292,7 +49271,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cint_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cint_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -49379,7 +49358,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cint_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -49428,7 +49407,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cfloat_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cfloat_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -49493,7 +49472,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cfloat_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -49542,7 +49521,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cbool_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cbool_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -49577,7 +49556,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cbool_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -49627,7 +49606,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cdouble_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cdouble_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -49650,7 +49629,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003Cdouble_003E_0020const_0020_002A_002CarType_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -49776,7 +49755,7 @@ internal class _003CModule_003E
 									num++;
 								}
 								while (*ptr5 != 0);
-								arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(ptr4, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BK_0040NAIEIME_0040Specify_003F5a_003F5file_003F5to_003F5import_003F3_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0BK_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0BK_0040NAIEIME_0040Specify_003F5a_003F5file_003F5to_003F5import_003F3_003F_0024AA_0040))));
+								arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(ptr4, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BK_0040NAIEIME_0040Specify_003F5a_003F5file_003F5to_003F5import_003F3_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BK_0040NAIEIME_0040Specify_003F5a_003F5file_003F5to_003F5import_003F3_003F_0024AA_0040) + num));
 								((sbyte*)P_0)[172] = 0;
 								return P_0;
 							}
@@ -51073,7 +51052,7 @@ internal class _003CModule_003E
 							num7++;
 						}
 						while (*ptr4 != 0);
-						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num7) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY09_0024_0024CBD, _003F>(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040))));
+						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040) + num7));
 						bool flag;
 						try
 						{
@@ -52300,7 +52279,7 @@ internal class _003CModule_003E
 							num7++;
 						}
 						while (*ptr4 != 0);
-						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num7) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY09_0024_0024CBD, _003F>(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040))));
+						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040) + num7));
 						bool flag;
 						try
 						{
@@ -53558,7 +53537,7 @@ internal class _003CModule_003E
 							num7++;
 						}
 						while (*ptr4 != 0);
-						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num7) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY09_0024_0024CBD, _003F>(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040))));
+						arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj3, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_09PDOEPFPA_0040_003F_0024FLdefault_003F_0024FN_003F_0024AA_0040) + num7));
 						bool flag;
 						try
 						{
@@ -53757,17 +53736,11 @@ internal class _003CModule_003E
 		return *(uint*)P_0;
 	}
 
-	internal unsafe static arTree_003CarBasicString_003Cchar_002CarAllocator_003E_002CarBasicString_003Cchar_002CarAllocator_003E_002CarIdentity_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E.ConstIterator* arSet_003CarBasicString_003Cchar_002CarAllocator_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E_002EBegin(arSet_003CarBasicString_003Cchar_002CarAllocator_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E* P_0, arTree_003CarBasicString_003Cchar_002CarAllocator_003E_002CarBasicString_003Cchar_002CarAllocator_003E_002CarIdentity_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E.ConstIterator* P_1)
-	{
-		*(int*)P_1 = ((int*)P_0)[2];
-		return P_1;
-	}
+	// Removed duplicate arSet_003CarBasicString_003Cchar_002CarAllocator_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E_002EBegin
 
-	internal unsafe static arTree_003CarBasicString_003Cchar_002CarAllocator_003E_002CarBasicString_003Cchar_002CarAllocator_003E_002CarIdentity_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E.ConstIterator* arSet_003CarBasicString_003Cchar_002CarAllocator_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E_002EEnd(arSet_003CarBasicString_003Cchar_002CarAllocator_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E* P_0, arTree_003CarBasicString_003Cchar_002CarAllocator_003E_002CarBasicString_003Cchar_002CarAllocator_003E_002CarIdentity_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E.ConstIterator* P_1)
-	{
-		*(int*)P_1 = (int)((byte*)P_0 + 12);
-		return P_1;
-	}
+
+	// Removed duplicate arSet_003CarBasicString_003Cchar_002CarAllocator_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E_002EEnd
+
 
 	internal unsafe static uint arTree_003CarBasicString_003Cchar_002CarAllocator_003E_002CarBasicString_003Cchar_002CarAllocator_003E_002CarIdentity_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E_002ESize(arTree_003CarBasicString_003Cchar_002CarAllocator_003E_002CarBasicString_003Cchar_002CarAllocator_003E_002CarIdentity_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarLess_003CarBasicString_003Cchar_002CarAllocator_003E_0020_003E_002CarAllocator_003E* P_0)
 	{
@@ -54737,9 +54710,9 @@ internal class _003CModule_003E
 	internal unsafe static void edGisImportRoadsDialogManaged_002ESetCustomizeTemplateDialog(edGisImportRoadsDialogManaged* P_0, edGisImportRoadsCustomDialogManaged* customizeTemplateDialog)
 	{
 		((int*)P_0)[44] = (int)customizeTemplateDialog;
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)customizeTemplateDialog + 104)))((nint)customizeTemplateDialog);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)customizeTemplateDialog + 104)))((nint)customizeTemplateDialog);
 		int num = ((int*)P_0)[44];
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)num + 108)))((IntPtr)num);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)num + 108)))((IntPtr)num);
 	}
 
 	[DebuggerStepThrough]
@@ -55357,15 +55330,11 @@ internal class _003CModule_003E
 		arStaticInitList_002E_007Bdtor_007D((arStaticInitList*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003FStaticInit_0040_003F_0024arSingleton_0040VgisGisBlackboard_0040_0040_0040_00400VInitializer_00401_0040A));
 	}
 
-	internal unsafe static arBasicString_003Cchar_002CarAllocator_003E* arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E_002EBegin(arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E* P_0)
-	{
-		return (arBasicString_003Cchar_002CarAllocator_003E*)(int)(*(uint*)P_0);
-	}
+	// Removed duplicate arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E_002EBegin
 
-	internal unsafe static arBasicString_003Cchar_002CarAllocator_003E* arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E_002EEnd(arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E* P_0)
-	{
-		return (arBasicString_003Cchar_002CarAllocator_003E*)(((int*)P_0)[1] * 8 + *(int*)P_0);
-	}
+
+	// Removed duplicate arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E_002EEnd
+
 
 	internal unsafe static void arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E_002EAssign_003Cclass_0020arBasicString_003Cchar_002Cclass_0020arAllocator_003E_0020const_0020_002A_003E(arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E* P_0, arBasicString_003Cchar_002CarAllocator_003E* first, arBasicString_003Cchar_002CarAllocator_003E* last)
 	{
@@ -56752,10 +56721,8 @@ internal class _003CModule_003E
 		return (edLodSettingsDialogManagedImpl)((GCHandle)intPtr).Target;
 	}
 
-	internal unsafe static arBasicString_003Cchar_002CarAllocator_003E* arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E_002E_005B_005D(arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E* P_0, uint n)
-	{
-		return (arBasicString_003Cchar_002CarAllocator_003E*)(int)(n * 8 + (uint)(*(int*)P_0));
-	}
+	// Removed duplicate arVector_003CarBasicString_003Cchar_002CarAllocator_003E_002CarAllocator_003E_002E_005B_005D
+
 
 	internal unsafe static void arVector_003CedLodInfo_002CarAllocator_003E_002E_007Bdtor_007D(arVector_003CedLodInfo_002CarAllocator_003E* P_0)
 	{
@@ -56775,10 +56742,8 @@ internal class _003CModule_003E
 		return (edLodInfo*)(int)(n * 44 + (uint)(*(int*)P_0));
 	}
 
-	internal unsafe static edLodInfo* arVector_003CedLodInfo_002CarAllocator_003E_002E_005B_005D(arVector_003CedLodInfo_002CarAllocator_003E* P_0, uint n)
-	{
-		return (edLodInfo*)(int)(n * 44 + (uint)(*(int*)P_0));
-	}
+	// Removed duplicate arVector_003CedLodInfo_002CarAllocator_003E_002E_005B_005D
+
 
 	internal unsafe static arVector_003CedLodInfo_002CarAllocator_003E* arVector_003CedLodInfo_002CarAllocator_003E_002E_007Bctor_007D(arVector_003CedLodInfo_002CarAllocator_003E* P_0, arAllocator* alloc)
 	{
@@ -57762,7 +57727,7 @@ internal class _003CModule_003E
 			num++;
 		}
 		while (*ptr != 0);
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0L_0040BHGLLOIO_0040ktDocument_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0L_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0L_0040BHGLLOIO_0040ktDocument_003F_0024AA_0040))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0L_0040BHGLLOIO_0040ktDocument_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0L_0040BHGLLOIO_0040ktDocument_003F_0024AA_0040) + num));
 		try
 		{
 			ktMetaObject_002ESetName(classInfo, &obj);
@@ -57834,7 +57799,7 @@ internal class _003CModule_003E
 			num++;
 		}
 		while (*ptr != 0);
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BB_0040FHMEAMLN_0040ktDocumentObject_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0BB_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0BB_0040FHMEAMLN_0040ktDocumentObject_003F_0024AA_0040))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BB_0040FHMEAMLN_0040ktDocumentObject_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BB_0040FHMEAMLN_0040ktDocumentObject_003F_0024AA_0040) + num));
 		try
 		{
 			ktMetaObject_002ESetName(classInfo, &obj);
@@ -57906,7 +57871,7 @@ internal class _003CModule_003E
 			num++;
 		}
 		while (*ptr != 0);
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BD_0040MLJPGNEJ_0040ktMetaDataTemplate_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0BD_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0BD_0040MLJPGNEJ_0040ktMetaDataTemplate_003F_0024AA_0040))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BD_0040MLJPGNEJ_0040ktMetaDataTemplate_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BD_0040MLJPGNEJ_0040ktMetaDataTemplate_003F_0024AA_0040) + num));
 		try
 		{
 			ktMetaObject_002ESetName(classInfo, &obj);
@@ -57978,7 +57943,7 @@ internal class _003CModule_003E
 			num++;
 		}
 		while (*ptr != 0);
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BF_0040CDKIBPNK_0040ktTemplateCollection_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0BF_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0BF_0040CDKIBPNK_0040ktTemplateCollection_003F_0024AA_0040))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BF_0040CDKIBPNK_0040ktTemplateCollection_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0BF_0040CDKIBPNK_0040ktTemplateCollection_003F_0024AA_0040) + num));
 		try
 		{
 			ktMetaObject_002ESetName(classInfo, &obj);
@@ -58050,7 +58015,7 @@ internal class _003CModule_003E
 			num++;
 		}
 		while (*ptr != 0);
-		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0M_0040EPFKGDCM_0040RenameEvent_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0M_0040_0024_0024CBD, _003F>(ref _003F_003F_C_0040_0M_0040EPFKGDCM_0040RenameEvent_003F_0024AA_0040))));
+		arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0M_0040EPFKGDCM_0040RenameEvent_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_C_0040_0M_0040EPFKGDCM_0040RenameEvent_003F_0024AA_0040) + num));
 		try
 		{
 			ktMetaObject_002ESetName(classInfo, &obj);
@@ -58887,7 +58852,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CmtAlignedBox2Impl_003Cfloat_003E_0020_003E* ptr = (arTypeVisitor_003CmtAlignedBox2Impl_003Cfloat_003E_0020_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040V_003F_0024mtAlignedBox2Impl_0040M_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CmtAlignedBox2Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CmtAlignedBox2Impl_003Cfloat_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -58935,7 +58900,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CmtAlignedBox2Impl_003Cdouble_003E_0020_003E* ptr = (arTypeVisitor_003CmtAlignedBox2Impl_003Cdouble_003E_0020_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040V_003F_0024mtAlignedBox2Impl_0040N_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CmtAlignedBox2Impl_003Cdouble_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CmtAlignedBox2Impl_003Cdouble_003E_0020_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -59468,7 +59433,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -59521,7 +59486,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -61882,7 +61847,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CktDocument_0020_002A_003E* ptr = (arTypeVisitor_003CktDocument_0020_002A_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040PAVktDocument_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CktDocument_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CktDocument_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -61909,7 +61874,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CktObject_0020_002A_003E* ptr = (arTypeVisitor_003CktObject_0020_002A_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040PAVktObject_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CktObject_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CktObject_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -61936,7 +61901,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CktDocumentObject_0020_002A_003E* ptr = (arTypeVisitor_003CktDocumentObject_0020_002A_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040PAVktDocumentObject_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CktDocumentObject_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CktDocumentObject_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -61963,7 +61928,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CktMetaDataTemplate_0020_002A_003E* ptr = (arTypeVisitor_003CktMetaDataTemplate_0020_002A_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040PAVktMetaDataTemplate_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CktMetaDataTemplate_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CktMetaDataTemplate_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -61990,7 +61955,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CktTemplateCollection_0020_002A_003E* ptr = (arTypeVisitor_003CktTemplateCollection_0020_002A_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040PAVktTemplateCollection_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CktTemplateCollection_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CktTemplateCollection_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -62017,7 +61982,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E* ptr = (arTypeVisitor_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040PAVRenameEvent_0040ktTemplateCollection_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -62627,7 +62592,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktDocument_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktDocument_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -62670,7 +62635,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktDocumentObject_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktDocumentObject_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -62713,7 +62678,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -62756,7 +62721,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktTemplateCollection_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktTemplateCollection_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -62799,7 +62764,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate* unmanaged[Cdecl, Cdecl]<void> second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arMakePair_003Cclass_0020arPair_003Cclass_0020arType_003Cclass_0020ktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002Cclass_0020arType_003Cclass_0020ktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E(arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E first, delegate*<void> second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, ref first, 8);
@@ -62899,7 +62864,7 @@ internal class _003CModule_003E
 		return (arBasicString_003Cchar_002CarAllocator_003E*)(((int*)iter)[2] + 4);
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocument_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocument_003E* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -62913,7 +62878,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktObject_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktObject_003E* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -62927,7 +62892,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocumentObject_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocumentObject_003E* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -62941,7 +62906,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktMetaDataTemplate_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktMetaDataTemplate_003E* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -62955,7 +62920,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003E* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -62969,7 +62934,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void*, void> second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arMakePair_003Cclass_0020ktTypeMetaObject_003Cclass_0020ktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E(arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E* first, delegate*<void*, void> second)
 	{
 		*(int*)P_0 = (int)first;
 		((int*)P_0)[1] = (int)second;
@@ -63247,7 +63212,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocument_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -63278,7 +63243,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktDocumentObject_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -63309,7 +63274,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktMetaDataTemplate_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -63340,7 +63305,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -63371,7 +63336,7 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate* unmanaged[Cdecl, Cdecl]<void>* second)
+	internal unsafe static arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E_002E_007Bctor_007D(arPair_003CarPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0029_003E* P_0, arPair_003CarType_003CktTemplateCollection_003A_003ARenameEvent_0020_002A_003E_0020const_0020_002A_002CarType_003CktObject_0020_002A_003E_0020const_0020_002A_003E* first, delegate*<void>* second)
 	{
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_0, first, 8);
@@ -63379,42 +63344,42 @@ internal class _003CModule_003E
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocument_003E** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktDocument_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocument_003E** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktObject_003E** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktObject_003E** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocumentObject_003E** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktDocumentObject_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktDocumentObject_003E** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktMetaDataTemplate_003E** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktMetaDataTemplate_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktMetaDataTemplate_003E** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003E** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktTemplateCollection_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003E** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
 		return P_0;
 	}
 
-	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E** first, delegate* unmanaged[Cdecl, Cdecl]<void*, void>* second)
+	internal unsafe static arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E_002E_007Bctor_007D(arPair_003CktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E_0020_002A_002Cvoid_0020_0028__cdecl_002A_0029_0028void_0020const_0020_002A_0029_003E* P_0, ktTypeMetaObject_003CktTemplateCollection_003A_003ARenameEvent_003E** first, delegate*<void*, void>* second)
 	{
 		*(int*)P_0 = *(int*)first;
 		((int*)P_0)[1] = *(int*)second;
@@ -66220,7 +66185,7 @@ internal class _003CModule_003E
 
 	internal unsafe static void arParserObjectCreateHelper_003CktDocumentObject_003E_002EPostLoad(arParserObjectCreateHelper_003CktDocumentObject_003E* P_0, void* @object)
 	{
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)@object + 48)))((nint)@object);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)@object + 48)))((nint)@object);
 	}
 
 	[return: MarshalAs(UnmanagedType.U1)]
@@ -66274,17 +66239,17 @@ internal class _003CModule_003E
 	[return: MarshalAs(UnmanagedType.U1)]
 	internal unsafe static bool arParserObjectCreateHelper_003CktDocumentObject_003E_002EInstanceCheck(arParserObjectCreateHelper_003CktDocumentObject_003E* P_0, void* @object)
 	{
-		return ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)@object + 8)))((nint)@object) > 1;
+		return ((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)@object + 8)))((nint)@object) > 1;
 	}
 
 	internal unsafe static void arParserObjectHelper_003CktDocumentObject_003E_002EFileIO(arParserObjectHelper_003CktDocumentObject_003E* P_0, void* @object, arParser* parser)
 	{
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arParser*, void>)(int)(*(uint*)(*(int*)@object + 40)))((nint)@object, parser);
+		((delegate*<IntPtr, arParser*, void>)(int)(*(uint*)(*(int*)@object + 40)))((nint)@object, parser);
 	}
 
 	internal unsafe static void arParserObjectHelper_003CktDocumentObject_003E_002EPostLoad(arParserObjectHelper_003CktDocumentObject_003E* P_0, void* @object)
 	{
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)@object + 48)))((nint)@object);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)@object + 48)))((nint)@object);
 	}
 
 	[return: MarshalAs(UnmanagedType.U1)]
@@ -68728,7 +68693,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CgisVector2d_003E* ptr = (arTypeVisitor_003CgisVector2d_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040VgisVector2d_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CgisVector2d_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CgisVector2d_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -68776,7 +68741,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CgisAlignedBox2d_003E* ptr = (arTypeVisitor_003CgisAlignedBox2d_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040VgisAlignedBox2d_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CgisAlignedBox2d_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CgisAlignedBox2d_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -68824,7 +68789,7 @@ internal class _003CModule_003E
 		arTypeVisitor_003CgisVector3d_003E* ptr = (arTypeVisitor_003CgisVector3d_003E*)__RTDynamicCast(baseVisitor, 0, System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAVarBaseTypeVisitor_0040_0040_00408), System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003F_003F_R0_003FAV_003F_0024arTypeVisitor_0040VgisVector3d_0040_0040_0040_0040_00408), 0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arType_003CgisVector3d_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
+			((delegate*<IntPtr, arType_003CgisVector3d_003E*, void>)(int)(*(uint*)(*(int*)ptr + 4)))((nint)ptr, P_0);
 		}
 	}
 
@@ -69450,7 +69415,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -69503,7 +69468,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -69556,7 +69521,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -74233,7 +74198,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -74291,7 +74256,7 @@ internal class _003CModule_003E
 	{
 		if (inst != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)inst)))((nint)inst, 1u);
 		}
 	}
 
@@ -77634,7 +77599,7 @@ internal class _003CModule_003E
 		arValueStorageBase* ptr = (arValueStorageBase*)(int)(*(uint*)P_0);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 		}
 	}
 
@@ -77645,7 +77610,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)x;
 		if (num != 0)
 		{
-			*(int*)(&arValue2) = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
+			*(int*)(&arValue2) = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
 		}
 		arValueStorageBase* ptr;
 		try
@@ -77662,7 +77627,7 @@ internal class _003CModule_003E
 		}
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 		}
 		return P_0;
 	}
@@ -77679,7 +77644,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)P_0;
 		if (num != 0)
 		{
-			return ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			return ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		return (arTypeElement*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref _003FId_0040_003F_0024arType_0040X_0040_00402V1_0040B);
 	}
@@ -77687,7 +77652,7 @@ internal class _003CModule_003E
 	internal unsafe static int arValue_002EExtractInt(arValue* P_0)
 	{
 		int num = *(int*)P_0;
-		return ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)num + 8)))((IntPtr)num);
+		return ((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)num + 8)))((IntPtr)num);
 	}
 
 	internal static void _003FA0xf381d6c2_002E_003F_003F__EIoRegistrarInstancingStub_1_173_0040_003FA0xf381d6c2_0040_0040YMXXZ()
@@ -77932,7 +77897,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)value;
 		if (num != 0)
 		{
-			*(int*)(&arValue2) = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
+			*(int*)(&arValue2) = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
 		}
 		arValueStorageBase* ptr;
 		try
@@ -77949,7 +77914,7 @@ internal class _003CModule_003E
 		}
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 		}
 	}
 
@@ -77965,7 +77930,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)value;
 		if (num != 0)
 		{
-			*(int*)(&arValue2) = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
+			*(int*)(&arValue2) = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
 		}
 		arValueStorageBase* ptr;
 		try
@@ -77982,7 +77947,7 @@ internal class _003CModule_003E
 		}
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 		}
 	}
 
@@ -77998,7 +77963,7 @@ internal class _003CModule_003E
 		uint num = *(uint*)value;
 		if (num != 0)
 		{
-			*(int*)(&arValue2) = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
+			*(int*)(&arValue2) = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num + 4)))((IntPtr)(int)num);
 		}
 		arValueStorageBase* ptr;
 		try
@@ -78015,7 +77980,7 @@ internal class _003CModule_003E
 		}
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 		}
 	}
 
@@ -78053,7 +78018,7 @@ internal class _003CModule_003E
 				arValueStorageBase* ptr = (arValueStorageBase*)(int)((uint*)P_0)[5];
 				if (ptr != null)
 				{
-					((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+					((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 				}
 			}
 			catch
@@ -78065,7 +78030,7 @@ internal class _003CModule_003E
 			arValueStorageBase* ptr2 = (arValueStorageBase*)(int)((uint*)P_0)[4];
 			if (ptr2 != null)
 			{
-				((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr2)))((nint)ptr2, 1u);
+				((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr2)))((nint)ptr2, 1u);
 			}
 		}
 		catch
@@ -78077,7 +78042,7 @@ internal class _003CModule_003E
 		arValueStorageBase* ptr3 = (arValueStorageBase*)(int)((uint*)P_0)[3];
 		if (ptr3 != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr3)))((nint)ptr3, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr3)))((nint)ptr3, 1u);
 		}
 	}
 
@@ -78108,7 +78073,7 @@ internal class _003CModule_003E
 		uint num2 = *(uint*)num;
 		if (num2 != 0)
 		{
-			*(int*)ptr = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
+			*(int*)ptr = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num2 + 4)))((IntPtr)(int)num2);
 		}
 		try
 		{
@@ -78118,7 +78083,7 @@ internal class _003CModule_003E
 			uint num4 = *(uint*)num3;
 			if (num4 != 0)
 			{
-				*(int*)ptr2 = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num4 + 4)))((IntPtr)(int)num4);
+				*(int*)ptr2 = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num4 + 4)))((IntPtr)(int)num4);
 			}
 			try
 			{
@@ -78128,7 +78093,7 @@ internal class _003CModule_003E
 				uint num6 = *(uint*)num5;
 				if (num6 != 0)
 				{
-					*(int*)ptr3 = (int)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num6 + 4)))((IntPtr)(int)num6);
+					*(int*)ptr3 = (int)((delegate*<IntPtr, arValueStorageBase*>)(int)(*(uint*)(*(int*)(int)num6 + 4)))((IntPtr)(int)num6);
 				}
 				try
 				{
@@ -80734,7 +80699,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -80765,7 +80730,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -80794,7 +80759,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -80825,7 +80790,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -80858,7 +80823,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num2 != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
 		}
 		else
 		{
@@ -80919,7 +80884,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -80951,7 +80916,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -80983,7 +80948,7 @@ internal class _003CModule_003E
 		ref arType_003Cvoid_003E reference;
 		if (num != 0)
 		{
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81066,26 +81031,26 @@ internal class _003CModule_003E
 		if (num != 0)
 		{
 			uint num2 = num;
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
 		}
 		else
 		{
 			reference = ref _003FId_0040_003F_0024arType_0040X_0040_00402V1_0040B;
 		}
-		if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference) + 8)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference)) == 0)
+		if (((delegate*<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference) + 8)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference)) == 0)
 		{
 			num = *(uint*)value;
 			ref arType_003Cvoid_003E reference2;
 			if (num != 0)
 			{
 				uint num3 = num;
-				reference2 = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3);
+				reference2 = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3);
 			}
 			else
 			{
 				reference2 = ref _003FId_0040_003F_0024arType_0040X_0040_00402V1_0040B;
 			}
-			if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference2) + 4)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference2)) == 0)
+			if (((delegate*<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference2) + 4)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference2)) == 0)
 			{
 				return arValueConversionTable_002EConvertFromMappings_003Cint_003E(P_0, value, success);
 			}
@@ -81096,7 +81061,7 @@ internal class _003CModule_003E
 		}
 		num = *(uint*)value;
 		uint num4 = num;
-		return ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
+		return ((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4);
 	}
 
 	internal unsafe static float arValueConversionTable_002EConvertThroughTraits_003Cfloat_003E(arValueConversionTable* P_0, arValue* value, bool* success, arIntegralConstant_003Cbool_002C0_003E __unnamed002)
@@ -81114,26 +81079,26 @@ internal class _003CModule_003E
 		if (num != 0)
 		{
 			uint num2 = num;
-			reference = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
+			reference = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
 		}
 		else
 		{
 			reference = ref _003FId_0040_003F_0024arType_0040X_0040_00402V1_0040B;
 		}
-		if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference) + 8)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference)) == 0)
+		if (((delegate*<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference) + 8)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference)) == 0)
 		{
 			num = *(uint*)value;
 			ref arType_003Cvoid_003E reference2;
 			if (num != 0)
 			{
 				uint num3 = num;
-				reference2 = ref *(_003F*)((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3);
+				reference2 = ref *(_003F*)((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num3 + 12)))((IntPtr)(int)num3);
 			}
 			else
 			{
 				reference2 = ref _003FId_0040_003F_0024arType_0040X_0040_00402V1_0040B;
 			}
-			if (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference2) + 4)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference2)) == 0)
+			if (((delegate*<IntPtr, byte>)(int)(*(uint*)(System.Runtime.CompilerServices.Unsafe.As<arType_003Cvoid_003E, int>(ref reference2) + 4)))((nint)System.Runtime.CompilerServices.Unsafe.AsPointer(ref reference2)) == 0)
 			{
 				return arValueConversionTable_002EConvertFromMappings_003Cbool_003E(P_0, value, success);
 			}
@@ -81144,7 +81109,7 @@ internal class _003CModule_003E
 		}
 		num = *(uint*)value;
 		uint num4 = num;
-		return (((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4) != 0) ? true : false;
+		return (((delegate*<IntPtr, int>)(int)(*(uint*)(*(int*)(int)num4 + 8)))((IntPtr)(int)num4) != 0) ? true : false;
 	}
 
 	internal unsafe static arColor32Template_003CarColor32Base_003E* arValueConversionTable_002EConvertThroughTraits_003Cclass_0020arColor32Template_003Cclass_0020arColor32Base_003E_0020_003E(arValueConversionTable* P_0, arColor32Template_003CarColor32Base_003E* P_1, arValue* value, bool* success, arIntegralConstant_003Cbool_002C0_003E __unnamed002)
@@ -81233,7 +81198,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81252,7 +81217,7 @@ internal class _003CModule_003E
 		{
 			*success = true;
 		}
-		return ((delegate* unmanaged[Cdecl, Cdecl]<arValue*, int>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(value);
+		return ((delegate*<arValue*, int>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(value);
 	}
 
 	internal unsafe static float arValueConversionTable_002EConvertFromMappings_003Cfloat_003E(arValueConversionTable* P_0, arValue* value, bool* success)
@@ -81261,7 +81226,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81280,7 +81245,7 @@ internal class _003CModule_003E
 		{
 			*success = true;
 		}
-		return ((delegate* unmanaged[Cdecl, Cdecl]<arValue*, float>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(value);
+		return ((delegate*<arValue*, float>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(value);
 	}
 
 	[return: MarshalAs(UnmanagedType.U1)]
@@ -81296,7 +81261,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81315,7 +81280,7 @@ internal class _003CModule_003E
 		{
 			*success = true;
 		}
-		return ((delegate* unmanaged[Cdecl, Cdecl]<arValue*, byte>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(value) != 0;
+		return ((delegate*<arValue*, byte>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(value) != 0;
 	}
 
 	internal unsafe static arColor32Template_003CarColor32Base_003E* arValueConversionTable_002EConvertFromMappings_003Cclass_0020arColor32Template_003Cclass_0020arColor32Base_003E_0020_003E(arValueConversionTable* P_0, arColor32Template_003CarColor32Base_003E* P_1, arValue* value, bool* success)
@@ -81324,7 +81289,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81348,7 +81313,7 @@ internal class _003CModule_003E
 			*success = true;
 		}
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arColor32Template_003CarColor32Base_003E obj2);
-		arColor32Template_003CarColor32Base_003E* ptr2 = ((delegate* unmanaged[Cdecl, Cdecl]<arColor32Template_003CarColor32Base_003E*, arValue*, arColor32Template_003CarColor32Base_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
+		arColor32Template_003CarColor32Base_003E* ptr2 = ((delegate*<arColor32Template_003CarColor32Base_003E*, arValue*, arColor32Template_003CarColor32Base_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlockUnaligned(P_1, ptr2, 4);
 		return P_1;
@@ -81361,7 +81326,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num2 != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num2 + 12)))((IntPtr)(int)num2);
 		}
 		else
 		{
@@ -81398,7 +81363,7 @@ internal class _003CModule_003E
 			*success = true;
 		}
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arBasicString_003Cchar_002CarAllocator_003E obj2);
-		arBasicString_003Cchar_002CarAllocator_003E* ptr2 = ((delegate* unmanaged[Cdecl, Cdecl]<arBasicString_003Cchar_002CarAllocator_003E*, arValue*, arBasicString_003Cchar_002CarAllocator_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
+		arBasicString_003Cchar_002CarAllocator_003E* ptr2 = ((delegate*<arBasicString_003Cchar_002CarAllocator_003E*, arValue*, arBasicString_003Cchar_002CarAllocator_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
 		try
 		{
 			try
@@ -81445,7 +81410,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81465,7 +81430,7 @@ internal class _003CModule_003E
 			*success = true;
 		}
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arVector2Impl_003Cfloat_003E obj2);
-		arVector2Impl_003Cfloat_003E* ptr2 = ((delegate* unmanaged[Cdecl, Cdecl]<arVector2Impl_003Cfloat_003E*, arValue*, arVector2Impl_003Cfloat_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
+		arVector2Impl_003Cfloat_003E* ptr2 = ((delegate*<arVector2Impl_003Cfloat_003E*, arValue*, arVector2Impl_003Cfloat_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_1, ptr2, 8);
 		return P_1;
@@ -81477,7 +81442,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81497,7 +81462,7 @@ internal class _003CModule_003E
 			*success = true;
 		}
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arVector3Impl_003Cfloat_003E obj2);
-		arVector3Impl_003Cfloat_003E* ptr2 = ((delegate* unmanaged[Cdecl, Cdecl]<arVector3Impl_003Cfloat_003E*, arValue*, arVector3Impl_003Cfloat_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
+		arVector3Impl_003Cfloat_003E* ptr2 = ((delegate*<arVector3Impl_003Cfloat_003E*, arValue*, arVector3Impl_003Cfloat_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_1, ptr2, 12);
 		return P_1;
@@ -81509,7 +81474,7 @@ internal class _003CModule_003E
 		arTypeElement* ptr;
 		if (num != 0)
 		{
-			ptr = ((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
+			ptr = ((delegate*<IntPtr, arTypeElement*>)(int)(*(uint*)(*(int*)(int)num + 12)))((IntPtr)(int)num);
 		}
 		else
 		{
@@ -81529,7 +81494,7 @@ internal class _003CModule_003E
 			*success = true;
 		}
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arVector4Impl_003Cfloat_003E obj2);
-		arVector4Impl_003Cfloat_003E* ptr2 = ((delegate* unmanaged[Cdecl, Cdecl]<arVector4Impl_003Cfloat_003E*, arValue*, arVector4Impl_003Cfloat_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
+		arVector4Impl_003Cfloat_003E* ptr2 = ((delegate*<arVector4Impl_003Cfloat_003E*, arValue*, arVector4Impl_003Cfloat_003E*>)(int)(*(uint*)(*(int*)(&iterator) + 24)))(&obj2, value);
 		// IL cpblk instruction
 		System.Runtime.CompilerServices.Unsafe.CopyBlock(P_1, ptr2, 16);
 		return P_1;
@@ -81848,7 +81813,7 @@ internal class _003CModule_003E
 
 	internal unsafe static void palDialogBox_Win32PC_002EShowNotModal(palDialogBox_Win32PC* P_0)
 	{
-		((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, void>)(int)(*(uint*)(*(int*)P_0 + 104)))((nint)P_0);
+		((delegate*<IntPtr, void>)(int)(*(uint*)(*(int*)P_0 + 104)))((nint)P_0);
 		IntPtr intPtr = new IntPtr((void*)(int)((uint*)P_0)[35]);
 		if (((GCHandle)intPtr).Target != null)
 		{
@@ -86769,7 +86734,7 @@ internal class _003CModule_003E
 
 	internal unsafe static void _003CCrtImplementationDetails_003E_002EDefaultDomain_002EInitialize()
 	{
-		_003CCrtImplementationDetails_003E_002EDoCallBackInDefaultDomain((delegate* unmanaged[Stdcall, Stdcall]<void*, int>)__unep_0040_003FDoNothing_0040DefaultDomain_0040_003CCrtImplementationDetails_003E_0040_0040_0024_0024FCGJPAX_0040Z, null);
+		_003CCrtImplementationDetails_003E_002EDoCallBackInDefaultDomain((delegate*<void*, int>)__unep_0040_003FDoNothing_0040DefaultDomain_0040_003CCrtImplementationDetails_003E_0040_0040_0024_0024FCGJPAX_0040Z, null);
 	}
 
 	internal static void _003FA0xb1a04e76_002E_003F_003F__E_003FInitialized_0040CurrentDomain_0040_003CCrtImplementationDetails_003E_0040_0040_0024_0024Q2HA_0040_0040YMXXZ()
@@ -86840,11 +86805,11 @@ internal class _003CModule_003E
 		{
 			_003FInitializedNative_0040CurrentDomain_0040_003CCrtImplementationDetails_003E_0040_0040_0024_0024Q2W4State_0040Progress_00402_0040A = (Progress.State)1;
 			__native_startup_state = (__enative_startup_state)1;
-			if (_initterm_e((delegate* unmanaged[Cdecl, Cdecl]<int>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xi_a), (delegate* unmanaged[Cdecl, Cdecl]<int>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xi_z)) != 0)
+			if (_initterm_e((delegate*<int>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xi_a), (delegate*<int>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xi_z)) != 0)
 			{
 				_003CCrtImplementationDetails_003E_002EThrowModuleLoadException(gcroot_003CSystem_003A_003AString_0020_005E_003E_002E_002EP_0024AAVString_0040System_0040_0040((gcroot_003CSystem_003A_003AString_0020_005E_003E*)P_0));
 			}
-			_initterm((delegate* unmanaged[Cdecl, Cdecl]<void>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xc_a), (delegate* unmanaged[Cdecl, Cdecl]<void>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xc_z));
+			_initterm((delegate*<void>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xc_a), (delegate*<void>*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref __xc_z));
 			__native_startup_state = (__enative_startup_state)2;
 			_003FInitializedNativeFromCCTOR_0040DefaultDomain_0040_003CCrtImplementationDetails_003E_0040_00402_NA = true;
 			_003FInitializedNative_0040CurrentDomain_0040_003CCrtImplementationDetails_003E_0040_0040_0024_0024Q2W4State_0040Progress_00402_0040A = (Progress.State)2;
@@ -86989,7 +86954,7 @@ internal class _003CModule_003E
 			}
 			else
 			{
-				_003CCrtImplementationDetails_003E_002EDoCallBackInDefaultDomain((delegate* unmanaged[Stdcall, Stdcall]<void*, int>)__unep_0040_003F_UninitializeDefaultDomain_0040LanguageSupport_0040_003CCrtImplementationDetails_003E_0040_0040_0024_0024FCGJPAX_0040Z, null);
+				_003CCrtImplementationDetails_003E_002EDoCallBackInDefaultDomain((delegate*<void*, int>)__unep_0040_003F_UninitializeDefaultDomain_0040LanguageSupport_0040_003CCrtImplementationDetails_003E_0040_0040_0024_0024FCGJPAX_0040Z, null);
 			}
 		}
 	}
@@ -87246,7 +87211,7 @@ internal class _003CModule_003E
 		locale.facet* ptr = std_002Elocale_002Efacet_002E_Decref((locale.facet*)(int)((uint*)P_0)[1]);
 		if (ptr != null)
 		{
-			((delegate* unmanaged[Thiscall, Thiscall]<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
+			((delegate*<IntPtr, uint, void*>)(int)(*(uint*)(int)(*(uint*)ptr)))((nint)ptr, 1u);
 		}
 	}
 
@@ -87673,7 +87638,7 @@ internal class _003CModule_003E
 	}
 
 	[DebuggerStepThrough]
-	internal unsafe static int _initterm_e(delegate* unmanaged[Cdecl, Cdecl]<int>* pfbegin, delegate* unmanaged[Cdecl, Cdecl]<int>* pfend)
+	internal unsafe static int _initterm_e(delegate*<int>* pfbegin, delegate*<int>* pfend)
 	{
 		int num = 0;
 		if (pfbegin < pfend)
@@ -87683,9 +87648,9 @@ internal class _003CModule_003E
 				uint num2 = *(uint*)pfbegin;
 				if (num2 != 0)
 				{
-					num = ((delegate* unmanaged[Cdecl, Cdecl]<int>)(int)num2)();
+					num = ((delegate*<int>)(int)num2)();
 				}
-				pfbegin = (delegate* unmanaged[Cdecl, Cdecl]<int>*)((byte*)pfbegin + 4);
+				pfbegin = (delegate*<int>*)((byte*)pfbegin + 4);
 				if (pfbegin >= pfend)
 				{
 					break;
@@ -87696,7 +87661,7 @@ internal class _003CModule_003E
 	}
 
 	[DebuggerStepThrough]
-	internal unsafe static void _initterm(delegate* unmanaged[Cdecl, Cdecl]<void>* pfbegin, delegate* unmanaged[Cdecl, Cdecl]<void>* pfend)
+	internal unsafe static void _initterm(delegate*<void>* pfbegin, delegate*<void>* pfend)
 	{
 		if (pfbegin >= pfend)
 		{
@@ -87707,9 +87672,9 @@ internal class _003CModule_003E
 			uint num = *(uint*)pfbegin;
 			if (num != 0)
 			{
-				((delegate* unmanaged[Cdecl, Cdecl]<void>)(int)num)();
+				((delegate*<void>)(int)num)();
 			}
-			pfbegin = (delegate* unmanaged[Cdecl, Cdecl]<void>*)((byte*)pfbegin + 4);
+			pfbegin = (delegate*<void>*)((byte*)pfbegin + 4);
 		}
 		while (pfbegin < pfend);
 	}
@@ -87750,7 +87715,7 @@ internal class _003CModule_003E
 	[STAThread]
 	public static extern uint _WinMainCRTStartup();
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void* @new(uint P_0);
@@ -87799,7 +87764,7 @@ internal class _003CModule_003E
 	[return: MarshalAs(UnmanagedType.U1)]
 	public unsafe static extern bool arStringOps_002EIsNullOrEmpty(arBasicString_003Cchar_002CarAllocator_003E* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void delete(void* P_0);
@@ -87813,7 +87778,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern palMessageBox.EnumResult palMessageBox_002EShowError(sbyte* P_0, sbyte* P_1, __arglist);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void delete_005B_005D(void* P_0);
@@ -87866,7 +87831,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern arIndenter* arIndenter_002E_007Bctor_007D(arIndenter* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern int isspace(int P_0);
@@ -87891,22 +87856,22 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern palActivationKeyDialog* palActivationKeyDialog_002E_007Bctor_007D(palActivationKeyDialog* P_0, sbyte* P_1, arGuid P_2, sbyte* P_3, sbyte* P_4);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern basic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E* std_002Ebasic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E_002E_007Bctor_007D(basic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E* P_0, basic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E* P_1);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void std_002Ebasic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E_002E_007Bdtor_007D(basic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern sbyte* std_002Ebasic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E_002Ec_str(basic_string_003Cchar_002Cstd_003A_003Achar_traits_003Cchar_003E_002Cstd_003A_003Aallocator_003Cchar_003E_0020_003E* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern allocator_003Cwchar_t_003E* std_002Eallocator_003Cwchar_t_003E_002E_007Bctor_007D(allocator_003Cwchar_t_003E* P_0, allocator_003Cwchar_t_003E* P_1);
@@ -87915,7 +87880,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern sbyte* gisDbfField_002EExtractString(gisDbfField* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern int sprintf(sbyte* P_0, sbyte* P_1, __arglist);
@@ -87949,7 +87914,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void arParserData_002E_007Bdtor_007D(arParserData* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void _CxxThrowException(void* P_0, _s__ThrowInfo* P_1);
@@ -88003,7 +87968,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern gisRoadImportParameters* gisRoadImportParameters_002E_007Bctor_007D(gisRoadImportParameters* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void* __RTDynamicCast(void* P_0, int P_1, void* P_2, void* P_3, int P_4);
@@ -88063,22 +88028,22 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void gisStyleMap_002EAddStyle(gisStyleMap* P_0, arBasicString_003Cchar_002CarAllocator_003E* P_1, arBasicString_003Cchar_002CarAllocator_003E* P_2);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern int type_info_002Ebefore(type_info* P_0, type_info* P_1);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern sbyte* type_info_002Ename(type_info* P_0, __type_info_node* P_1);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern std.exception* std_002Eexception_002E_007Bctor_007D(std.exception* P_0, std.exception* P_1);
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void std_002Eexception_002E_007Bdtor_007D(std.exception* P_0);
@@ -88135,7 +88100,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern palLodSettingsDialog* palLodSettingsDialog_002E_007Bctor_007D(palLodSettingsDialog* P_0, sbyte* P_1, arGuid P_2, sbyte* P_3, sbyte* P_4);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern double ceil(double P_0);
@@ -88160,7 +88125,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern arBasicString_003Cchar_002CarAllocator_003E* ktMetaDataTemplate_002EGetName(ktMetaDataTemplate* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void* __RTtypeid(void* P_0);
@@ -88249,7 +88214,7 @@ internal class _003CModule_003E
 	[return: MarshalAs(UnmanagedType.U1)]
 	public unsafe static extern bool gisBoundsHelpers_002EIsValidLL(gisAlignedBox2d* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern int sprintf_s(sbyte* P_0, uint P_1, sbyte* P_2, __arglist);
@@ -90371,7 +90336,7 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void* _getFiberPtrId();
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void _amsg_exit(int P_0);
@@ -90380,87 +90345,87 @@ internal class _003CModule_003E
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void __security_init_cookie();
 
-	[DllImport("", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.StdCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void Sleep(uint P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void _003CCrtImplementationDetails_003E_002EThrowModuleLoadException(string P_0, Exception P_1);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void _003CCrtImplementationDetails_003E_002EThrowModuleLoadException(string P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void _003CCrtImplementationDetails_003E_002EDoDllLanguageSupportValidation();
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void _003CCrtImplementationDetails_003E_002EThrowNestedModuleLoadException(Exception P_0, Exception P_1);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void _003CCrtImplementationDetails_003E_002ERegisterModuleUninitializer(EventHandler P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
-	public unsafe static extern void _003CCrtImplementationDetails_003E_002EDoCallBackInDefaultDomain(delegate* unmanaged[Stdcall, Stdcall]<void*, int> P_0, void* P_1);
+	public unsafe static extern void _003CCrtImplementationDetails_003E_002EDoCallBackInDefaultDomain(delegate*<void*, int> P_0, void* P_1);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void _cexit();
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern int __FrameUnwindFilter(_EXCEPTION_POINTERS* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void terminate();
 
-	[DllImport("", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.ThisCall, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern locale.facet* std_002Elocale_002Efacet_002E_Decref(locale.facet* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void std_002E_Lockit_002E_Lockit_ctor(int P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void std_002E_Lockit_002E_Lockit_dtor(int P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public static extern void abort();
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void* _encode_pointer(void* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void* _decode_pointer(void* P_0);
 
-	[DllImport("", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
+	[DllImport("CityScapeNative.dll", CallingConvention = CallingConvention.Cdecl, SetLastError = true)]
 	[MethodImpl(MethodImplOptions.Unmanaged, MethodCodeType = MethodCodeType.Native)]
 	[SuppressUnmanagedCodeSecurity]
 	public unsafe static extern void* _encoded_null();

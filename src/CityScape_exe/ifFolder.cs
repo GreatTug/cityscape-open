@@ -21,7 +21,6 @@ internal struct ifFolder
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	public enum EnumRemoveResult
 	{
 
@@ -29,7 +28,7 @@ internal struct ifFolder
 
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumMoveResult
 	{

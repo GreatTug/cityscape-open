@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-internal static struct arCallback2_003CtrGeographyGridFeature_0020const_0020_0026_002CtrGridModification_0020const_0020_0026_003E
+internal struct arCallback2_003CtrGeographyGridFeature_0020const_0020_0026_002CtrGridModification_0020const_0020_0026_003E
 {
 }

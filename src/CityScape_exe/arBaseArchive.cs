@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct arBaseArchive
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	public enum EnumReadWrite
@@ -20,7 +20,7 @@ internal struct arBaseArchive
 
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumArchiveType
 	{

@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-internal static struct arTypeVisitor_003CprNetworkNode_003E
+internal struct arTypeVisitor_003CprNetworkNode_003E
 {
 }

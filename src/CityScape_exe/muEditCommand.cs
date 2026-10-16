@@ -11,7 +11,7 @@ internal struct muEditCommand
 {
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumCommandType
 	{

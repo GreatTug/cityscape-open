@@ -5,7 +5,6 @@ namespace boost;
 
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
-[NativeCppClass]
 internal enum memory_order
 {
 

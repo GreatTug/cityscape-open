@@ -11,7 +11,7 @@ internal struct mtMatrix44
 {
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumFrustumPlanes
 	{

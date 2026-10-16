@@ -7,11 +7,11 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct arJoystick
+internal struct arJoystick
 {
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumDirections
 	{
@@ -20,7 +20,7 @@ internal static struct arJoystick
 
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumType
 	{

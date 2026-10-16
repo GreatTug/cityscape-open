@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 internal struct arTextWriteArchive
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	internal enum EnumNewLineState
 	{

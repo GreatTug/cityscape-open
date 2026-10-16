@@ -11,7 +11,7 @@ internal struct trRoadStyle
 {
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumConstructionType
 	{
@@ -20,7 +20,7 @@ internal struct trRoadStyle
 
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumTextures
 	{
@@ -28,7 +28,7 @@ internal struct trRoadStyle
 	}
 
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	public enum EnumDetailTextures

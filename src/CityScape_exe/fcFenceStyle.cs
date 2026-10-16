@@ -7,12 +7,11 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct fcFenceStyle
+internal struct fcFenceStyle
 {
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum EnumFenceStyleTypes
 	{
 
@@ -21,7 +20,6 @@ internal static struct fcFenceStyle
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum EnumAlignParent
 	{
 

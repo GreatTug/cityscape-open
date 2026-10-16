@@ -11,7 +11,7 @@ internal struct arColor32Template_003CarColor32Base_003E
 {
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumColors
 	{

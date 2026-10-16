@@ -7,10 +7,10 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
 [NativeCppClass]
-internal static struct gxTexture
+internal struct gxTexture
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumFace
@@ -29,7 +29,7 @@ internal static struct gxTexture
 
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumFormat
 	{

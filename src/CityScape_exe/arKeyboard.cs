@@ -11,7 +11,7 @@ internal struct arKeyboard
 {
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumKey
 	{
@@ -20,7 +20,7 @@ internal struct arKeyboard
 
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumKeyState
 	{

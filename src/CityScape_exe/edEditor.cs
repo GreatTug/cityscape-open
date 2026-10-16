@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct edEditor
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	public enum EnumKeyLokState
@@ -20,13 +20,12 @@ internal struct edEditor
 
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	internal enum EnumResult
 	{
 
 	}
 
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	internal enum EnumConfirmFlag
@@ -35,7 +34,7 @@ internal struct edEditor
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	internal enum EnumMenu
 	{
@@ -43,7 +42,7 @@ internal struct edEditor
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	internal enum EnumMouseState
 	{

@@ -14,7 +14,6 @@ internal struct ios_base
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum @event
 	{
 

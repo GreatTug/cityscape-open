@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [NativeCppClass]
 internal struct palWidgetToolPanel
 {
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
@@ -19,7 +19,7 @@ internal struct palWidgetToolPanel
 	}
 
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumUnhideDockingType

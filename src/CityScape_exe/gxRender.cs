@@ -12,14 +12,13 @@ internal struct gxRender
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	public enum EnumAnisotropicLevel
 	{
 
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	public enum EnumFill
@@ -27,7 +26,7 @@ internal struct gxRender
 
 	}
 
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
@@ -38,7 +37,7 @@ internal struct gxRender
 
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumCull
 	{
@@ -47,7 +46,7 @@ internal struct gxRender
 
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumCmpType
 	{
@@ -56,7 +55,7 @@ internal struct gxRender
 
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumBlendType
 	{
@@ -64,7 +63,7 @@ internal struct gxRender
 	}
 
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	public enum EnumBlendEquation

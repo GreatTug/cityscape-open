@@ -12,7 +12,6 @@ internal struct arKeyLock
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum EnumLeaseStatus
 	{
 

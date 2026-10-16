@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct ifVisitor_003CtrGeographyGridFeature_003E
+internal struct ifVisitor_003CtrGeographyGridFeature_003E
 {
 }

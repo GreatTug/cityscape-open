@@ -12,7 +12,6 @@ internal struct prNetworkModifiable
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum EnumModifyType
 	{
 

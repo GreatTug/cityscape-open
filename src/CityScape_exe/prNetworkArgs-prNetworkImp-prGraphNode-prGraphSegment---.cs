@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 internal struct prNetworkArgs_003CprNetworkImp_003CprGraphNode_002CprGraphSegment_003E_0020_003E
 {
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]

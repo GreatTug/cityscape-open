@@ -11,7 +11,7 @@ internal struct trRoadSide
 {
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumSide
 	{

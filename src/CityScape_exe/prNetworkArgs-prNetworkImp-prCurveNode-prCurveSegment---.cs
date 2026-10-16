@@ -11,7 +11,7 @@ internal struct prNetworkArgs_003CprNetworkImp_003CprCurveNode_002CprCurveSegmen
 {
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumDirtyType
 	{

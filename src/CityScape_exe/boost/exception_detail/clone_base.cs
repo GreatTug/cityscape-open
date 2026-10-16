@@ -8,6 +8,6 @@ namespace boost.exception_detail;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct clone_base
+internal struct clone_base
 {
 }

@@ -30,7 +30,6 @@ internal struct gxLightMgr
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum EnumShadowType
 	{
 
@@ -38,7 +37,7 @@ internal struct gxLightMgr
 
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum EnumShadowState
 	{

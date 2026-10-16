@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct mtConvex
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumResult

@@ -5,7 +5,6 @@ namespace gxRenderStateCmpFunc;
 
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-[NativeCppClass]
 internal enum Enum
 {
 

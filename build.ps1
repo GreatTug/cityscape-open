@@ -29,7 +29,8 @@ $projects = @(
     "src\gisImageryDotNet\gisImageryDotNet.csproj",
     "src\ktKitDotNet\ktKitDotNet.csproj",
     "src\edEditorDotNet\edEditorDotNet.csproj",
-    "src\BugReporter\BugReporter.csproj"
+    "src\BugReporter\BugReporter.csproj",
+    "src\CityScape\CityScape.csproj"
 )
 
 foreach ($proj in $projects) {
@@ -47,6 +48,32 @@ foreach ($proj in $projects) {
     }
     Write-Host "[OK] $proj compiled successfully!" -ForegroundColor Green
 }
+
+# Stage distribution to bin/Release/net48
+$binDist = "bin\Release\net48"
+New-Item -ItemType Directory -Force -Path $binDist | Out-Null
+Write-Host "`n---> Staging distribution to $binDist..." -ForegroundColor Yellow
+
+# Copy third-party runtime dependencies from lib/
+if (Test-Path "lib") {
+    Copy-Item "lib\*" -Destination $binDist -Force
+}
+
+# Copy newly built assemblies and debug symbols from each project
+foreach ($proj in $projects) {
+    $projDir = Split-Path $proj
+    $projBin = Join-Path $projDir "bin\Release\net48"
+    if (Test-Path $projBin) {
+        Copy-Item "$projBin\*" -Destination $binDist -Force
+    }
+}
+
+# Copy main application configuration
+if (Test-Path "CityScape.exe.config") {
+    Copy-Item "CityScape.exe.config" -Destination "$binDist\CityScape.exe.config" -Force
+}
+
+Write-Host "[OK] Staged all distribution binaries to $binDist" -ForegroundColor Green
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  All CityScape assemblies built successfully!" -ForegroundColor Green

@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct arPlatform
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	public enum EnumPlatform

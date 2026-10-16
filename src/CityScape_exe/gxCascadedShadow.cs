@@ -11,7 +11,7 @@ internal struct gxCascadedShadow
 {
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumSplitType
 	{
@@ -21,7 +21,6 @@ internal struct gxCascadedShadow
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	public enum EnumShadowType
 	{
 

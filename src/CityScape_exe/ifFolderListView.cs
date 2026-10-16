@@ -12,7 +12,6 @@ internal struct ifFolderListView
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum EnumListModeFlags
 	{
 

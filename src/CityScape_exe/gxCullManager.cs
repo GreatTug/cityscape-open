@@ -11,7 +11,7 @@ internal struct gxCullManager
 {
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumTestType
 	{
@@ -20,7 +20,7 @@ internal struct gxCullManager
 
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum EnumCullState
 	{

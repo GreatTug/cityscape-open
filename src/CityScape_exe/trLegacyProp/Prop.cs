@@ -9,9 +9,9 @@ namespace trLegacyProp;
 [MiscellaneousBits(64)]
 [NativeCppClass]
 [DebugInfoInPDB]
-internal static struct Prop
+internal struct Prop
 {
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]

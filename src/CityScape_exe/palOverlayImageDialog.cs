@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
 [NativeCppClass]
-internal static struct palOverlayImageDialog
+internal struct palOverlayImageDialog
 {
 }

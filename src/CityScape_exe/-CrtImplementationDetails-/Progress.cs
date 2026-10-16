@@ -13,7 +13,7 @@ internal struct Progress
 {
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum State
 	{

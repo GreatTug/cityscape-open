@@ -11,7 +11,7 @@ internal struct prPolygonImpl_003Cfloat_003E
 {
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	public enum eStatus
 	{

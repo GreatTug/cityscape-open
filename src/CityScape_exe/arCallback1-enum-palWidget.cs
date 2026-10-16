@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
 [NativeCppClass]
-internal static struct arCallback1_003Cenum_0020palWidget_003A_003AEnumEditingState_003E
+internal struct arCallback1_003Cenum_0020palWidget_003A_003AEnumEditingState_003E
 {
 }

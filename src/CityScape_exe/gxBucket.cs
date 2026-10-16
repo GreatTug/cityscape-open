@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 internal struct gxBucket
 {
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
@@ -19,7 +19,7 @@ internal struct gxBucket
 	}
 
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	public enum EnumBucketShadow
@@ -28,7 +28,7 @@ internal struct gxBucket
 	}
 
 	[CLSCompliant(false)]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	public enum EnumBucket
@@ -39,7 +39,6 @@ internal struct gxBucket
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
 	public enum EnumBucketSkyShadow
 	{
 
@@ -48,7 +47,6 @@ internal struct gxBucket
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum EnumSortTypes
 	{
 

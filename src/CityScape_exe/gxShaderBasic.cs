@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 internal struct gxShaderBasic
 {
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]

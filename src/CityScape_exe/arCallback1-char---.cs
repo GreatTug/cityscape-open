@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
-internal static struct arCallback1_003Cchar_0020_002A_003E
+internal struct arCallback1_003Cchar_0020_002A_003E
 {
 }

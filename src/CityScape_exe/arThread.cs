@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct arThread
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	public enum EnumPriority

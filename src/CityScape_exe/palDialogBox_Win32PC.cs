@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
 [NativeCppClass]
-internal static struct palDialogBox_Win32PC
+internal struct palDialogBox_Win32PC
 {
 }

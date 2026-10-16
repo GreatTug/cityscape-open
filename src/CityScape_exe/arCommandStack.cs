@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 internal struct arCommandStack
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	internal enum EnumStackState
 	{

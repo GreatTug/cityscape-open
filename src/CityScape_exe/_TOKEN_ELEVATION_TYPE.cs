@@ -3,7 +3,6 @@ using Microsoft.VisualC;
 
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
-[NativeCppClass]
 internal enum _TOKEN_ELEVATION_TYPE
 {
 

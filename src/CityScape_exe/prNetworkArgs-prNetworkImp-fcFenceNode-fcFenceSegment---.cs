@@ -12,7 +12,6 @@ internal struct prNetworkArgs_003CprNetworkImp_003CfcFenceNode_002CfcFenceSegmen
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum EnumDirtyType
 	{
 

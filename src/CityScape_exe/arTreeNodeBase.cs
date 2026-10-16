@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 [MiscellaneousBits(65)]
 internal struct arTreeNodeBase
 {
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]

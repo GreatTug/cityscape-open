@@ -12,7 +12,6 @@ internal struct gxPipeline
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum EnumDepthMapSupport
 	{
 

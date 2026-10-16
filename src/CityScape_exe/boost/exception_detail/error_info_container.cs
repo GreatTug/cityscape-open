@@ -8,6 +8,6 @@ namespace boost.exception_detail;
 [DebugInfoInPDB]
 [NativeCppClass]
 [MiscellaneousBits(65)]
-internal static struct error_info_container
+internal struct error_info_container
 {
 }

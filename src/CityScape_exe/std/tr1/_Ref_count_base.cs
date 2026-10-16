@@ -8,6 +8,6 @@ namespace std.tr1;
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
 [NativeCppClass]
-internal static struct _Ref_count_base
+internal struct _Ref_count_base
 {
 }

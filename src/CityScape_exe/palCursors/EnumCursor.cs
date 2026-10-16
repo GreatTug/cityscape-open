@@ -5,7 +5,6 @@ namespace palCursors;
 
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-[NativeCppClass]
 internal enum EnumCursor
 {
 

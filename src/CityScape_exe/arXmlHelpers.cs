@@ -11,7 +11,7 @@ internal struct arXmlHelpers
 {
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum StateBegin
 	{
@@ -19,7 +19,7 @@ internal struct arXmlHelpers
 	}
 
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	public enum StateEnd
@@ -27,7 +27,7 @@ internal struct arXmlHelpers
 
 	}
 
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
@@ -36,7 +36,7 @@ internal struct arXmlHelpers
 
 	}
 
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
@@ -47,7 +47,7 @@ internal struct arXmlHelpers
 
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum BeginFlagsResult
 	{

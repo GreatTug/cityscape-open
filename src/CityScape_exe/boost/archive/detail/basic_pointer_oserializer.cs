@@ -8,6 +8,6 @@ namespace boost.archive.detail;
 [NativeCppClass]
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
-internal static struct basic_pointer_oserializer
+internal struct basic_pointer_oserializer
 {
 }

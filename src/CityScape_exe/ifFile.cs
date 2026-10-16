@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct ifFile
 {
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
 	public enum EnumCopyResult
@@ -19,7 +19,7 @@ internal struct ifFile
 	}
 
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
 	public enum EnumMoveResult

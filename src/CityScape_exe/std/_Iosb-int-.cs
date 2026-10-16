@@ -12,7 +12,7 @@ namespace std;
 internal struct _Iosb_003Cint_003E
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	public enum _Dummy_enum
@@ -21,7 +21,7 @@ internal struct _Iosb_003Cint_003E
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	public enum _Fmtflags
@@ -32,13 +32,12 @@ internal struct _Iosb_003Cint_003E
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
 	[CLSCompliant(false)]
-	[NativeCppClass]
 	public enum _Iostate
 	{
 
 	}
 
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
@@ -47,7 +46,7 @@ internal struct _Iosb_003Cint_003E
 
 	}
 
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]

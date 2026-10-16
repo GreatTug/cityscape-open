@@ -10,7 +10,7 @@ using Microsoft.VisualC;
 internal struct palDialogBox
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	public enum EnumParamType
@@ -36,7 +36,7 @@ internal struct palDialogBox
 	}
 
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	internal enum Messages
 	{

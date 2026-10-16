@@ -39,7 +39,7 @@ public class DocumentRenderView : DocumentView
 
 	[Browsable(false)]
 	[ReadOnly(true)]
-	public override Guid Guid => ControlRender.RenderWindow.Guid;
+	public override Guid Guid => (ControlRender?.RenderWindow != null) ? ControlRender.RenderWindow.Guid : Guid.Empty;
 
 	public DocumentRenderView()
 	{

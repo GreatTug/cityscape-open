@@ -7,7 +7,7 @@ using Microsoft.VisualC;
 [DebugInfoInPDB]
 [MiscellaneousBits(64)]
 [NativeCppClass]
-internal static struct arCommandBasedSymbol
+internal struct arCommandBasedSymbol
 {
 	[StructLayout(LayoutKind.Sequential, Size = 12)]
 	[MiscellaneousBits(65)]

@@ -11,7 +11,7 @@ internal struct gxLight
 {
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumLightType
 	{

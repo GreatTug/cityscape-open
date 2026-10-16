@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct arTypeVisitor_003Cenum_0020fcFenceStyle_003A_003AEnumAlignParent_003E
+internal struct arTypeVisitor_003Cenum_0020fcFenceStyle_003A_003AEnumAlignParent_003E
 {
 }

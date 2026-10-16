@@ -9,12 +9,11 @@ namespace trLegacyProp;
 [DebugInfoInPDB]
 [NativeCppClass]
 [MiscellaneousBits(64)]
-internal static struct Anchor
+internal struct Anchor
 {
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum EnumGeometry
 	{
 

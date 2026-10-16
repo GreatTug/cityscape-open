@@ -8,6 +8,6 @@ namespace boost.archive.detail;
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
 [NativeCppClass]
-internal static struct basic_oarchive
+internal struct basic_oarchive
 {
 }

@@ -14,7 +14,6 @@ internal struct time_base
 	[DebugInfoInPDB]
 	[CLSCompliant(false)]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
 	public enum dateorder
 	{
 

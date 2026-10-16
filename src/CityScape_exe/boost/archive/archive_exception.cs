@@ -13,7 +13,7 @@ internal struct archive_exception
 {
 	[CLSCompliant(false)]
 	[DebugInfoInPDB]
-	[NativeCppClass]
+	
 	[MiscellaneousBits(64)]
 	public enum exception_code
 	{

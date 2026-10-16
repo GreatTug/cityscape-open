@@ -6,6 +6,6 @@ using Microsoft.VisualC;
 [NativeCppClass]
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-internal static struct arTypeVisitor_003CmtAlignedBox2Impl_003Cdouble_003E_0020_003E
+internal struct arTypeVisitor_003CmtAlignedBox2Impl_003Cdouble_003E_0020_003E
 {
 }

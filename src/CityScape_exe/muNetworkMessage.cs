@@ -11,7 +11,7 @@ internal struct muNetworkMessage
 {
 	[DebugInfoInPDB]
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[CLSCompliant(false)]
 	public enum EnumMessageType
 	{

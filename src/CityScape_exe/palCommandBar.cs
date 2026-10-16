@@ -9,7 +9,7 @@ using Microsoft.VisualC;
 internal struct palCommandBar
 {
 	[MiscellaneousBits(64)]
-	[NativeCppClass]
+	
 	[DebugInfoInPDB]
 	internal enum Messages
 	{

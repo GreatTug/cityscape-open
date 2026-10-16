@@ -261,7 +261,7 @@ internal class ktTemplateEditor
 			num2++;
 		}
 		while (*ptr != 0);
-		global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num2) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0M_0040_0024_0024CBD, _003F>(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040))));
+		global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EInsert(&obj, null, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040) + num2));
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out mdMetaDataDetail mdMetaDataDetail2);
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out arValue arValue2);
 		while (true)
@@ -305,7 +305,7 @@ internal class ktTemplateEditor
 						num3++;
 					}
 					while (*ptr3 != 0);
-					global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(&obj, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040), (sbyte*)((ref *(_003F*)num3) + (ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY0M_0040_0024_0024CBD, _003F>(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040))));
+					global::_003CModule_003E.arBasicString_003Cchar_002CarAllocator_003E_002EAssign_003Cchar_0020const_0020_002A_003E(&obj, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040), ((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_0M_0040PLINOBKC_0040New_003F5Element_003F_0024AA_0040) + num3));
 					global::_003CModule_003E.operator_002B_003D_003Cchar_002Cclass_0020arAllocator_003E(&obj, (sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref global::_003CModule_003E._003F_003F_C_0040_01CLKCMJKC_0040_003F5_003F_0024AA_0040));
 					num++;
 					global::_003CModule_003E._002B_003D(&obj, num);

@@ -5,7 +5,6 @@ namespace ktKit;
 
 [MiscellaneousBits(64)]
 [DebugInfoInPDB]
-[NativeCppClass]
 internal enum MouseButtons
 {
 
