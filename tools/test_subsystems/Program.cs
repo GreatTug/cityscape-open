@@ -1921,6 +1921,78 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("UnifiedClusterCullHzbIndirectCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 UnifiedClusterCullHzbIndirectCs compute shader registered");
             Assert(pipeline.GetModule("UnifiedClusterCullHzbIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V UnifiedClusterCullHzbIndirectCs compute shader registered");
 
+            // Weighted Blended Order-Independent Transparency (WBOIT - McGuire & Bavoil)
+            var wboit = pipeline.OrderIndependentTransparency;
+            Assert(wboit != null, "pipeline.OrderIndependentTransparency instantiated successfully");
+
+            // 1. Depth Weight Function Monotonicity and Clamping
+            float wNear = wboit.EvaluateWeight(5.0f, alpha: 0.5f);
+            float wFar = wboit.EvaluateWeight(150.0f, alpha: 0.5f);
+            Assert(wNear > wFar, $"Closer transparent surface has higher blend weight: {wNear:F2} > {wFar:F2}");
+
+            float wExtremeNear = wboit.EvaluateWeight(0.001f, alpha: 1.0f);
+            Assert(Math.Abs(wExtremeNear - wboit.MaxWeight) < 1e-3f, $"Extreme near surface safely clamped to MaxWeight: {wExtremeNear:F1}");
+
+            float wExtremeFar = wboit.EvaluateWeight(5000.0f, alpha: 1.0f);
+            Assert(Math.Abs(wExtremeFar - wboit.MinWeight) < 1e-3f, $"Extreme distant surface safely clamped to MinWeight: {wExtremeFar:F4}");
+
+            float wHalfAlpha = wboit.EvaluateWeight(20.0f, alpha: 0.25f);
+            float wFullAlpha = wboit.EvaluateWeight(20.0f, alpha: 0.50f);
+            Assert(Math.Abs(wFullAlpha - wHalfAlpha * 2.0f) < 1e-4f, "Weight scales linearly with surface fragment opacity");
+
+            // 2. Architectural Glass Fresnel Reflectance
+            wboit.EvaluateArchitecturalGlass(viewDotNormal: 1.0f, baseAlpha: 0.30f, out float fNormal, out float aNormal);
+            wboit.EvaluateArchitecturalGlass(viewDotNormal: 0.05f, baseAlpha: 0.30f, out float fGrazing, out float aGrazing);
+            Assert(Math.Abs(fNormal - 0.0426f) < 0.01f, $"Normal incidence crown glass reflection matches F0 (4.26%): {fNormal:P2}");
+            Assert(fGrazing > 0.70f, $"Grazing angle skyscraper glass reflection reaches high specular peak: {fGrazing:P2}");
+            Assert(aGrazing > aNormal, $"Grazing angle increases apparent glass opacity: {aGrazing:F2} > {aNormal:F2}");
+
+            // 3. Single Transparent Layer Composite Matches Analytical Alpha Blend
+            float accumR1 = 0f, accumG1 = 0f, accumB1 = 0f, accumA1 = 0f, rev1 = 1.0f;
+            wboit.AccumulateFragment(0.0f, 0.8f, 0.9f, alpha: 0.40f, linearDepth: 25.0f,
+                ref accumR1, ref accumG1, ref accumB1, ref accumA1, ref rev1);
+            Assert(Math.Abs(rev1 - 0.60f) < 1e-5f, $"Revealage buffer correctly recorded transmittance product (1 - alpha = 0.60): {rev1:F2}");
+
+            wboit.CompositePixel(bgR: 1.0f, bgG: 1.0f, bgB: 1.0f,
+                accumR1, accumG1, accumB1, accumA1, rev1,
+                out float outR1, out float outG1, out float outB1);
+            // Expected: C_trans * 0.40 + C_bg * 0.60 = (0.0*0.4+0.6, 0.8*0.4+0.6, 0.9*0.4+0.6) = (0.60, 0.92, 0.96)
+            Assert(Math.Abs(outR1 - 0.60f) < 1e-4f && Math.Abs(outG1 - 0.92f) < 1e-4f && Math.Abs(outB1 - 0.96f) < 1e-4f,
+                $"Single transparent layer composite precisely matches analytical alpha blend: ({outR1:F2}, {outG1:F2}, {outB1:F2})");
+
+            // 4. Mathematical Order Invariance (Draw order independence)
+            // Sequence A: Front layer (Amber glass, z=10, a=0.30) then Back layer (Cobalt glass, z=60, a=0.50)
+            float accAR = 0f, accAG = 0f, accAB = 0f, accAA = 0f, revA = 1.0f;
+            wboit.AccumulateFragment(1.0f, 0.6f, 0.1f, alpha: 0.30f, linearDepth: 10.0f, ref accAR, ref accAG, ref accAB, ref accAA, ref revA);
+            wboit.AccumulateFragment(0.1f, 0.3f, 0.9f, alpha: 0.50f, linearDepth: 60.0f, ref accAR, ref accAG, ref accAB, ref accAA, ref revA);
+
+            wboit.CompositePixel(0.5f, 0.5f, 0.5f, accAR, accAG, accAB, accAA, revA, out float outAR, out float outAG, out float outAB);
+
+            // Sequence B: Back layer first, then Front layer (opposite draw order)
+            float accBR = 0f, accBG = 0f, accBB = 0f, accBA = 0f, revB = 1.0f;
+            wboit.AccumulateFragment(0.1f, 0.3f, 0.9f, alpha: 0.50f, linearDepth: 60.0f, ref accBR, ref accBG, ref accBB, ref accBA, ref revB);
+            wboit.AccumulateFragment(1.0f, 0.6f, 0.1f, alpha: 0.30f, linearDepth: 10.0f, ref accBR, ref accBG, ref accBB, ref accBA, ref revB);
+
+            wboit.CompositePixel(0.5f, 0.5f, 0.5f, accBR, accBG, accBB, accBA, revB, out float outBR, out float outBG, out float outBB);
+
+            Assert(Math.Abs(outAR - outBR) < 1e-5f && Math.Abs(outAG - outBG) < 1e-5f && Math.Abs(outAB - outBB) < 1e-5f,
+                $"Order-independent transparency mathematically guarantees exact draw-order invariance (Front->Back vs Back->Front match: Delta < 1e-5)");
+
+            // 5. Buffer Composite Pass
+            float[] bgBuffer = new float[] { 0.5f, 0.5f, 0.5f, 0.1f, 0.1f, 0.1f };
+            float[] accumBuffer = new float[] { accAR, accAG, accAB, accAA, 0f, 0f, 0f, 0f };
+            float[] revBuffer = new float[] { revA, 1.0f };
+            float[] outBuffer = new float[6];
+            wboit.CompositeBuffer(bgBuffer, accumBuffer, revBuffer, outBuffer, pixelCount: 2);
+            Assert(Math.Abs(outBuffer[0] - outAR) < 1e-5f, "CompositeBuffer produced valid transparent blend for pixel 0");
+            Assert(Math.Abs(outBuffer[3] - 0.1f) < 1e-5f, "CompositeBuffer preserved unmodified background on pixel 1 with no transparency");
+
+            // WBOIT Shaders Registered
+            Assert(pipeline.GetModule("WeightedBlendedOitAccumPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 WeightedBlendedOitAccumPs shader registered");
+            Assert(pipeline.GetModule("WeightedBlendedOitAccumPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V WeightedBlendedOitAccumPs shader registered");
+            Assert(pipeline.GetModule("WeightedBlendedOitCompositePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 WeightedBlendedOitCompositePs shader registered");
+            Assert(pipeline.GetModule("WeightedBlendedOitCompositePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V WeightedBlendedOitCompositePs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

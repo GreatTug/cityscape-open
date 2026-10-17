@@ -3738,6 +3738,148 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Weighted Blended Order-Independent Transparency (WBOIT - Morgan McGuire & Louis Bavoil).
+    /// Provides sorting-free O(1) multi-layer transparency blending for architectural glass curtain walls,
+    /// skyscraper facades, vehicle windshields, and overlapping transparent particle volumes.
+    /// Eliminates sorting artifacts, popping, and geometry order dependency.
+    /// </summary>
+    public class OrderIndependentTransparencyPipeline
+    {
+        public float DepthWeightScale { get; set; } = 200.0f;
+        public float DepthWeightPower { get; set; } = 4.0f;
+        public float DepthWeightMultiplier { get; set; } = 10.0f;
+        public float MinWeight { get; set; } = 0.01f;
+        public float MaxWeight { get; set; } = 3000.0f;
+
+        // Architectural Glass PBR parameters
+        public float GlassTintR { get; set; } = 0.65f;
+        public float GlassTintG { get; set; } = 0.85f;
+        public float GlassTintB { get; set; } = 0.95f;
+        public float GlassAlpha { get; set; } = 0.35f;
+        public float GlassRefractionIndex { get; set; } = 1.52f; // Crown glass
+        public float GlassRoughness { get; set; } = 0.02f;
+
+        /// <summary>
+        /// Evaluates depth-dependent blending weight w(z, alpha) according to McGuire & Bavoil (2013).
+        /// Closer transparent surfaces receive higher weight to dominate the blend, while
+        /// distant surfaces contribute smoothly without float16 precision overflow.
+        /// </summary>
+        public float EvaluateWeight(float linearDepth, float alpha)
+        {
+            float z = Math.Max(0.01f, linearDepth);
+            float zScaled = z / Math.Max(1.0f, DepthWeightScale);
+            float zPow = (float)Math.Pow(zScaled, DepthWeightPower);
+            float denom = 1e-5f + zPow;
+            float rawWeight = DepthWeightMultiplier / denom;
+
+            float clamped = Math.Max(MinWeight, Math.Min(MaxWeight, rawWeight));
+            return alpha * clamped;
+        }
+
+        /// <summary>
+        /// Evaluates normalized device depth weight formulation: clamp(alpha * 8.0 * (1.0 - zNorm)^3, min, max).
+        /// </summary>
+        public float EvaluateWeightNormalized(float normalizedDepth, float alpha)
+        {
+            float z = Math.Max(0.0f, Math.Min(1.0f, normalizedDepth));
+            float invZ = 1.0f - z;
+            float rawWeight = alpha * 8.0f * invZ * invZ * invZ;
+            return Math.Max(MinWeight, Math.Min(MaxWeight, rawWeight));
+        }
+
+        /// <summary>
+        /// Evaluates Fresnel reflectance and effective opacity for architectural glass at grazing angles.
+        /// Uses Schlick's approximation: F = F0 + (1 - F0)*(1 - |V.N|)^5.
+        /// </summary>
+        public void EvaluateArchitecturalGlass(float viewDotNormal, float baseAlpha, out float fresnelReflectance, out float effectiveAlpha)
+        {
+            float nDotV = Math.Max(0.0f, Math.Min(1.0f, Math.Abs(viewDotNormal)));
+            float f0 = (float)Math.Pow((GlassRefractionIndex - 1.0f) / (GlassRefractionIndex + 1.0f), 2.0);
+            fresnelReflectance = f0 + (1.0f - f0) * (float)Math.Pow(1.0f - nDotV, 5.0);
+
+            // Grazing angles increase apparent opacity due to specular reflection
+            effectiveAlpha = Math.Max(0.01f, Math.Min(0.99f, baseAlpha + fresnelReflectance * 0.40f));
+        }
+
+        /// <summary>
+        /// Accumulates a single transparent fragment into dual render target buffers:
+        /// RT0 (Accum): Additive color and alpha weight.
+        /// RT1 (Revealage): Multiplicative transmittance (1 - alpha).
+        /// </summary>
+        public void AccumulateFragment(
+            float r, float g, float b, float alpha, float linearDepth,
+            ref float accumR, ref float accumG, ref float accumB, ref float accumA, ref float revealage)
+        {
+            float a = Math.Max(0.0f, Math.Min(1.0f, alpha));
+            float w = EvaluateWeight(linearDepth, a);
+
+            // RT0 Additive accumulation
+            accumR += r * a * w;
+            accumG += g * a * w;
+            accumB += b * a * w;
+            accumA += a * w;
+
+            // RT1 Multiplicative revealage (transmittance product)
+            revealage *= (1.0f - a);
+        }
+
+        /// <summary>
+        /// Reconstructs final composite color from accumulated transparency and revealage over opaque background.
+        /// Formula: C_final = (accum.rgb / max(accum.a, 1e-5)) * (1.0 - revealage) + C_bg * revealage.
+        /// </summary>
+        public void CompositePixel(
+            float bgR, float bgG, float bgB,
+            float accumR, float accumG, float accumB, float accumA, float revealage,
+            out float outR, out float outG, out float outB)
+        {
+            if (accumA < 1e-5f)
+            {
+                // No transparent fragments present
+                outR = bgR;
+                outG = bgG;
+                outB = bgB;
+                return;
+            }
+
+            float invA = 1.0f / Math.Max(accumA, 1e-5f);
+            float transR = accumR * invA;
+            float transG = accumG * invA;
+            float transB = accumB * invA;
+
+            float rev = Math.Max(0.0f, Math.Min(1.0f, revealage));
+            float transFactor = 1.0f - rev;
+
+            outR = transR * transFactor + bgR * rev;
+            outG = transG * transFactor + bgG * rev;
+            outB = transB * transFactor + bgB * rev;
+        }
+
+        /// <summary>
+        /// High-throughput full-screen buffer composite pass.
+        /// </summary>
+        public void CompositeBuffer(
+            float[] bgColorsRgb, float[] accumColorsRgba, float[] revealageBuffer,
+            float[] outColorsRgb, int pixelCount)
+        {
+            if (bgColorsRgb == null || accumColorsRgba == null || revealageBuffer == null || outColorsRgb == null)
+                return;
+
+            for (int i = 0; i < pixelCount; i++)
+            {
+                int bgIdx = i * 3;
+                int accumIdx = i * 4;
+
+                CompositePixel(
+                    bgColorsRgb[bgIdx], bgColorsRgb[bgIdx + 1], bgColorsRgb[bgIdx + 2],
+                    accumColorsRgba[accumIdx], accumColorsRgba[accumIdx + 1], accumColorsRgba[accumIdx + 2], accumColorsRgba[accumIdx + 3],
+                    revealageBuffer[i],
+                    out outColorsRgb[bgIdx], out outColorsRgb[bgIdx + 1], out outColorsRgb[bgIdx + 2]
+                );
+            }
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -3765,6 +3907,7 @@ namespace palDotNet.palModernEngine
         public WetRoadRipplesPipeline WetRoads { get; } = new WetRoadRipplesPipeline();
         public VolumetricCloudPipeline VolumetricClouds { get; } = new VolumetricCloudPipeline();
         public SubsurfaceScatteringPipeline SubsurfaceScattering { get; } = new SubsurfaceScatteringPipeline();
+        public OrderIndependentTransparencyPipeline OrderIndependentTransparency { get; } = new OrderIndependentTransparencyPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -6512,6 +6655,173 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("UnifiedClusterCullHzbIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslUnifiedCullCs, Cache));
+
+            // 23. Weighted Blended Order-Independent Transparency (WBOIT - McGuire & Bavoil)
+            // Shader 45: HLSL SM6 WeightedBlendedOitAccumPs (MRT: SV_Target0 = Accumulation RGBA16F, SV_Target1 = Revealage R8_UNORM)
+            string hlslWboitAccumPs = @"
+                cbuffer OitParams : register(b0)
+                {
+                    float4 GlassTint;        // rgb = tint color, a = base alpha
+                    float  DepthScale;       // 200.0f
+                    float  DepthMultiplier;  // 10.0f
+                    float  MinWeight;        // 0.01f
+                    float  MaxWeight;        // 3000.0f
+                };
+
+                struct PSInput
+                {
+                    float4 Position : SV_Position;
+                    float3 WorldPos : POSITION0;
+                    float3 Normal   : NORMAL0;
+                    float2 TexCoord : TEXCOORD0;
+                    float  LinearZ  : TEXCOORD1;
+                };
+
+                struct PSOutput
+                {
+                    float4 Accumulation : SV_Target0;
+                    float  Revealage    : SV_Target1;
+                };
+
+                float ComputeDepthWeight(float z, float alpha)
+                {
+                    float zTerm = z / max(1.0f, DepthScale);
+                    float denom = 1e-5f + pow(zTerm, 4.0f);
+                    float w = DepthMultiplier / denom;
+                    return alpha * clamp(w, MinWeight, MaxWeight);
+                }
+
+                PSOutput main(PSInput input)
+                {
+                    PSOutput output;
+
+                    // Architectural glass Fresnel reflectance (Schlick approximation)
+                    float3 V = normalize(-input.WorldPos);
+                    float3 N = normalize(input.Normal);
+                    float nDotV = abs(dot(N, V));
+                    float F0 = 0.0426f; // Crown glass (IOR = 1.52)
+                    float fresnel = F0 + (1.0f - F0) * pow(1.0f - nDotV, 5.0f);
+
+                    float alpha = clamp(GlassTint.a + fresnel * 0.40f, 0.01f, 0.99f);
+                    float3 color = GlassTint.rgb;
+
+                    float weight = ComputeDepthWeight(input.LinearZ, alpha);
+
+                    // RT0: Accumulation buffer (Additive blend: One, One)
+                    output.Accumulation = float4(color * alpha * weight, alpha * weight);
+
+                    // RT1: Revealage buffer (Multiplicative blend: Zero, 1 - SrcAlpha)
+                    output.Revealage = alpha;
+
+                    return output;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WeightedBlendedOitAccumPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslWboitAccumPs, Cache));
+
+            // Shader 46: Vulkan SPIR-V WeightedBlendedOitAccumPs
+            string glslWboitAccumPs = @"
+                #version 450
+                layout(location = 0) in vec3 inWorldPos;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec2 inTexCoord;
+                layout(location = 3) in float inLinearZ;
+
+                layout(location = 0) out vec4 outAccum;
+                layout(location = 1) out float outReveal;
+
+                layout(binding = 0) uniform OitUBO {
+                    vec4  glassTint;
+                    float depthScale;
+                    float depthMultiplier;
+                    float minWeight;
+                    float maxWeight;
+                } ubo;
+
+                float computeDepthWeight(float z, float alpha) {
+                    float zTerm = z / max(1.0, ubo.depthScale);
+                    float denom = 1e-5 + pow(zTerm, 4.0);
+                    float w = ubo.depthMultiplier / denom;
+                    return alpha * clamp(w, ubo.minWeight, ubo.maxWeight);
+                }
+
+                void main() {
+                    vec3 V = normalize(-inWorldPos);
+                    vec3 N = normalize(inNormal);
+                    float nDotV = abs(dot(N, V));
+                    float F0 = 0.0426;
+                    float fresnel = F0 + (1.0 - F0) * pow(1.0 - nDotV, 5.0);
+
+                    float alpha = clamp(ubo.glassTint.a + fresnel * 0.40, 0.01, 0.99);
+                    vec3 color = ubo.glassTint.rgb;
+
+                    float weight = computeDepthWeight(inLinearZ, alpha);
+                    outAccum = vec4(color * alpha * weight, alpha * weight);
+                    outReveal = alpha;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WeightedBlendedOitAccumPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslWboitAccumPs, Cache));
+
+            // Shader 47: HLSL SM6 WeightedBlendedOitCompositePs (Full-Screen Quad Pass)
+            string hlslWboitCompositePs = @"
+                Texture2D<float4> AccumTexture    : register(t0);
+                Texture2D<float>  RevealTexture   : register(t1);
+                Texture2D<float4> OpaqueBgTexture : register(t2);
+                SamplerState      PointSampler    : register(s0);
+
+                struct PSInput
+                {
+                    float4 Position : SV_Position;
+                    float2 TexCoord : TEXCOORD0;
+                };
+
+                float4 main(PSInput input) : SV_Target
+                {
+                    float4 accum = AccumTexture.Sample(PointSampler, input.TexCoord);
+                    float revealage = RevealTexture.Sample(PointSampler, input.TexCoord);
+                    float4 bg = OpaqueBgTexture.Sample(PointSampler, input.TexCoord);
+
+                    // If no transparent fragments were accumulated, preserve background untouched
+                    if (accum.a < 1e-5f)
+                    {
+                        return bg;
+                    }
+
+                    // Average accumulated transparent radiance
+                    float3 transColor = accum.rgb / max(accum.a, 1e-5f);
+
+                    // Composite transparent radiance over opaque background using revealage
+                    float3 finalColor = transColor * (1.0f - revealage) + bg.rgb * revealage;
+                    return float4(finalColor, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WeightedBlendedOitCompositePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslWboitCompositePs, Cache));
+
+            // Shader 48: Vulkan SPIR-V WeightedBlendedOitCompositePs (Full-Screen Quad Pass)
+            string glslWboitCompositePs = @"
+                #version 450
+                layout(location = 0) in vec2 inTexCoord;
+                layout(location = 0) out vec4 outFinalColor;
+
+                layout(binding = 0) uniform sampler2D accumSampler;
+                layout(binding = 1) uniform sampler2D revealSampler;
+                layout(binding = 2) uniform sampler2D opaqueBgSampler;
+
+                void main() {
+                    vec4 accum = texture(accumSampler, inTexCoord);
+                    float revealage = texture(revealSampler, inTexCoord).r;
+                    vec4 bg = texture(opaqueBgSampler, inTexCoord);
+
+                    if (accum.a < 1e-5) {
+                        outFinalColor = bg;
+                        return;
+                    }
+
+                    vec3 transColor = accum.rgb / max(accum.a, 1e-5);
+                    vec3 finalRgb = transColor * (1.0 - revealage) + bg.rgb * revealage;
+                    outFinalColor = vec4(finalRgb, 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WeightedBlendedOitCompositePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslWboitCompositePs, Cache));
         }
     }
 }
