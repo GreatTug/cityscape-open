@@ -1192,6 +1192,47 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("FoliageInstancedVs", ShaderStage.Vertex, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V FoliageInstancedVs shader registered");
             Assert(pipeline.GetModule("FoliagePbrPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V FoliagePbrPs shader registered");
 
+            // Temporal Anti-Aliasing (TAA) Pipeline, Sub-pixel Jittering & Neighborhood Clamping
+            var taa = pipeline.TemporalAA;
+            Assert(taa != null, "pipeline.TemporalAA initialized");
+            Assert(taa.JitterSampleCount == 8, "TAA configured with 8-phase Halton sequence");
+
+            // Verify Halton sequence low-discrepancy sub-pixel jitter
+            taa.GetCameraJitter(0, 1920, 1080, out float jPx0, out float jPy0, out float jNdcX0, out float jNdcY0);
+            taa.GetCameraJitter(1, 1920, 1080, out float jPx1, out float jPy1, out float jNdcX1, out float jNdcY1);
+            Assert(jPx0 >= -0.5f && jPx0 <= 0.5f && jPy0 >= -0.5f && jPy0 <= 0.5f, "TAA sub-pixel jitter bounded within [-0.5, 0.5] pixel envelope");
+            Assert(jPx0 != jPx1 || jPy0 != jPy1, "Consecutive frames yield distinct low-discrepancy sub-pixel jitter samples");
+            Assert(Math.Abs(jNdcX0) < 0.002f && Math.Abs(jNdcY0) < 0.002f, "TAA NDC jitter magnitude is sub-pixel scaled for 1080p projection");
+
+            // Verify 3x3 Color Variance Clamping (Anti-Ghosting)
+            float[] testNeighborhoodR = new float[] { 0.20f, 0.22f, 0.21f, 0.23f, 0.25f, 0.24f, 0.22f, 0.21f, 0.23f };
+            float[] testNeighborhoodG = new float[] { 0.50f, 0.52f, 0.51f, 0.53f, 0.55f, 0.54f, 0.52f, 0.51f, 0.53f };
+            float[] testNeighborhoodB = new float[] { 0.10f, 0.12f, 0.11f, 0.13f, 0.15f, 0.14f, 0.12f, 0.11f, 0.13f };
+
+            // Outlier bright history (e.g. fast moving specular highlight at 1.0)
+            taa.ClampHistoryColor(1.0f, 1.0f, 1.0f, testNeighborhoodR, testNeighborhoodG, testNeighborhoodB,
+                out float clampedR, out float clampedG, out float clampedB);
+            Assert(clampedR < 0.35f && clampedG < 0.65f && clampedB < 0.25f,
+                $"Outlier history color clamped into 3x3 variance box to prevent ghosting: R({clampedR:F3}), G({clampedG:F3}), B({clampedB:F3})");
+
+            // In-range history color preserved
+            taa.ClampHistoryColor(0.22f, 0.52f, 0.12f, testNeighborhoodR, testNeighborhoodG, testNeighborhoodB,
+                out float keepR, out float keepG, out float keepB);
+            Assert(Math.Abs(keepR - 0.22f) < 0.001f && Math.Abs(keepG - 0.52f) < 0.001f, "Valid in-gamut history color preserved without clamping");
+
+            // Verify Full TAA Pixel Resolve & Disocclusion Rejection
+            taa.ResolveTaaPixel(0.24f, 0.54f, 0.14f, 0.22f, 0.52f, 0.12f, testNeighborhoodR, testNeighborhoodG, testNeighborhoodB,
+                isDisoccluded: false, out float resR, out float resG, out float resB);
+            Assert(resR > 0.22f && resR < 0.24f, $"TAA smoothly blends current jittered sample with historical accumulator: R={resR:F4}");
+
+            taa.ResolveTaaPixel(0.90f, 0.90f, 0.90f, 0.10f, 0.10f, 0.10f, testNeighborhoodR, testNeighborhoodG, testNeighborhoodB,
+                isDisoccluded: true, out float disocR, out float disocG, out float disocB);
+            Assert(disocR == 0.90f && disocG == 0.90f && disocB == 0.90f, "Disocclusion edge instantly rejects history buffer to prevent ghost trails");
+
+            // TAA Shaders Registered
+            Assert(pipeline.GetModule("TemporalAntiAliasingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 TemporalAntiAliasingPs shader registered");
+            Assert(pipeline.GetModule("TemporalAntiAliasingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V TemporalAntiAliasingPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

@@ -1080,6 +1080,140 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Temporal Anti-Aliasing (TAA) pipeline with Halton sub-pixel jittering,
+    /// velocity vector reprojection, 3x3 variance neighborhood clamping, and EMA history accumulation.
+    /// Completely eliminates temporal crawling, foliage shimmering, and sub-pixel edge chatter.
+    /// </summary>
+    public class TemporalAntiAliasingPipeline
+    {
+        public float BlendFactor { get; set; } = 0.10f; // 10% new sample, 90% accumulated history
+        public float HistoryClampingGamma { get; set; } = 1.25f; // Box variance multiplier (1.0 - 1.5)
+        public int JitterSampleCount { get; set; } = 8;
+        public bool EnableSharpening { get; set; } = true;
+        public float Sharpness { get; set; } = 0.25f;
+
+        /// <summary>
+        /// Computes the radical inverse of an integer in a given base (Halton low-discrepancy sequence).
+        /// </summary>
+        public static float HaltonSequence(int index, int baseVal)
+        {
+            float result = 0.0f;
+            float f = 1.0f / baseVal;
+            int i = index;
+            while (i > 0)
+            {
+                result += f * (i % baseVal);
+                i /= baseVal;
+                f /= baseVal;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Retrieves the 2D sub-pixel projection jitter offset (in [-0.5, 0.5] pixel units) for a frame index.
+        /// </summary>
+        public void GetCameraJitter(int frameIndex, int screenWidth, int screenHeight,
+            out float jitterPixelX, out float jitterPixelY, out float jitterNdcX, out float jitterNdcY)
+        {
+            int sampleIdx = (frameIndex % JitterSampleCount) + 1;
+            // Halton(2, 3) shifted from [0, 1] to [-0.5, 0.5]
+            jitterPixelX = HaltonSequence(sampleIdx, 2) - 0.5f;
+            jitterPixelY = HaltonSequence(sampleIdx, 3) - 0.5f;
+
+            float w = Math.Max(1, screenWidth);
+            float h = Math.Max(1, screenHeight);
+            jitterNdcX = (2.0f * jitterPixelX) / w;
+            jitterNdcY = (2.0f * jitterPixelY) / h;
+        }
+
+        /// <summary>
+        /// Computes color variance bounding box from 3x3 neighborhood and clamps history to eliminate ghosting.
+        /// </summary>
+        public void ClampHistoryColor(float histR, float histG, float histB,
+            float[] neighbor3x3R, float[] neighbor3x3G, float[] neighbor3x3B,
+            out float clampedR, out float clampedG, out float clampedB)
+        {
+            if (neighbor3x3R == null || neighbor3x3R.Length == 0)
+            {
+                clampedR = histR;
+                clampedG = histG;
+                clampedB = histB;
+                return;
+            }
+
+            int count = neighbor3x3R.Length;
+            float sumR = 0f, sumG = 0f, sumB = 0f;
+            float sumSqR = 0f, sumSqG = 0f, sumSqB = 0f;
+            float minR = float.MaxValue, minG = float.MaxValue, minB = float.MaxValue;
+            float maxR = float.MinValue, maxG = float.MinValue, maxB = float.MinValue;
+
+            for (int i = 0; i < count; i++)
+            {
+                float r = neighbor3x3R[i];
+                float g = neighbor3x3G[i];
+                float b = neighbor3x3B[i];
+
+                sumR += r; sumG += g; sumB += b;
+                sumSqR += r * r; sumSqG += g * g; sumSqB += b * b;
+
+                if (r < minR) minR = r; if (r > maxR) maxR = r;
+                if (g < minG) minG = g; if (g > maxG) maxG = g;
+                if (b < minB) minB = b; if (b > maxB) maxB = b;
+            }
+
+            float invCount = 1.0f / count;
+            float meanR = sumR * invCount;
+            float meanG = sumG * invCount;
+            float meanB = sumB * invCount;
+
+            float varR = Math.Max(0.0f, (sumSqR * invCount) - (meanR * meanR));
+            float varG = Math.Max(0.0f, (sumSqG * invCount) - (meanG * meanG));
+            float varB = Math.Max(0.0f, (sumSqB * invCount) - (meanB * meanB));
+
+            float sigmaR = (float)Math.Sqrt(varR) * HistoryClampingGamma;
+            float sigmaG = (float)Math.Sqrt(varG) * HistoryClampingGamma;
+            float sigmaB = (float)Math.Sqrt(varB) * HistoryClampingGamma;
+
+            float boxMinR = Math.Max(minR, meanR - sigmaR);
+            float boxMaxR = Math.Min(maxR, meanR + sigmaR);
+            float boxMinG = Math.Max(minG, meanG - sigmaG);
+            float boxMaxG = Math.Min(maxG, meanG + sigmaG);
+            float boxMinB = Math.Max(minB, meanB - sigmaB);
+            float boxMaxB = Math.Min(maxB, meanB + sigmaB);
+
+            clampedR = Math.Max(boxMinR, Math.Min(boxMaxR, histR));
+            clampedG = Math.Max(boxMinG, Math.Min(boxMaxG, histG));
+            clampedB = Math.Max(boxMinB, Math.Min(boxMaxB, histB));
+        }
+
+        /// <summary>
+        /// Resolves a single pixel with TAA temporal history blending and disocclusion handling.
+        /// </summary>
+        public void ResolveTaaPixel(float currR, float currG, float currB,
+            float histR, float histG, float histB,
+            float[] neighbor3x3R, float[] neighbor3x3G, float[] neighbor3x3B,
+            bool isDisoccluded,
+            out float outR, out float outG, out float outB)
+        {
+            if (isDisoccluded)
+            {
+                outR = currR;
+                outG = currG;
+                outB = currB;
+                return;
+            }
+
+            ClampHistoryColor(histR, histG, histB, neighbor3x3R, neighbor3x3G, neighbor3x3B,
+                out float clampedHistR, out float clampedHistG, out float clampedHistB);
+
+            float alpha = Math.Max(0.01f, Math.Min(1.0f, BlendFactor));
+            outR = currR * alpha + clampedHistR * (1.0f - alpha);
+            outG = currG * alpha + clampedHistG * (1.0f - alpha);
+            outB = currB * alpha + clampedHistB * (1.0f - alpha);
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -1093,6 +1227,7 @@ namespace palDotNet.palModernEngine
         public CascadedShadowPipeline Shadows { get; } = new CascadedShadowPipeline();
         public HdrPostProcessingPipeline PostProcessing { get; } = new HdrPostProcessingPipeline();
         public FoliageInstancingPipeline Foliage { get; } = new FoliageInstancingPipeline();
+        public TemporalAntiAliasingPipeline TemporalAA { get; } = new TemporalAntiAliasingPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -1640,6 +1775,129 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("FoliagePbrPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslFoliagePs, Cache));
+
+            // 15. Temporal Anti-Aliasing (TAA) Velocity Reprojection & Neighborhood Clamping Pixel Shader (DirectX 12 SM6)
+            string hlslTaaPs = @"
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+                Texture2D gCurrentColorTexture : register(t0);
+                Texture2D gHistoryColorTexture : register(t1);
+                Texture2D gVelocityTexture     : register(t2);
+                SamplerState gPointSampler     : register(s0);
+                SamplerState gLinearSampler    : register(s1);
+
+                cbuffer TaaConstants : register(b0) {
+                    float2 gTexelSize;
+                    float  gBlendFactor;
+                    float  gGammaClamping;
+                };
+
+                float4 main(PSInput input) : SV_Target {
+                    float2 uv = input.uv;
+                    float2 velocity = gVelocityTexture.Sample(gPointSampler, uv).xy;
+                    float2 prevUv = uv - velocity;
+
+                    float3 current = gCurrentColorTexture.Sample(gPointSampler, uv).rgb;
+
+                    float3 minCol = current;
+                    float3 maxCol = current;
+                    float3 sumCol = current;
+                    float3 sumSqCol = current * current;
+
+                    float2 offsets[8] = {
+                        float2(-1, -1), float2(0, -1), float2(1, -1),
+                        float2(-1,  0),                float2(1,  0),
+                        float2(-1,  1), float2(0,  1), float2(1,  1)
+                    };
+
+                    [unroll]
+                    for (int i = 0; i < 8; i++) {
+                        float3 n = gCurrentColorTexture.Sample(gPointSampler, uv + offsets[i] * gTexelSize).rgb;
+                        minCol = min(minCol, n);
+                        maxCol = max(maxCol, n);
+                        sumCol += n;
+                        sumSqCol += n * n;
+                    }
+
+                    float3 mean = sumCol / 9.0f;
+                    float3 variance = max(0.0f.xxx, (sumSqCol / 9.0f) - (mean * mean));
+                    float3 sigma = sqrt(variance) * gGammaClamping;
+
+                    float3 boxMin = max(minCol, mean - sigma);
+                    float3 boxMax = min(maxCol, mean + sigma);
+
+                    bool offScreen = (prevUv.x < 0.0f || prevUv.x > 1.0f || prevUv.y < 0.0f || prevUv.y > 1.0f);
+                    if (offScreen) {
+                        return float4(current, 1.0f);
+                    }
+
+                    float3 history = gHistoryColorTexture.Sample(gLinearSampler, prevUv).rgb;
+                    float3 clampedHistory = clamp(history, boxMin, boxMax);
+
+                    float3 resolved = lerp(clampedHistory, current, gBlendFactor);
+                    return float4(resolved, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("TemporalAntiAliasingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslTaaPs, Cache));
+
+            // 16. Vulkan SPIR-V Temporal Anti-Aliasing Pixel Shader
+            string glslTaaPs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texCurrent;
+                layout(binding = 1) uniform sampler2D texHistory;
+                layout(binding = 2) uniform sampler2D texVelocity;
+
+                layout(binding = 3) uniform TaaUBO {
+                    vec2 texelSize;
+                    float blendFactor;
+                    float gammaClamping;
+                } ubo;
+
+                void main() {
+                    vec2 velocity = texture(texVelocity, inUV).xy;
+                    vec2 prevUv = inUV - velocity;
+                    vec3 current = texture(texCurrent, inUV).rgb;
+
+                    if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
+                        outColor = vec4(current, 1.0);
+                        return;
+                    }
+
+                    vec3 minCol = current;
+                    vec3 maxCol = current;
+                    vec3 sumCol = current;
+                    vec3 sumSq = current * current;
+
+                    ivec2 offs[8] = ivec2[](
+                        ivec2(-1,-1), ivec2(0,-1), ivec2(1,-1),
+                        ivec2(-1, 0),             ivec2(1, 0),
+                        ivec2(-1, 1), ivec2(0, 1), ivec2(1, 1)
+                    );
+
+                    for (int i = 0; i < 8; i++) {
+                        vec3 n = texture(texCurrent, inUV + vec2(offs[i]) * ubo.texelSize).rgb;
+                        minCol = min(minCol, n);
+                        maxCol = max(maxCol, n);
+                        sumCol += n;
+                        sumSq += n * n;
+                    }
+
+                    vec3 mean = sumCol / 9.0;
+                    vec3 sigma = sqrt(max(vec3(0.0), (sumSq / 9.0) - (mean * mean))) * ubo.gammaClamping;
+                    vec3 boxMin = max(minCol, mean - sigma);
+                    vec3 boxMax = min(maxCol, mean + sigma);
+
+                    vec3 history = texture(texHistory, prevUv).rgb;
+                    vec3 clamped = clamp(history, boxMin, boxMax);
+                    outColor = vec4(mix(clamped, current, ubo.blendFactor), 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("TemporalAntiAliasingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslTaaPs, Cache));
         }
     }
 }
