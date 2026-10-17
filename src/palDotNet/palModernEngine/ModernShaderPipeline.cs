@@ -2072,6 +2072,152 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Depth-Aware Spatial Bilateral Upsampling & Temporal Reprojection Pipeline.
+    /// Upsamples half-resolution ambient occlusion (GTAO) and volumetric fog buffers (960x540)
+    /// to full 1080p resolution while preserving razor-sharp geometry silhouettes and thin wires
+    /// without edge halos or bleed artifacts, achieving a 4x reduction in heavy raymarching workloads.
+    /// </summary>
+    public class DepthAwareBilateralUpsamplePipeline
+    {
+        public float DepthThreshold { get; set; } = 0.5f;
+        public float DepthSigma { get; set; } = 0.25f;
+        public float HistoryBlendFactor { get; set; } = 0.15f;
+        public int HalfWidth { get; set; } = 960;
+        public int HalfHeight { get; set; } = 540;
+        public int FullWidth { get; set; } = 1920;
+        public int FullHeight { get; set; } = 1080;
+
+        /// <summary>
+        /// Evaluates 4-tap spatial bilateral upsample for a full-resolution target pixel.
+        /// halfResDepths4: [d00, d10, d01, d11]
+        /// halfResValues4: [v00, v10, v01, v11]
+        /// uFrac, vFrac: sub-pixel fractional offset in [0, 1]
+        /// </summary>
+        public float EvaluateBilateralUpsample(float fullResDepth, float[] halfResDepths4, float[] halfResValues4, float uFrac, float vFrac)
+        {
+            if (halfResDepths4 == null || halfResValues4 == null || halfResDepths4.Length < 4 || halfResValues4.Length < 4)
+                return 1.0f;
+
+            // Bilinear spatial weights
+            float w00 = (1.0f - uFrac) * (1.0f - vFrac);
+            float w10 = uFrac * (1.0f - vFrac);
+            float w01 = (1.0f - uFrac) * vFrac;
+            float w11 = uFrac * vFrac;
+
+            float[] spatialWeights = { w00, w10, w01, w11 };
+
+            float sumWeights = 0.0f;
+            float sumValues = 0.0f;
+
+            int bestNearestIdx = 0;
+            float minDepthDiff = float.MaxValue;
+
+            for (int i = 0; i < 4; i++)
+            {
+                float diff = Math.Abs(halfResDepths4[i] - fullResDepth);
+                if (diff < minDepthDiff)
+                {
+                    minDepthDiff = diff;
+                    bestNearestIdx = i;
+                }
+
+                // Depth-preserving exponential kernel
+                float depthWeight = (float)Math.Exp(-diff / Math.Max(0.001f, DepthSigma));
+                float totalWeight = spatialWeights[i] * depthWeight;
+
+                sumValues += halfResValues4[i] * totalWeight;
+                sumWeights += totalWeight;
+            }
+
+            // If all 4 half-res samples deviate significantly (e.g. thin foreground silhouette),
+            // fallback to the nearest depth sample to completely prevent halo bleed.
+            if (sumWeights < 1e-4f)
+            {
+                return halfResValues4[bestNearestIdx];
+            }
+
+            return sumValues / sumWeights;
+        }
+
+        /// <summary>
+        /// Resolves upsampled pixel with historical temporal buffer, applying neighborhood variance clamping
+        /// and immediate disocclusion history rejection.
+        /// </summary>
+        public float ResolveTemporalBilateral(float fullResDepth, float[] halfResDepths4, float[] halfResValues4,
+            float uFrac, float vFrac, float historyValue, float[] local3x3Values, bool isDisoccluded)
+        {
+            float upsampledCurrent = EvaluateBilateralUpsample(fullResDepth, halfResDepths4, halfResValues4, uFrac, vFrac);
+
+            if (isDisoccluded || local3x3Values == null || local3x3Values.Length == 0)
+            {
+                return upsampledCurrent;
+            }
+
+            // 3x3 Neighborhood Variance Clamping
+            float minVal = float.MaxValue;
+            float maxVal = float.MinValue;
+            for (int i = 0; i < local3x3Values.Length; i++)
+            {
+                float v = local3x3Values[i];
+                if (v < minVal) minVal = v;
+                if (v > maxVal) maxVal = v;
+            }
+
+            float clampedHistory = Math.Max(minVal, Math.Min(maxVal, historyValue));
+            float alpha = Math.Max(0.01f, Math.Min(1.0f, HistoryBlendFactor));
+
+            return alpha * upsampledCurrent + (1.0f - alpha) * clampedHistory;
+        }
+
+        /// <summary>
+        /// Full grid CPU bilateral upsample processor.
+        /// </summary>
+        public void UpsampleGrid(float[] fullResDepthBuffer, float[] halfResDepthBuffer, float[] halfResSourceValues,
+            float[] outFullResValues, int fullW, int fullH)
+        {
+            if (fullResDepthBuffer == null || halfResDepthBuffer == null || halfResSourceValues == null || outFullResValues == null)
+                return;
+
+            int halfW = fullW / 2;
+            int halfH = fullH / 2;
+
+            for (int y = 0; y < fullH; y++)
+            {
+                float halfY = (y + 0.5f) * 0.5f - 0.5f;
+                int y0 = Math.Max(0, Math.Min(halfH - 1, (int)Math.Floor(halfY)));
+                int y1 = Math.Max(0, Math.Min(halfH - 1, y0 + 1));
+                float vFrac = Math.Max(0f, Math.Min(1f, halfY - y0));
+
+                for (int x = 0; x < fullW; x++)
+                {
+                    float halfX = (x + 0.5f) * 0.5f - 0.5f;
+                    int x0 = Math.Max(0, Math.Min(halfW - 1, (int)Math.Floor(halfX)));
+                    int x1 = Math.Max(0, Math.Min(halfW - 1, x0 + 1));
+                    float uFrac = Math.Max(0f, Math.Min(1f, halfX - x0));
+
+                    float fullDepth = fullResDepthBuffer[y * fullW + x];
+
+                    float[] d4 = {
+                        halfResDepthBuffer[y0 * halfW + x0],
+                        halfResDepthBuffer[y0 * halfW + x1],
+                        halfResDepthBuffer[y1 * halfW + x0],
+                        halfResDepthBuffer[y1 * halfW + x1]
+                    };
+
+                    float[] v4 = {
+                        halfResSourceValues[y0 * halfW + x0],
+                        halfResSourceValues[y0 * halfW + x1],
+                        halfResSourceValues[y1 * halfW + x0],
+                        halfResSourceValues[y1 * halfW + x1]
+                    };
+
+                    outFullResValues[y * fullW + x] = EvaluateBilateralUpsample(fullDepth, d4, v4, uFrac, vFrac);
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -2091,6 +2237,7 @@ namespace palDotNet.palModernEngine
         public HierarchicalZBufferPipeline OcclusionCulling { get; } = new HierarchicalZBufferPipeline();
         public VolumetricFogPipeline VolumetricFog { get; } = new VolumetricFogPipeline();
         public GpuClusterLodPipeline MeshClustering { get; } = new GpuClusterLodPipeline();
+        public DepthAwareBilateralUpsamplePipeline BilateralUpsample { get; } = new DepthAwareBilateralUpsamplePipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -3387,6 +3534,134 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("GpuClusterCullIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslClusterCullCs, Cache));
+
+            // 27. DirectX 12 HLSL SM6 Depth-Aware Spatial Bilateral Upsampling & Temporal Reprojection Pixel Shader
+            string hlslBilateralPs = @"
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+
+                Texture2D<float>  gFullResDepth   : register(t0);
+                Texture2D<float>  gHalfResDepth   : register(t1);
+                Texture2D<float4> gHalfResColor   : register(t2);
+                Texture2D<float4> gHistoryColor   : register(t3);
+                SamplerState      gPointSampler   : register(s0);
+
+                cbuffer BilateralConstants : register(b0) {
+                    float2 gFullResolution;
+                    float2 gHalfResolution;
+                    float  gDepthSigma;
+                    float  gHistoryBlend;
+                    float2 gPadding;
+                };
+
+                float4 main(PSInput input) : SV_Target {
+                    float fullDepth = gFullResDepth.Sample(gPointSampler, input.uv);
+
+                    float2 halfTexelCoord = input.uv * gHalfResolution - 0.5f;
+                    int2 baseCoord = int2(floor(halfTexelCoord));
+                    float2 fracCoord = frac(halfTexelCoord);
+
+                    float4 weights = float4(
+                        (1.0f - fracCoord.x) * (1.0f - fracCoord.y),
+                        fracCoord.x * (1.0f - fracCoord.y),
+                        (1.0f - fracCoord.x) * fracCoord.y,
+                        fracCoord.x * fracCoord.y
+                    );
+
+                    int2 offsets[4] = { int2(0, 0), int2(1, 0), int2(0, 1), int2(1, 1) };
+                    float sumW = 0.0f;
+                    float4 sumCol = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+                    float minDiff = 1e9f;
+                    float4 nearestCol = float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+                    for (int i = 0; i < 4; i++) {
+                        int2 sampleCoord = clamp(baseCoord + offsets[i], int2(0, 0), int2((int)gHalfResolution.x - 1, (int)gHalfResolution.y - 1));
+                        float hDepth = gHalfResDepth.Load(int3(sampleCoord, 0));
+                        float4 hCol = gHalfResColor.Load(int3(sampleCoord, 0));
+
+                        float diff = abs(hDepth - fullDepth);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            nearestCol = hCol;
+                        }
+
+                        float dw = exp(-diff / max(1e-3f, gDepthSigma));
+                        float tw = weights[i] * dw;
+                        sumCol += hCol * tw;
+                        sumW += tw;
+                    }
+
+                    float4 upsampled = (sumW < 1e-4f) ? nearestCol : (sumCol / sumW);
+                    float4 history = gHistoryColor.Sample(gPointSampler, input.uv);
+                    return lerp(history, upsampled, gHistoryBlend);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("DepthAwareBilateralUpsamplePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslBilateralPs, Cache));
+
+            // 28. Vulkan SPIR-V Depth-Aware Spatial Bilateral Upsampling & Temporal Reprojection Fragment Shader
+            string glslBilateralPs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texFullResDepth;
+                layout(binding = 1) uniform sampler2D texHalfResDepth;
+                layout(binding = 2) uniform sampler2D texHalfResColor;
+                layout(binding = 3) uniform sampler2D texHistoryColor;
+
+                layout(binding = 4) uniform BilateralUBO {
+                    vec2 fullResolution;
+                    vec2 halfResolution;
+                    float depthSigma;
+                    float historyBlend;
+                } ubo;
+
+                void main() {
+                    float fullDepth = texture(texFullResDepth, inUV).r;
+
+                    vec2 halfCoord = inUV * ubo.halfResolution - 0.5;
+                    ivec2 baseCoord = ivec2(floor(halfCoord));
+                    vec2 fracCoord = fract(halfCoord);
+
+                    vec4 weights = vec4(
+                        (1.0 - fracCoord.x) * (1.0 - fracCoord.y),
+                        fracCoord.x * (1.0 - fracCoord.y),
+                        (1.0 - fracCoord.x) * fracCoord.y,
+                        fracCoord.x * fracCoord.y
+                    );
+
+                    ivec2 offsets[4] = ivec2[](ivec2(0, 0), ivec2(1, 0), ivec2(0, 1), ivec2(1, 1));
+                    float sumW = 0.0;
+                    vec4 sumCol = vec4(0.0);
+                    float minDiff = 1e9;
+                    vec4 nearestCol = vec4(1.0);
+
+                    for (int i = 0; i < 4; i++) {
+                        ivec2 sc = clamp(baseCoord + offsets[i], ivec2(0), ivec2(ubo.halfResolution) - 1);
+                        float hDepth = texelFetch(texHalfResDepth, sc, 0).r;
+                        vec4 hCol = texelFetch(texHalfResColor, sc, 0);
+
+                        float diff = abs(hDepth - fullDepth);
+                        if (diff < minDiff) {
+                            minDiff = diff;
+                            nearestCol = hCol;
+                        }
+
+                        float dw = exp(-diff / max(0.001, ubo.depthSigma));
+                        float tw = weights[i] * dw;
+                        sumCol += hCol * tw;
+                        sumW += tw;
+                    }
+
+                    vec4 upsampled = (sumW < 1e-4) ? nearestCol : (sumCol / sumW);
+                    vec4 history = texture(texHistoryColor, inUV);
+                    outColor = mix(history, upsampled, ubo.historyBlend);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("DepthAwareBilateralUpsamplePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslBilateralPs, Cache));
         }
     }
 }

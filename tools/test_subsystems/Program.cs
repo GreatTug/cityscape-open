@@ -1470,6 +1470,45 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("GpuClusterCullIndirectCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 GpuClusterCullIndirectCs compute shader registered");
             Assert(pipeline.GetModule("GpuClusterCullIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V GpuClusterCullIndirectCs compute shader registered");
 
+            // Depth-Aware Spatial Bilateral Upsampling & Temporal Reprojection Pipeline
+            var bilateral = pipeline.BilateralUpsample;
+            Assert(bilateral != null, "pipeline.BilateralUpsample initialized");
+            Assert(bilateral.HalfWidth == 960 && bilateral.HalfHeight == 540, "Half-resolution target configured to 960x540 (quarter pixel count)");
+            Assert(bilateral.FullWidth == 1920 && bilateral.FullHeight == 1080, "Full-resolution target configured to 1920x1080 (1080p)");
+
+            // Flat Surface Exact Bilinear Interpolation
+            float[] flatDepths = { 10.0f, 10.0f, 10.0f, 10.0f };
+            float[] flatAoValues = { 0.20f, 0.40f, 0.60f, 0.80f };
+            float upsampledCenter = bilateral.EvaluateBilateralUpsample(10.0f, flatDepths, flatAoValues, 0.5f, 0.5f);
+            Assert(Math.Abs(upsampledCenter - 0.50f) < 1e-3f, $"Flat continuous surface evaluates to exact bilinear blend: {upsampledCenter:F3}");
+
+            // Sharp Depth Discontinuity Edge Preservation (Zero Silhouette Bleed)
+            float[] edgeDepths = { 5.0f, 100.0f, 100.0f, 100.0f };
+            float[] edgeAoValues = { 0.20f, 1.00f, 1.00f, 1.00f };
+            float fgUpsampled = bilateral.EvaluateBilateralUpsample(5.0f, edgeDepths, edgeAoValues, 0.5f, 0.5f);
+            Assert(Math.Abs(fgUpsampled - 0.20f) < 0.01f, $"Sharp depth edge preserves foreground occlusion without background bleed ({fgUpsampled:F3} ~ 0.200)");
+            float bgUpsampled = bilateral.EvaluateBilateralUpsample(100.0f, edgeDepths, edgeAoValues, 0.5f, 0.5f);
+            Assert(Math.Abs(bgUpsampled - 1.00f) < 0.01f, $"Sharp depth edge preserves background without dark foreground halo bleed ({bgUpsampled:F3} ~ 1.000)");
+
+            // Thin Silhouette Fallback (No NaN or division by zero)
+            float[] missDepths = { 100.0f, 100.0f, 100.0f, 100.0f };
+            float[] missAoValues = { 0.80f, 0.90f, 0.85f, 0.95f };
+            float fallbackVal = bilateral.EvaluateBilateralUpsample(2.0f, missDepths, missAoValues, 0.5f, 0.5f);
+            Assert(!float.IsNaN(fallbackVal) && fallbackVal >= 0.80f && fallbackVal <= 0.95f, "Thin silhouette sample safely falls back to nearest sample without NaN");
+
+            // Temporal Accumulation & Disocclusion Rejection
+            float[] local3x3 = { 0.20f, 0.22f, 0.21f, 0.23f, 0.22f, 0.24f, 0.21f, 0.20f, 0.22f };
+            float historyStable = 0.22f;
+            float temporalResolved = bilateral.ResolveTemporalBilateral(10.0f, flatDepths, new[] { 0.22f, 0.22f, 0.22f, 0.22f }, 0.5f, 0.5f, historyStable, local3x3, isDisoccluded: false);
+            Assert(Math.Abs(temporalResolved - 0.22f) < 1e-3f, "Temporal accumulation maintains stable signal for stationary camera");
+
+            float disocResolved = bilateral.ResolveTemporalBilateral(10.0f, flatDepths, new[] { 0.90f, 0.90f, 0.90f, 0.90f }, 0.5f, 0.5f, historyValue: 0.10f, local3x3, isDisoccluded: true);
+            Assert(Math.Abs(disocResolved - 0.90f) < 1e-3f, "Disocclusion edge instantly bypasses history buffer to prevent ghost trails");
+
+            // Bilateral Upsample Shaders Registered
+            Assert(pipeline.GetModule("DepthAwareBilateralUpsamplePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 DepthAwareBilateralUpsamplePs shader registered");
+            Assert(pipeline.GetModule("DepthAwareBilateralUpsamplePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V DepthAwareBilateralUpsamplePs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
