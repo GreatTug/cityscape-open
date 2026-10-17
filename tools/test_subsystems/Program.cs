@@ -1993,6 +1993,64 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("WeightedBlendedOitCompositePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 WeightedBlendedOitCompositePs shader registered");
             Assert(pipeline.GetModule("WeightedBlendedOitCompositePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V WeightedBlendedOitCompositePs shader registered");
 
+            // Screen-Space Contact Shadows (SSCS) Raymarching Pipeline
+            var sscs = pipeline.ContactShadows;
+            Assert(sscs != null, "pipeline.ContactShadows instantiated successfully");
+
+            // 1. Interleaved Gradient Noise (IGN)
+            float ign00 = ScreenSpaceContactShadowPipeline.EvaluateInterleavedGradientNoise(100, 200);
+            float ign01 = ScreenSpaceContactShadowPipeline.EvaluateInterleavedGradientNoise(101, 200);
+            Assert(ign00 >= 0.0f && ign00 <= 1.0f, $"IGN produces valid normalized noise: {ign00:F4}");
+            Assert(Math.Abs(ign00 - ign01) > 0.05f, $"Consecutive screen pixels exhibit high-frequency jitter decorrelation: {ign00:F3} != {ign01:F3}");
+
+            // 2. Screen Edge Fade Attenuation
+            float fadeCenter = sscs.EvaluateEdgeFade(0.5f, 0.5f);
+            float fadeEdge = sscs.EvaluateEdgeFade(0.0f, 0.5f);
+            float fadePartial = sscs.EvaluateEdgeFade(0.025f, 0.5f);
+            Assert(Math.Abs(fadeCenter - 1.0f) < 1e-4f, "Center of viewport has full contact shadow strength (fade = 1.0)");
+            Assert(Math.Abs(fadeEdge - 0.0f) < 1e-4f, "Screen boundary has zero contact shadow strength to prevent hard screen edge artifacts (fade = 0.0)");
+            Assert(fadePartial > 0.0f && fadePartial < 1.0f, $"Smooth linear attenuation across edge margin: {fadePartial:F2}");
+
+            // 3. CSM Shadow Map Grounding Combination
+            float combinedGrounded = ScreenSpaceContactShadowPipeline.CombineWithCascadedShadow(0.90f, 0.25f);
+            Assert(Math.Abs(combinedGrounded - 0.25f) < 1e-4f, "Contact shadow grounds building contact point when CSM is disconnected: 0.25");
+
+            float combinedOccluded = ScreenSpaceContactShadowPipeline.CombineWithCascadedShadow(0.10f, 0.85f);
+            Assert(Math.Abs(combinedOccluded - 0.10f) < 1e-4f, "Preserves dense architectural CSM shadow: 0.10");
+
+            // 4. Screen-Space Depth Raymarching Test
+            // Perspective Matrix (FOV 90 deg, Near 0.1, Far 1000)
+            float[] sscsViewProj = new float[] {
+                1f, 0f, 0f, 0f,
+                0f, 1f, 0f, 0f,
+                0f, 0f, 1.0001f, 1f,
+                0f, 0f, -0.10001f, 0f
+            };
+
+            // Test Case A: Flat ground with distant clear background (no occluder in light path)
+            float unshadowed = sscs.RaymarchContactShadow(
+                posX: 0f, posY: 0f, posZ: 20f,
+                normalX: 0f, normalY: 1f, normalZ: 0f,
+                lightDirX: 0f, lightDirY: 0.707f, lightDirZ: 0.707f,
+                viewProjMatrix4x4: sscsViewProj,
+                depthSampler: (u, v) => 1.0f, // Far plane default
+                jitter: 0.0f);
+            Assert(Math.Abs(unshadowed - 1.0f) < 1e-4f, "Unoccluded surface returns 1.0 (fully lit / no contact shadow)");
+
+            // Test Case B: Curb / building foundation occluder blocking the light ray path
+            float occluded = sscs.RaymarchContactShadow(
+                posX: 0f, posY: 0f, posZ: 20f,
+                normalX: 0f, normalY: 1f, normalZ: 0f,
+                lightDirX: 0f, lightDirY: 0.707f, lightDirZ: 0.707f,
+                viewProjMatrix4x4: sscsViewProj,
+                depthSampler: (u, v) => 0.990f, // Occluder surface right in front of ray
+                jitter: 0.0f);
+            Assert(occluded < 0.35f, $"Building foundation occluder produces deep grounding contact shadow: {occluded:F2}");
+
+            // Contact Shadows Shaders Registered
+            Assert(pipeline.GetModule("ContactShadowsPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 ContactShadowsPs shader registered");
+            Assert(pipeline.GetModule("ContactShadowsPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V ContactShadowsPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

@@ -3880,6 +3880,147 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Screen-Space Contact Shadows (SSCS) raymarching pipeline.
+    /// Traces short-range rays (0.05m - 3.0m) along the sun/light direction through the screen-space depth buffer.
+    /// Accurately grounds architectural foundations, curbs, sidewalks, vehicles, and street furniture,
+    /// eliminating Cascaded Shadow Map (CSM) shadow detachment ("Peter Panning") and resolution starvation.
+    /// </summary>
+    public class ScreenSpaceContactShadowPipeline
+    {
+        public float MaxRayDistance { get; set; } = 2.5f;       // Max raymarch distance in world meters
+        public int StepCount { get; set; } = 24;                // Linear raymarch sample steps
+        public float RayBias { get; set; } = 0.008f;             // Normal offset bias to prevent self-intersection
+        public float ThicknessThreshold { get; set; } = 0.15f;   // Assumed occluder geometry depth thickness
+        public float ShadowIntensity { get; set; } = 0.85f;     // Maximum contact shadow darkening factor
+        public float EdgeFadeMargin { get; set; } = 0.05f;       // Screen border fade margin [0, 0.5]
+
+        /// <summary>
+        /// Computes screen-border attenuation weight to smoothly fade contact shadows near screen edges.
+        /// </summary>
+        public float EvaluateEdgeFade(float u, float v)
+        {
+            float edgeDistX = Math.Min(u, 1.0f - u);
+            float edgeDistY = Math.Min(v, 1.0f - v);
+            float minEdgeDist = Math.Min(edgeDistX, edgeDistY);
+
+            if (minEdgeDist <= 0.0f) return 0.0f;
+            if (minEdgeDist >= EdgeFadeMargin) return 1.0f;
+
+            return minEdgeDist / Math.Max(1e-4f, EdgeFadeMargin);
+        }
+
+        /// <summary>
+        /// Evaluates Interleaved Gradient Noise (IGN - Jorge Jimenez) for temporal jittering.
+        /// Produces uniform dither patterns that turn banding into high-frequency noise.
+        /// </summary>
+        public static float EvaluateInterleavedGradientNoise(int pixelX, int pixelY)
+        {
+            // Jimenez 2014: fract(52.9829189 * fract(0.06711056 * x + 0.00583715 * y))
+            double magic = 0.06711056 * pixelX + 0.00583715 * pixelY;
+            double frac1 = magic - Math.Floor(magic);
+            double val = 52.9829189 * frac1;
+            return (float)(val - Math.Floor(val));
+        }
+
+        /// <summary>
+        /// Combines Cascaded Shadow Map (CSM) shadow factor with Screen-Space Contact Shadow factor.
+        /// Returns final grounded shadow factor in [0, 1] (0 = fully shadowed, 1 = fully lit).
+        /// </summary>
+        public static float CombineWithCascadedShadow(float csmShadowFactor, float contactShadowFactor)
+        {
+            return Math.Min(Math.Max(0.0f, csmShadowFactor), Math.Max(0.0f, contactShadowFactor));
+        }
+
+        /// <summary>
+        /// Raymarches screen-space depth buffer along the light direction to detect contact occluders.
+        /// Returns contact shadow factor in [0, 1] (0 = occluded/in shadow, 1 = unshadowed).
+        /// </summary>
+        public float RaymarchContactShadow(
+            float posX, float posY, float posZ,
+            float normalX, float normalY, float normalZ,
+            float lightDirX, float lightDirY, float lightDirZ,
+            float[] viewProjMatrix4x4,
+            Func<float, float, float> depthSampler,
+            float jitter = 0.5f)
+        {
+            if (viewProjMatrix4x4 == null || viewProjMatrix4x4.Length < 16 || depthSampler == null)
+                return 1.0f;
+
+            // Normalize vectors
+            float lLen = (float)Math.Sqrt(lightDirX * lightDirX + lightDirY * lightDirY + lightDirZ * lightDirZ);
+            if (lLen < 1e-4f) return 1.0f;
+            float lx = lightDirX / lLen, ly = lightDirY / lLen, lz = lightDirZ / lLen;
+
+            float nLen = (float)Math.Sqrt(normalX * normalX + normalY * normalY + normalZ * normalZ);
+            float nx = nLen > 1e-4f ? normalX / nLen : 0f;
+            float ny = nLen > 1e-4f ? normalY / nLen : 1f;
+            float nz = nLen > 1e-4f ? normalZ / nLen : 0f;
+
+            // Offset start point along surface normal
+            float startX = posX + nx * RayBias;
+            float startY = posY + ny * RayBias;
+            float startZ = posZ + nz * RayBias;
+
+            int steps = Math.Max(4, StepCount);
+            float stepDist = MaxRayDistance / steps;
+            float occlusion = 0.0f;
+
+            for (int i = 0; i < steps; i++)
+            {
+                float t = (i + jitter) * stepDist;
+                if (t > MaxRayDistance) break;
+
+                // Sample point along light ray
+                float spX = startX + lx * t;
+                float spY = startY + ly * t;
+                float spZ = startZ + lz * t;
+
+                // Project into screen space (clip -> NDC -> UV)
+                float clipX = spX * viewProjMatrix4x4[0] + spY * viewProjMatrix4x4[4] + spZ * viewProjMatrix4x4[8] + viewProjMatrix4x4[12];
+                float clipY = spX * viewProjMatrix4x4[1] + spY * viewProjMatrix4x4[5] + spZ * viewProjMatrix4x4[9] + viewProjMatrix4x4[13];
+                float clipZ = spX * viewProjMatrix4x4[2] + spY * viewProjMatrix4x4[6] + spZ * viewProjMatrix4x4[10] + viewProjMatrix4x4[14];
+                float clipW = spX * viewProjMatrix4x4[3] + spY * viewProjMatrix4x4[7] + spZ * viewProjMatrix4x4[11] + viewProjMatrix4x4[15];
+
+                if (clipW <= 1e-4f) continue;
+                float invW = 1.0f / clipW;
+                float ndcX = clipX * invW;
+                float ndcY = clipY * invW;
+                float ndcZ = clipZ * invW;
+
+                float u = ndcX * 0.5f + 0.5f;
+                float v = 1.0f - (ndcY * 0.5f + 0.5f);
+
+                // Check screen bounds
+                if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f)
+                    break;
+
+                // Sample depth from buffer
+                float bufferDepth = depthSampler(u, v);
+
+                // Occlusion test: ray sample is behind surface in buffer, but within thickness threshold
+                float depthDiff = ndcZ - bufferDepth;
+                if (depthDiff > 1e-4f && depthDiff < ThicknessThreshold)
+                {
+                    // Hit detected
+                    float edgeFade = EvaluateEdgeFade(u, v);
+                    float distFade = 1.0f - (t / MaxRayDistance) * (t / MaxRayDistance);
+                    float thickFade = 1.0f - (depthDiff / ThicknessThreshold);
+
+                    float hitOcclusion = edgeFade * distFade * thickFade;
+                    if (hitOcclusion > occlusion)
+                    {
+                        occlusion = hitOcclusion;
+                    }
+                    if (occlusion >= 0.95f) break;
+                }
+            }
+
+            float shadowTerm = 1.0f - (occlusion * ShadowIntensity);
+            return Math.Max(0.0f, Math.Min(1.0f, shadowTerm));
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -3908,6 +4049,7 @@ namespace palDotNet.palModernEngine
         public VolumetricCloudPipeline VolumetricClouds { get; } = new VolumetricCloudPipeline();
         public SubsurfaceScatteringPipeline SubsurfaceScattering { get; } = new SubsurfaceScatteringPipeline();
         public OrderIndependentTransparencyPipeline OrderIndependentTransparency { get; } = new OrderIndependentTransparencyPipeline();
+        public ScreenSpaceContactShadowPipeline ContactShadows { get; } = new ScreenSpaceContactShadowPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -6822,6 +6964,165 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("WeightedBlendedOitCompositePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslWboitCompositePs, Cache));
+
+            // 24. Screen-Space Contact Shadows (SSCS) Raymarching Pipeline
+            // Shader 49: HLSL SM6 ContactShadowsPs
+            string hlslContactShadowsPs = @"
+                Texture2D<float>  DepthTexture   : register(t0);
+                Texture2D<float3> NormalTexture  : register(t1);
+                SamplerState      PointClamp     : register(s0);
+
+                cbuffer ContactShadowCB : register(b0)
+                {
+                    float4x4 ViewProjMatrix;
+                    float4x4 InvViewProjMatrix;
+                    float3   LightDirection;
+                    float    MaxRayDistance;
+                    float    RayBias;
+                    float    Thickness;
+                    float    ShadowIntensity;
+                    uint     StepCount;
+                };
+
+                struct PSInput
+                {
+                    float4 Position : SV_Position;
+                    float2 TexCoord : TEXCOORD0;
+                };
+
+                float InterleavedGradientNoise(float2 screenPos)
+                {
+                    return frac(52.9829189f * frac(0.06711056f * screenPos.x + 0.00583715f * screenPos.y));
+                }
+
+                float4 main(PSInput input) : SV_Target
+                {
+                    float depth = DepthTexture.Sample(PointClamp, input.TexCoord);
+                    if (depth >= 1.0f) return float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+                    float4 clipPos = float4(input.TexCoord.x * 2.0f - 1.0f, (1.0f - input.TexCoord.y) * 2.0f - 1.0f, depth, 1.0f);
+                    float4 worldPosH = mul(InvViewProjMatrix, clipPos);
+                    float3 worldPos = worldPosH.xyz / worldPosH.w;
+
+                    float3 normal = normalize(NormalTexture.Sample(PointClamp, input.TexCoord).xyz * 2.0f - 1.0f);
+                    float3 L = normalize(LightDirection);
+
+                    if (dot(normal, L) <= 0.0f) return float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+                    float3 rayStart = worldPos + normal * RayBias;
+                    float stepDist = MaxRayDistance / (float)StepCount;
+                    float jitter = InterleavedGradientNoise(input.Position.xy);
+
+                    float occlusion = 0.0f;
+
+                    for (uint i = 0; i < StepCount; i++)
+                    {
+                        float t = ((float)i + jitter) * stepDist;
+                        float3 rayPos = rayStart + L * t;
+
+                        float4 proj = mul(ViewProjMatrix, float4(rayPos, 1.0f));
+                        if (proj.w <= 1e-4f) continue;
+                        float3 ndc = proj.xyz / proj.w;
+                        float2 uv = float2(ndc.x * 0.5f + 0.5f, 1.0f - (ndc.y * 0.5f + 0.5f));
+
+                        if (uv.x < 0.0f || uv.x > 1.0f || uv.y < 0.0f || uv.y > 1.0f) break;
+
+                        float bufDepth = DepthTexture.SampleLevel(PointClamp, uv, 0);
+                        float diff = ndc.z - bufDepth;
+
+                        if (diff > 1e-4f && diff < Thickness)
+                        {
+                            float edgeFade = saturate(min(min(uv.x, 1.0f - uv.x), min(uv.y, 1.0f - uv.y)) / 0.05f);
+                            float distFade = 1.0f - (t / MaxRayDistance) * (t / MaxRayDistance);
+                            float thickFade = 1.0f - (diff / Thickness);
+                            occlusion = max(occlusion, edgeFade * distFade * thickFade);
+                            if (occlusion >= 0.95f) break;
+                        }
+                    }
+
+                    float shadowFactor = 1.0f - occlusion * ShadowIntensity;
+                    return float4(shadowFactor, shadowFactor, shadowFactor, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("ContactShadowsPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslContactShadowsPs, Cache));
+
+            // Shader 50: Vulkan SPIR-V ContactShadowsPs
+            string glslContactShadowsPs = @"
+                #version 450
+                layout(location = 0) in vec2 inTexCoord;
+                layout(location = 0) out vec4 outShadow;
+
+                layout(binding = 0) uniform sampler2D depthSampler;
+                layout(binding = 1) uniform sampler2D normalSampler;
+
+                layout(binding = 2) uniform ContactShadowUBO {
+                    mat4 viewProj;
+                    mat4 invViewProj;
+                    vec3 lightDir;
+                    float maxRayDistance;
+                    float rayBias;
+                    float thickness;
+                    float shadowIntensity;
+                    uint stepCount;
+                } ubo;
+
+                float interleavedGradientNoise(vec2 screenPos) {
+                    return fract(52.9829189 * fract(0.06711056 * screenPos.x + 0.00583715 * screenPos.y));
+                }
+
+                void main() {
+                    float depth = texture(depthSampler, inTexCoord).r;
+                    if (depth >= 1.0) {
+                        outShadow = vec4(1.0);
+                        return;
+                    }
+
+                    vec4 clipPos = vec4(inTexCoord.x * 2.0 - 1.0, (1.0 - inTexCoord.y) * 2.0 - 1.0, depth, 1.0);
+                    vec4 worldPosH = ubo.invViewProj * clipPos;
+                    vec3 worldPos = worldPosH.xyz / worldPosH.w;
+
+                    vec3 normal = normalize(texture(normalSampler, inTexCoord).xyz * 2.0 - 1.0);
+                    vec3 L = normalize(ubo.lightDir);
+
+                    if (dot(normal, L) <= 0.0) {
+                        outShadow = vec4(1.0);
+                        return;
+                    }
+
+                    vec3 rayStart = worldPos + normal * ubo.rayBias;
+                    float stepDist = ubo.maxRayDistance / float(ubo.stepCount);
+                    float jitter = interleavedGradientNoise(gl_FragCoord.xy);
+
+                    float occlusion = 0.0;
+
+                    for (uint i = 0u; i < ubo.stepCount; i++) {
+                        float t = (float(i) + jitter) * stepDist;
+                        vec3 rayPos = rayStart + L * t;
+
+                        vec4 proj = ubo.viewProj * vec4(rayPos, 1.0);
+                        if (proj.w <= 1e-4) continue;
+                        vec3 ndc = proj.xyz / proj.w;
+                        vec2 uv = vec2(ndc.x * 0.5 + 0.5, 1.0 - (ndc.y * 0.5 + 0.5));
+
+                        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) break;
+
+                        float bufDepth = texture(depthSampler, uv).r;
+                        float diff = ndc.z - bufDepth;
+
+                        if (diff > 1e-4 && diff < ubo.thickness) {
+                            float edgeFade = clamp(min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y)) / 0.05, 0.0, 1.0);
+                            float distFade = 1.0 - (t / ubo.maxRayDistance) * (t / ubo.maxRayDistance);
+                            float thickFade = 1.0 - (diff / ubo.thickness);
+                            occlusion = max(occlusion, edgeFade * distFade * thickFade);
+                            if (occlusion >= 0.95) break;
+                        }
+                    }
+
+                    float shadowFactor = 1.0 - occlusion * ubo.shadowIntensity;
+                    outShadow = vec4(vec3(shadowFactor), 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("ContactShadowsPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslContactShadowsPs, Cache));
         }
     }
 }
