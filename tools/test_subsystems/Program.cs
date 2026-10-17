@@ -1595,6 +1595,54 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("AnisotropicFacadePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 AnisotropicFacadePs shader registered");
             Assert(pipeline.GetModule("AnisotropicFacadePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V AnisotropicFacadePs shader registered");
 
+            // Physically-Based Camera Exposure, EV100 Calibration & Temporal Eye Adaptation Pipeline
+            var exposure = pipeline.CameraExposure;
+            Assert(exposure != null, "pipeline.CameraExposure initialized");
+            Assert(exposure.ApertureFStop == 8.0f && Math.Abs(exposure.ShutterSpeedSeconds - 1.0f / 125.0f) < 1e-5f, "Default camera settings: f/8.0, 1/125s, ISO 100");
+
+            // EV100 Calibration from Camera Settings
+            float evMidday = CameraExposurePipeline.ComputeEv100FromCameraSettings(8.0f, 1.0f / 125.0f, 100.0f);
+            Assert(Math.Abs(evMidday - 12.966f) < 0.01f, $"Photographic EV100 from f/8 at 1/125s ISO 100: {evMidday:F3} (matches Sunny 16/midday chart)");
+            float evNight = CameraExposurePipeline.ComputeEv100FromCameraSettings(2.8f, 1.0f / 30.0f, 400.0f);
+            Assert(Math.Abs(evNight - 5.878f) < 0.01f, $"Night city street EV100 (f/2.8, 1/30s, ISO 400): {evNight:F3}");
+
+            // EV100 from Scene Average Luminance (K = 12.5) & Linear Exposure Scale
+            float evFromLum = CameraExposurePipeline.ComputeEv100FromLuminance(1000.0f);
+            Assert(Math.Abs(evFromLum - evMidday) < 0.01f, "EV100 derived from 1000 cd/m^2 scene luminance exactly matches camera exposure");
+
+            float scaleBright = CameraExposurePipeline.ComputeExposureScale(evMidday);
+            float scaleDark = CameraExposurePipeline.ComputeExposureScale(4.0f);
+            Assert(scaleDark > scaleBright * 100.0f, $"Dark night scene exposure scale is dramatically higher than bright midday ({scaleDark:F5} vs {scaleBright:F5})");
+
+            // 64-Bin Luminance Histogram Indexing & Outlier Percentile Filtering
+            int binMin = exposure.ComputeHistogramBin(0.001f);
+            int binMax = exposure.ComputeHistogramBin(100000.0f);
+            Assert(binMin == 0 && binMax == 63, "Histogram bins correctly clamp to [0, 63] range across extreme dynamic range");
+
+            uint[] testHist = new uint[CameraExposurePipeline.HistogramBins];
+            int darkBin = exposure.ComputeHistogramBin(0.01f);
+            int midBin = exposure.ComputeHistogramBin(100.0f);
+            int brightBin = exposure.ComputeHistogramBin(50000.0f);
+            testHist[darkBin] = 1000; // 10% outlier shadow cave
+            testHist[midBin] = 8000;  // 80% midtones
+            testHist[brightBin] = 1000; // 10% outlier sun glint
+
+            float avgLum = exposure.EvaluateHistogramAverageLuminance(testHist);
+            Assert(avgLum > 70.0f && avgLum < 140.0f, $"Histogram percentile reduction successfully filters outlier sun glints and deep shadow caves: AvgLum={avgLum:F2} cd/m^2");
+
+            // Temporal Eye Adaptation (Pupil Constriction vs Dilation)
+            exposure.AdaptedLuminance = 10.0f;
+            float adaptBright = exposure.UpdateEyeAdaptation(5000.0f, 0.5f);
+            Assert(adaptBright > 2500.0f, $"Temporal eye adaptation rapidly constricts pupil under blinding light: {adaptBright:F1} cd/m^2");
+
+            exposure.AdaptedLuminance = 5000.0f;
+            float adaptDark = exposure.UpdateEyeAdaptation(10.0f, 0.5f);
+            Assert(adaptDark > 2000.0f, $"Temporal eye adaptation dilates slowly when entering darkness, preventing sudden washouts: {adaptDark:F1} cd/m^2");
+
+            // Camera Exposure Shaders Registered
+            Assert(pipeline.GetModule("LuminanceHistogramCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 LuminanceHistogramCs shader registered");
+            Assert(pipeline.GetModule("LuminanceHistogramCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V LuminanceHistogramCs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

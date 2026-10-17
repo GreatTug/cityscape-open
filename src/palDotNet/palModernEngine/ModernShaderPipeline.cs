@@ -2663,6 +2663,151 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Physically-Based Camera Exposure, EV100 Calibration & Temporal Eye Adaptation Pipeline.
+    /// Implements standard photographic exposure mechanics (aperture f-number, shutter speed, ISO sensitivity),
+    /// ISO 100 EV100 calibration, 64-bin luminance histogram reduction with percentile clipping,
+    /// and dynamic asymmetric temporal eye adaptation (rod/cone pupil constriction vs dilation).
+    /// </summary>
+    public class CameraExposurePipeline
+    {
+        public const int HistogramBins = 64;
+
+        public float ApertureFStop { get; set; } = 8.0f;                // f/8.0
+        public float ShutterSpeedSeconds { get; set; } = 1.0f / 125.0f; // 1/125s
+        public float IsoSensitivity { get; set; } = 100.0f;             // ISO 100
+
+        public float MinLogLuminance { get; set; } = -8.0f;             // 2^-8 ~ 0.0039 cd/m^2 (starlight)
+        public float MaxLogLuminance { get; set; } = 16.0f;             // 2^16 = 65,536 cd/m^2 (direct noon sunlight)
+
+        public float LowPercentile { get; set; } = 0.20f;               // Discard darkest 20%
+        public float HighPercentile { get; set; } = 0.90f;              // Discard brightest 10%
+
+        public float AdaptationRateDarkToBright { get; set; } = 2.0f;   // Fast constriction (tau = 0.5s)
+        public float AdaptationRateBrightToDark { get; set; } = 0.5f;   // Slow dilation (tau = 2.0s)
+
+        public float AdaptedLuminance { get; set; } = 1.0f;
+
+        /// <summary>
+        /// Computes standard photographic EV100 from camera parameters: EV100 = log2((N^2 / t) * (100 / ISO)).
+        /// </summary>
+        public static float ComputeEv100FromCameraSettings(float apertureFStop, float shutterSpeedSec, float iso)
+        {
+            if (apertureFStop <= 1e-4f) apertureFStop = 1e-4f;
+            if (shutterSpeedSec <= 1e-6f) shutterSpeedSec = 1e-6f;
+            if (iso <= 1e-2f) iso = 1e-2f;
+
+            float val = (apertureFStop * apertureFStop / shutterSpeedSec) * (100.0f / iso);
+            if (val <= 1e-6f) val = 1e-6f;
+            return (float)Math.Log(val, 2.0);
+        }
+
+        /// <summary>
+        /// Computes standard photographic EV100 from average luminance: EV100 = log2(L_avg * 100 / K) where K = 12.5 (standard calibration constant).
+        /// </summary>
+        public static float ComputeEv100FromLuminance(float averageLuminance, float calibrationK = 12.5f)
+        {
+            if (averageLuminance <= 1e-6f) averageLuminance = 1e-6f;
+            if (calibrationK <= 1e-4f) calibrationK = 12.5f;
+            return (float)Math.Log(averageLuminance * (100.0f / calibrationK), 2.0);
+        }
+
+        /// <summary>
+        /// Computes linear physical exposure multiplier k = 1.0 / (1.2 * 2^EV100).
+        /// </summary>
+        public static float ComputeExposureScale(float ev100)
+        {
+            float maxLum = 1.2f * (float)Math.Pow(2.0, ev100);
+            if (maxLum <= 1e-6f) maxLum = 1e-6f;
+            return 1.0f / maxLum;
+        }
+
+        /// <summary>
+        /// Computes 64-bin histogram index for a given linear luminance value.
+        /// </summary>
+        public int ComputeHistogramBin(float luminance)
+        {
+            if (luminance <= 1e-6f) return 0;
+            float logLum = (float)Math.Log(luminance, 2.0);
+            float norm = (logLum - MinLogLuminance) / Math.Max(1e-4f, MaxLogLuminance - MinLogLuminance);
+            int bin = (int)Math.Floor(norm * HistogramBins);
+            return Math.Max(0, Math.Min(HistogramBins - 1, bin));
+        }
+
+        /// <summary>
+        /// Evaluates representative linear luminance for a given histogram bin index.
+        /// </summary>
+        public float EvaluateBinLuminance(int binIndex)
+        {
+            float norm = (binIndex + 0.5f) / HistogramBins;
+            float logLum = MinLogLuminance + norm * (MaxLogLuminance - MinLogLuminance);
+            return (float)Math.Pow(2.0, logLum);
+        }
+
+        /// <summary>
+        /// Reduces a 64-bin luminance histogram with low and high percentile clipping to compute target scene luminance.
+        /// </summary>
+        public float EvaluateHistogramAverageLuminance(uint[] histogram)
+        {
+            if (histogram == null || histogram.Length < HistogramBins) return AdaptedLuminance;
+
+            ulong totalPixels = 0;
+            for (int i = 0; i < HistogramBins; i++) totalPixels += histogram[i];
+            if (totalPixels == 0) return AdaptedLuminance;
+
+            ulong minPixelIndex = (ulong)(totalPixels * Math.Max(0.0f, Math.Min(1.0f, LowPercentile)));
+            ulong maxPixelIndex = (ulong)(totalPixels * Math.Max(0.0f, Math.Min(1.0f, HighPercentile)));
+
+            ulong currentPixelCount = 0;
+            double weightedLogLumSum = 0.0;
+            double validPixelCount = 0.0;
+
+            for (int i = 0; i < HistogramBins; i++)
+            {
+                uint count = histogram[i];
+                if (count == 0) continue;
+
+                ulong nextCount = currentPixelCount + count;
+
+                // Overlap with valid percentile window [minPixelIndex, maxPixelIndex]
+                ulong start = Math.Max(currentPixelCount, minPixelIndex);
+                ulong end = Math.Min(nextCount, maxPixelIndex);
+
+                if (end > start)
+                {
+                    ulong validInBin = end - start;
+                    float norm = (i + 0.5f) / HistogramBins;
+                    float logLum = MinLogLuminance + norm * (MaxLogLuminance - MinLogLuminance);
+
+                    weightedLogLumSum += validInBin * logLum;
+                    validPixelCount += validInBin;
+                }
+
+                currentPixelCount = nextCount;
+            }
+
+            if (validPixelCount <= 0.0) return AdaptedLuminance;
+
+            double avgLogLum = weightedLogLumSum / validPixelCount;
+            return (float)Math.Pow(2.0, avgLogLum);
+        }
+
+        /// <summary>
+        /// Applies temporal eye adaptation differential equation:
+        /// L_adapted(t + dt) = L_adapted(t) + (L_target - L_adapted(t)) * (1 - exp(-dt * rate)).
+        /// </summary>
+        public float UpdateEyeAdaptation(float targetLuminance, float deltaTimeSeconds)
+        {
+            if (deltaTimeSeconds <= 0.0f) return AdaptedLuminance;
+
+            float rate = (targetLuminance > AdaptedLuminance) ? AdaptationRateDarkToBright : AdaptationRateBrightToDark;
+            float factor = 1.0f - (float)Math.Exp(-deltaTimeSeconds * rate);
+
+            AdaptedLuminance += (targetLuminance - AdaptedLuminance) * factor;
+            return AdaptedLuminance;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -2685,6 +2830,7 @@ namespace palDotNet.palModernEngine
         public DepthAwareBilateralUpsamplePipeline BilateralUpsample { get; } = new DepthAwareBilateralUpsamplePipeline();
         public SparseVirtualTexturePipeline VirtualTexturing { get; } = new SparseVirtualTexturePipeline();
         public AnisotropicSpecularPipeline AnisotropicSpecular { get; } = new AnisotropicSpecularPipeline();
+        public CameraExposurePipeline CameraExposure { get; } = new CameraExposurePipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -4423,6 +4569,92 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("AnisotropicFacadePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslAnisotropicPs, Cache));
+
+            // 33. DirectX 12 HLSL SM6 64-Bin Luminance Histogram Compute Shader
+            string hlslHistogramCs = @"
+                Texture2D<float4> gHdrColorTexture : register(t0);
+                RWStructuredBuffer<uint> gHistogramBuffer : register(u0);
+
+                cbuffer HistogramConstants : register(b0) {
+                    uint2  gDimensions;
+                    float  gMinLogLuminance;
+                    float  gMaxLogLuminance;
+                };
+
+                groupshared uint sHistogram[64];
+
+                [numthreads(16, 16, 1)]
+                void main(uint3 dispatchThreadId : SV_DispatchThreadID, uint groupIndex : SV_GroupIndex) {
+                    if (groupIndex < 64u) {
+                        sHistogram[groupIndex] = 0u;
+                    }
+                    GroupMemoryBarrierWithGroupSync();
+
+                    if (dispatchThreadId.x < gDimensions.x && dispatchThreadId.y < gDimensions.y) {
+                        float3 color = gHdrColorTexture.Load(int3(dispatchThreadId.xy, 0)).rgb;
+                        float lum = dot(color, float3(0.2126f, 0.7152f, 0.0722f));
+
+                        if (lum > 1e-4f) {
+                            float logLum = log2(lum);
+                            float norm = (logLum - gMinLogLuminance) / max(1e-4f, gMaxLogLuminance - gMinLogLuminance);
+                            uint bin = clamp((uint)floor(norm * 64.0f), 0u, 63u);
+                            InterlockedAdd(sHistogram[bin], 1u);
+                        }
+                    }
+                    GroupMemoryBarrierWithGroupSync();
+
+                    if (groupIndex < 64u) {
+                        InterlockedAdd(gHistogramBuffer[groupIndex], sHistogram[groupIndex]);
+                    }
+                }
+            ";
+            RegisterModule(new ModernShaderModule("LuminanceHistogramCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil, hlslHistogramCs, Cache));
+
+            // 34. Vulkan SPIR-V 64-Bin Luminance Histogram Compute Shader
+            string glslHistogramCs = @"
+                #version 460
+                layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+                layout(binding = 0) uniform sampler2D texHdrColor;
+                layout(binding = 1) buffer HistogramBuffer {
+                    uint histogram[64];
+                };
+
+                layout(binding = 2) uniform HistogramUBO {
+                    uvec2 dimensions;
+                    float minLogLum;
+                    float maxLogLum;
+                } ubo;
+
+                shared uint sHistogram[64];
+
+                void main() {
+                    uint groupIdx = gl_LocalInvocationIndex;
+                    if (groupIdx < 64u) {
+                        sHistogram[groupIdx] = 0u;
+                    }
+                    barrier();
+
+                    ivec2 coord = ivec2(gl_GlobalInvocationID.xy);
+                    if (coord.x < int(ubo.dimensions.x) && coord.y < int(ubo.dimensions.y)) {
+                        vec3 color = texelFetch(texHdrColor, coord, 0).rgb;
+                        float lum = dot(color, vec3(0.2126, 0.7152, 0.0722));
+
+                        if (lum > 1e-4) {
+                            float logLum = log2(lum);
+                            float norm = (logLum - ubo.minLogLum) / max(1e-4, ubo.maxLogLum - ubo.minLogLum);
+                            uint bin = clamp(uint(floor(norm * 64.0)), 0u, 63u);
+                            atomicAdd(sHistogram[bin], 1u);
+                        }
+                    }
+                    barrier();
+
+                    if (groupIdx < 64u) {
+                        atomicAdd(histogram[groupIdx], sHistogram[groupIdx]);
+                    }
+                }
+            ";
+            RegisterModule(new ModernShaderModule("LuminanceHistogramCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslHistogramCs, Cache));
         }
     }
 }
