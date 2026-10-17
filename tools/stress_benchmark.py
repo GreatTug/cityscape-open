@@ -81,12 +81,52 @@ def run_stress_benchmark():
         [System.IO.Directory]::Delete($tempDir, $true)
     }}
 
+    Write-Host "`n  [STAGE 4] Stress testing CDLOD Multithreaded Async Mesh Worker Pool (100km terrain)..."
+    $terrain = New-Object palDotNet.palVisual.TerrainSurfaceData(100000.0, 4800.0, 100000.0, 4800.0, 1, 1, 25.0)
+    $quadtree = New-Object palDotNet.palVisual.CdlodTerrainQuadtree($terrain, 4)
+    $frustum = [palDotNet.palVisual.ViewFrustum3D]::CreateFromCamera(0.0, 300.0, -3000.0, 0.0, 0.0, 60.0, 16.0 / 9.0, 5.0, 30000.0)
+    $tested = 0; $culled = 0
+    $visibleChunks = $quadtree.SelectVisibleChunks($frustum, 0.0, 300.0, -3000.0, [ref]$tested, [ref]$culled)
+    
+    $worker = New-Object palDotNet.palVisual.CdlodAsyncMeshWorker(4)
+    try {{
+        $swWorker = [System.Diagnostics.Stopwatch]::StartNew()
+        $enqueuedCount = 0
+        foreach ($chunk in $visibleChunks) {{
+            if ($worker.EnqueueRequest($chunk.Node, $chunk.LodLevel, $terrain, 16)) {{
+                $enqueuedCount++
+            }}
+        }}
+        $done = $worker.WaitForCompletion(5000)
+        $swWorker.Stop()
+        if (-not $done) {{ throw "CdlodAsyncMeshWorker timed out under stress test!" }}
+        if ($worker.CompletedCacheCount -lt $enqueuedCount) {{ throw "Incomplete cache count in CdlodAsyncMeshWorker" }}
+        Write-Host "  [PASS] Background worker generated $enqueuedCount CDLOD meshes in $($swWorker.ElapsedMilliseconds) ms ($($worker.CompletedCacheCount) in cache)."
+    }} finally {{
+        $worker.Dispose()
+    }}
+
+    Write-Host "`n  [STAGE 5] Benchmarking Mathematical PBR Shaders & Wave Simulation..."
+    $pipeline = New-Object palDotNet.palModernEngine.ModernShaderPipeline
+    $pbr = New-Object palDotNet.palModernEngine.PbrMaterialParameters
+    $pbr.Roughness = 0.35; $pbr.Metallic = 0.75
+    [float]$diff = 0.0; [float]$spec = 0.0
+    [float]$wx = 0.0; [float]$wy = 0.0; [float]$wz = 0.0
+    $swShader = [System.Diagnostics.Stopwatch]::StartNew()
+    for ($s = 0; $s -lt 5000; $s++) {{
+        $pbr.EvaluateFullPbrBrdf(0.85, 0.85, 0.98, 0.95, [ref]$diff, [ref]$spec)
+        $pipeline.WaterPipeline.EvaluateWaterDisplacement([float]$s, [float]($s * 2), 5.0, [ref]$wx, [ref]$wy, [ref]$wz)
+    }}
+    $swShader.Stop()
+    Write-Host "  [PASS] 5,000 PBR BRDF & Ocean Gerstner wave evaluations completed in $($swShader.ElapsedMilliseconds) ms."
+
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()
     $process.Refresh()
     $finalMem = $process.WorkingSet64 / 1MB
     $deltaMem = $finalMem - $initialMem
     Write-Host "`n  [FINAL] Final Working Set: $([math]::Round($finalMem, 2)) MB (Delta: $([math]::Round($deltaMem, 2)) MB)"
+    if ($deltaMem -gt 50.0) {{ throw "Memory working set delta exceeded 50 MB threshold ($deltaMem MB)" }}
     Write-Host "=========================================================="
     Write-Host "  STRESS BENCHMARK PASSED (100% STABLE, 0 LEAKS)          "
     Write-Host "=========================================================="

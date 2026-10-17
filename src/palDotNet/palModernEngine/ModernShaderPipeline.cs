@@ -40,7 +40,11 @@ namespace palDotNet.palModernEngine
         public uint CacheHits => _cacheHits;
         public uint CacheMisses => _cacheMisses;
 
-        public ShaderCompilationCache(string cacheDirectory = null)
+        public ShaderCompilationCache() : this(null)
+        {
+        }
+
+        public ShaderCompilationCache(string cacheDirectory)
         {
             if (string.IsNullOrEmpty(cacheDirectory))
             {
@@ -585,7 +589,11 @@ namespace palDotNet.palModernEngine
         public int RegisteredModuleCount => _modules.Count;
         public ShaderCompilationCache Cache { get; }
 
-        public ModernShaderPipeline(string cacheDir = null)
+        public ModernShaderPipeline() : this(null)
+        {
+        }
+
+        public ModernShaderPipeline(string cacheDir)
         {
             Cache = new ShaderCompilationCache(cacheDir);
             InitializeStandardShaders();

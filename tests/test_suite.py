@@ -224,8 +224,15 @@ def test_all():
     assert native_bytes[0x2c4d204:0x2c4d208] == b"\x00\x00\xbe\x4c", "Native 1600m constant #2 verified expanded to 100,000,000m"
     print("  [PASS] Native CityScape.exe 1600m and tile count unlock patches 100% verified in machine code")
 
+    # 11. Multi-Backend Stress & Memory Leak Benchmark
+    print("\n[TEST 11] Running Multi-Backend Graphics & Memory Stress Benchmark...")
+    res_stress = subprocess.run([sys.executable, "tools/stress_benchmark.py"], capture_output=True, text=True)
+    assert res_stress.returncode == 0, f"Stress benchmark failed with exit code {res_stress.returncode}:\n{res_stress.stdout}\n{res_stress.stderr}"
+    assert "STRESS BENCHMARK PASSED (100% STABLE, 0 LEAKS)" in res_stress.stdout, f"Unexpected stress output:\n{res_stress.stdout}"
+    print("  [PASS] 50 backend switches, 1,000 frames, 20 GLB exports, CDLOD worker stress & 5,000 PBR/wave evaluations verified stable")
+
     print("\n=================================================");
-    print("  ALL 10 COMPREHENSIVE TEST SUITES PASSED (100%)");
+    print("  ALL 11 COMPREHENSIVE TEST SUITES PASSED (100%)");
     print("=================================================");
 
 if __name__ == "__main__":
