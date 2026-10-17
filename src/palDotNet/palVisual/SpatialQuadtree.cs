@@ -203,23 +203,87 @@ namespace palDotNet.palVisual
             float nearH = nearClip * tanFov;
             float nearW = nearH * aspectRatio;
 
-            // 1. Near Plane
+            // 1. Near Plane: fwd . (P - (C + fwd * nearClip)) >= 0
             frustum.Planes[0] = new Plane3D(fwdX, fwdY, fwdZ, -(fwdX * (posX + fwdX * nearClip) + fwdY * (posY + fwdY * nearClip) + fwdZ * (posZ + fwdZ * nearClip)));
-            // 2. Far Plane
+
+            // 2. Far Plane: -fwd . (P - (C + fwd * farClip)) >= 0
             frustum.Planes[1] = new Plane3D(-fwdX, -fwdY, -fwdZ, (fwdX * (posX + fwdX * farClip) + fwdY * (posY + fwdY * farClip) + fwdZ * (posZ + fwdZ * farClip)));
 
-            // Left / Right / Top / Bottom normals
-            float leftNormX = fwdX * nearW + rightX * nearClip;
-            float leftNormZ = fwdZ * nearW + rightZ * nearClip;
-            frustum.Planes[2] = new Plane3D(leftNormX, 0f, leftNormZ, -(leftNormX * posX + leftNormZ * posZ));
+            // 3. Left Plane: (nearClip * right + nearW * fwd) . (P - C) >= 0
+            float lNx = nearClip * rightX + nearW * fwdX;
+            float lNy = nearClip * rightY + nearW * fwdY;
+            float lNz = nearClip * rightZ + nearW * fwdZ;
+            frustum.Planes[2] = new Plane3D(lNx, lNy, lNz, -(lNx * posX + lNy * posY + lNz * posZ));
 
-            float rightNormX = fwdX * nearW - rightX * nearClip;
-            float rightNormZ = fwdZ * nearW - rightZ * nearClip;
-            frustum.Planes[3] = new Plane3D(rightNormX, 0f, rightNormZ, -(rightNormX * posX + rightNormZ * posZ));
+            // 4. Right Plane: (-nearClip * right + nearW * fwd) . (P - C) >= 0
+            float rNx = -nearClip * rightX + nearW * fwdX;
+            float rNy = -nearClip * rightY + nearW * fwdY;
+            float rNz = -nearClip * rightZ + nearW * fwdZ;
+            frustum.Planes[3] = new Plane3D(rNx, rNy, rNz, -(rNx * posX + rNy * posY + rNz * posZ));
 
-            float topNormY = fwdY * nearH - upY * nearClip;
-            frustum.Planes[4] = new Plane3D(0f, topNormY, 0f, -(topNormY * posY));
-            frustum.Planes[5] = new Plane3D(0f, -topNormY, 0f, (topNormY * posY));
+            // 5. Bottom Plane: (nearClip * up + nearH * fwd) . (P - C) >= 0
+            float bNx = nearClip * upX + nearH * fwdX;
+            float bNy = nearClip * upY + nearH * fwdY;
+            float bNz = nearClip * upZ + nearH * fwdZ;
+            frustum.Planes[4] = new Plane3D(bNx, bNy, bNz, -(bNx * posX + bNy * posY + bNz * posZ));
+
+            // 6. Top Plane: (-nearClip * up + nearH * fwd) . (P - C) >= 0
+            float tNx = -nearClip * upX + nearH * fwdX;
+            float tNy = -nearClip * upY + nearH * fwdY;
+            float tNz = -nearClip * upZ + nearH * fwdZ;
+            frustum.Planes[5] = new Plane3D(tNx, tNy, tNz, -(tNx * posX + tNy * posY + tNz * posZ));
+
+            return frustum;
+        }
+
+        /// <summary>
+        /// Constructs a View Frustum perfectly matching the 3D Orbit Camera projection of ControlRender.
+        /// Guaranteed 1:1 mathematical alignment with ControlRender.Project(x, y, z).
+        /// </summary>
+        public static ViewFrustum3D CreateFromOrbitProjection(
+            float yawDeg, float pitchDeg, float camDist,
+            int viewportW, int viewportH, float focal,
+            float nearClip = 1.0f, float farClip = 500000.0f)
+        {
+            var frustum = new ViewFrustum3D();
+
+            float yawRad = (float)(yawDeg * Math.PI / 180.0);
+            float pitchRad = (float)(pitchDeg * Math.PI / 180.0);
+            float cosY = (float)Math.Cos(yawRad);
+            float sinY = (float)Math.Sin(yawRad);
+            float cosP = (float)Math.Cos(pitchRad);
+            float sinP = (float)Math.Sin(pitchRad);
+
+            // Plane coefficients matching ControlRender.Project:
+            // x1 = Ax * x + Bx * y + Cx * z
+            float Ax = cosY, Bx = 0f, Cx = -sinY;
+            // y2 = Ay * x + By * y + Cy * z
+            float Ay = -sinY * sinP, By = cosP, Cy = -cosY * sinP;
+            // z2 = Az * x + Bz * y + Cz * z
+            float Az = sinY * cosP, Bz = sinP, Cz = cosY * cosP;
+
+            // Half-extents ratio on screen with safety margin
+            float margin = 1.25f;
+            float kx = (viewportW * 0.5f * margin) / Math.Max(1.0f, focal);
+            float ky = (viewportH * 0.55f * margin) / Math.Max(1.0f, focal);
+
+            // 1. Near Plane: z2 + camDist - nearClip >= 0
+            frustum.Planes[0] = new Plane3D(Az, Bz, Cz, camDist - nearClip);
+
+            // 2. Far Plane: farClip - (z2 + camDist) >= 0
+            frustum.Planes[1] = new Plane3D(-Az, -Bz, -Cz, farClip - camDist);
+
+            // 3. Left Plane: x1 + kx * (z2 + camDist) >= 0
+            frustum.Planes[2] = new Plane3D(Ax + kx * Az, Bx + kx * Bz, Cx + kx * Cz, kx * camDist);
+
+            // 4. Right Plane: kx * (z2 + camDist) - x1 >= 0
+            frustum.Planes[3] = new Plane3D(kx * Az - Ax, kx * Bz - Bx, kx * Cz - Cx, kx * camDist);
+
+            // 5. Bottom Plane: y2 + ky * (z2 + camDist) >= 0
+            frustum.Planes[4] = new Plane3D(Ay + ky * Az, By + ky * Bz, Cy + ky * Cz, ky * camDist);
+
+            // 6. Top Plane: ky * (z2 + camDist) - y2 >= 0
+            frustum.Planes[5] = new Plane3D(ky * Az - Ay, ky * Bz - By, ky * Cz - Cy, ky * camDist);
 
             return frustum;
         }

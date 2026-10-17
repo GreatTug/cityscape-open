@@ -57,6 +57,7 @@ namespace CityScape.Tests
                 TestVisualAndDocking();
                 TestModernGraphicsAndEngine();
                 TestSpatialQuadtreeAndCulling();
+                TestGeospatialDemIngestion();
 
                 Console.WriteLine("\n=================================================");
                 Console.WriteLine($"  ALL {_totalTests} DEEP VERIFICATION ASSERTIONS PASSED (100%)");
@@ -1305,6 +1306,138 @@ namespace CityScape.Tests
             ControlRender.SetActiveTerrain(cdlodTerrain);
             Assert(ControlRender.TerrainCdlodTree != null, "ControlRender.TerrainCdlodTree populated on SetActiveTerrain");
             Assert(ControlRender.TerrainCdlodTree.TotalNodes == cdlodTree.TotalNodes, "ControlRender.TerrainCdlodTree node count matches configured quadtree");
+        }
+
+        static void TestGeospatialDemIngestion()
+        {
+            Console.WriteLine("\n[MODULE 9] Testing Real-World Geospatial DEM & GeoTIFF Raster Ingestion Pipeline...");
+
+            string tempDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "temp_dem_tests");
+            if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                // 1. Ingest Synthetic ESRI ASCII Grid (.asc)
+                string ascPath = Path.Combine(tempDir, "sample_mountains.asc");
+                using (var sw = new StreamWriter(ascPath))
+                {
+                    sw.WriteLine("NCOLS         5");
+                    sw.WriteLine("NROWS         5");
+                    sw.WriteLine("XLLCORNER     28.978400");
+                    sw.WriteLine("YLLCORNER     41.008200");
+                    sw.WriteLine("CELLSIZE      100.000000");
+                    sw.WriteLine("NODATA_VALUE  -9999.0");
+                    sw.WriteLine("10.0 20.0 50.0 80.0 100.0");
+                    sw.WriteLine("15.0 35.0 90.0 150.0 120.0");
+                    sw.WriteLine("25.0 60.0 180.0 250.0 140.0");
+                    sw.WriteLine("20.0 45.0 110.0 160.0 90.0");
+                    sw.WriteLine("12.0 25.0 60.0 80.0 40.0");
+                }
+
+                var demAsc = DemRasterData.LoadFromAsciiGrid(ascPath);
+                Assert(demAsc.Width == 5 && demAsc.Height == 5, $"ASCII Grid raster parsed dimensions: {demAsc.Width}x{demAsc.Height}");
+                Assert(Math.Abs(demAsc.MinElevation - 10.0f) < 0.1f, $"ASCII Grid MinElevation verified: {demAsc.MinElevation:F1}m");
+                Assert(Math.Abs(demAsc.MaxElevation - 250.0f) < 0.1f, $"ASCII Grid MaxElevation verified: {demAsc.MaxElevation:F1}m");
+                Assert(Math.Abs(demAsc.OriginX - 28.9784) < 1e-4 && Math.Abs(demAsc.OriginY - 41.0082) < 1e-4, "Geospatial origin coordinates parsed");
+
+                // Bilinear elevation sampling at center
+                float elevCenter = demAsc.SampleBilinear(0.5f, 0.5f);
+                Assert(elevCenter > 100.0f && elevCenter < 250.0f, $"Bilinear interpolated elevation at center (u=0.5, v=0.5): {elevCenter:F2}m");
+
+                // 2. Export & Ingest RAW 32-bit Float DEM (.raw)
+                string rawPath = Path.Combine(tempDir, "sample_mountains.raw");
+                demAsc.SaveToRawFloat(rawPath);
+                Assert(File.Exists(rawPath) && new FileInfo(rawPath).Length == 5 * 5 * 4, "Exported 32-bit Float RAW DEM file");
+
+                var demRaw = DemRasterData.LoadFromRawFloat(rawPath, 5, 5);
+                Assert(demRaw.Width == 5 && demRaw.Height == 5, "RAW DEM ingested matching dimensions");
+                Assert(Math.Abs(demRaw.GetElevation(2, 2) - 180.0f) < 1e-3, "RAW DEM center peak verified (180.0m)");
+                Assert(Math.Abs(demRaw.GetElevation(3, 2) - 250.0f) < 1e-3, "RAW DEM summit verified (250.0m)");
+
+                // 3. Ingest Grayscale Heightmap Image (.png)
+                string pngPath = Path.Combine(tempDir, "heightmap_test.png");
+                using (var bmp = new Bitmap(16, 16, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                {
+                    for (int y = 0; y < 16; y++)
+                    {
+                        for (int x = 0; x < 16; x++)
+                        {
+                            int val = (x * 16 + y * 16) / 2;
+                            val = Math.Min(255, Math.Max(0, val));
+                            bmp.SetPixel(x, y, Color.FromArgb(val, val, val));
+                        }
+                    }
+                    bmp.Save(pngPath, System.Drawing.Imaging.ImageFormat.Png);
+                }
+
+                var demImg = DemRasterData.LoadFromImage(pngPath, minElevation: 50f, maxElevation: 450f);
+                Assert(demImg.Width == 16 && demImg.Height == 16, $"Image DEM dimensions parsed: {demImg.Width}x{demImg.Height}");
+                Assert(demImg.MinElevation >= 50f && demImg.MaxElevation <= 450f, $"Image DEM elevation mapped to [50m, 450m]");
+
+                // 4. Ingest GeoTIFF Raster (.tif)
+                string tifPath = Path.Combine(tempDir, "geotiff_sample.tif");
+                using (var fs = new FileStream(tifPath, FileMode.Create, FileAccess.Write))
+                using (var bw = new BinaryWriter(fs))
+                {
+                    // Little-Endian TIFF Header
+                    bw.Write((ushort)0x4949); // 'II'
+                    bw.Write((ushort)42);     // Magic
+                    bw.Write((uint)8);        // IFD offset immediately after header
+
+                    ushort numEntries = 6;
+                    bw.Write(numEntries);
+
+                    // Tag 256: ImageWidth = 4
+                    bw.Write((ushort)256); bw.Write((ushort)4); bw.Write((uint)1); bw.Write((uint)4);
+                    // Tag 257: ImageLength = 4
+                    bw.Write((ushort)257); bw.Write((ushort)4); bw.Write((uint)1); bw.Write((uint)4);
+                    // Tag 258: BitsPerSample = 32
+                    bw.Write((ushort)258); bw.Write((ushort)3); bw.Write((uint)1); bw.Write((uint)32);
+                    // Tag 339: SampleFormat = 3 (Float)
+                    bw.Write((ushort)339); bw.Write((ushort)3); bw.Write((uint)1); bw.Write((uint)3);
+                    // Tag 273: StripOffsets
+                    uint dataOffset = (uint)(8 + 2 + numEntries * 12 + 4);
+                    bw.Write((ushort)273); bw.Write((ushort)4); bw.Write((uint)1); bw.Write(dataOffset);
+                    // Tag 279: StripByteCounts = 4*4*4 = 64
+                    bw.Write((ushort)279); bw.Write((ushort)4); bw.Write((uint)1); bw.Write((uint)(4 * 4 * 4));
+
+                    bw.Write((uint)0); // Next IFD offset = 0
+
+                    // Raw float elevation strip (4x4 = 16 floats)
+                    for (int p = 0; p < 16; p++)
+                    {
+                        bw.Write((float)(100.0f + p * 15.0f));
+                    }
+                }
+
+                var demTif = DemRasterData.LoadFromGeoTiff(tifPath);
+                Assert(demTif.Width == 4 && demTif.Height == 4, $"GeoTIFF 32-bit float elevation raster parsed: {demTif.Width}x{demTif.Height}");
+                Assert(Math.Abs(demTif.MinElevation - 100.0f) < 0.1f, $"GeoTIFF MinElevation verified: {demTif.MinElevation:F1}m");
+                Assert(Math.Abs(demTif.MaxElevation - 325.0f) < 0.1f, $"GeoTIFF MaxElevation verified: {demTif.MaxElevation:F1}m");
+
+                // 5. Integration with TerrainSurfaceData & CDLOD Rendering
+                var realWorldTerrain = new TerrainSurfaceData(10000f, 10000f, 2500f, 2500f, 4, 4, 2f);
+                realWorldTerrain.ApplyDemRaster(demAsc);
+                Assert(realWorldTerrain.ActiveDemRaster == demAsc, "TerrainSurfaceData successfully ingested real-world DEM raster");
+                Assert(Math.Abs(realWorldTerrain.ElevationMax - 250.0f) < 0.1f, "TerrainSurfaceData ElevationMax updated to match DEM bounds");
+
+                // Evaluate elevations on terrain surface
+                float eCenter = realWorldTerrain.EvaluateElevation(0f, 0f);
+                Assert(Math.Abs(eCenter - elevCenter) < 1e-3, $"Terrain surface EvaluateElevation(0,0) matches DEM raster: {eCenter:F2}m");
+
+                // CDLOD Chunk Mesh Generation using Ingested Real-World DEM
+                var cdlodTree = new CdlodTerrainQuadtree(realWorldTerrain, maxLodLevels: 3);
+                var frustum = ViewFrustum3D.CreateFromCamera(0f, 500f, -5000f, 0f, 0f, 60f, 16f / 9f, 5f, 15000f);
+                var visibleChunks = cdlodTree.SelectVisibleChunks(frustum, 0f, 500f, -5000f, out int _, out int _);
+                Assert(visibleChunks.Count > 0, "CDLOD chunks selected on real-world DEM terrain");
+
+                var demMesh = visibleChunks[0].GenerateMesh(realWorldTerrain, baseGridResolution: 8);
+                Assert(demMesh != null && demMesh.Vertices.Count > 0, "CDLOD mesh generated using ingested DEM raster elevation surface");
+            }
+            finally
+            {
+                try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { }
+            }
         }
     }
 }

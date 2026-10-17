@@ -25,6 +25,17 @@ namespace palDotNet.palVisual
         public bool HasActiveTerrain { get; set; } = true;
         public float ElevationMin { get; set; } = 0.0f;
         public float ElevationMax { get; set; } = 150.0f;
+        public DemRasterData ActiveDemRaster { get; set; }
+
+        public void ApplyDemRaster(DemRasterData dem)
+        {
+            ActiveDemRaster = dem;
+            if (dem != null && dem.IsLoaded)
+            {
+                ElevationMin = dem.MinElevation;
+                ElevationMax = dem.MaxElevation;
+            }
+        }
 
         public double AreaSquareMeters => (double)SizeX * (double)SizeY;
         public double AreaSquareKilometers => AreaSquareMeters / 1_000_000.0;
@@ -63,10 +74,20 @@ namespace palDotNet.palVisual
         }
 
         /// <summary>
-        /// Evaluates procedural or imported elevation at world position (X, Z).
+        /// Evaluates real-world GIS raster elevation or procedural relief at world position (X, Z).
         /// </summary>
         public float EvaluateElevation(float x, float z)
         {
+            if (ActiveDemRaster != null && ActiveDemRaster.IsLoaded)
+            {
+                float u = (x + SizeX * 0.5f) / Math.Max(1.0f, SizeX);
+                float v = (z + SizeY * 0.5f) / Math.Max(1.0f, SizeY);
+                if (u >= 0f && u <= 1f && v >= 0f && v <= 1f)
+                {
+                    return ActiveDemRaster.SampleBilinear(u, v);
+                }
+            }
+
             // Smooth natural rolling terrain relief proportional to scale
             float nx = x / Math.Max(100.0f, SizeX);
             float nz = z / Math.Max(100.0f, SizeY);

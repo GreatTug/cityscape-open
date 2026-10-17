@@ -424,7 +424,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		float farClip = Math.Max(15000f, diag * 3.0f);
 		float aspect = (float)w / Math.Max(1, h);
 
-		var frustum = ViewFrustum3D.CreateFromCamera(camX, camY, camZ, mCameraYaw, mCameraPitch, 65.0f, aspect, 1.0f, farClip);
+		var frustum = ViewFrustum3D.CreateFromOrbitProjection(mCameraYaw, mCameraPitch, camDist, w, h, focal, 1.0f, farClip);
 
 		// 3. CDLOD Multi-Resolution Hierarchical Terrain Mesh (Frustum-Culled Chunks)
 		if (TerrainCdlodTree == null || TerrainCdlodTree.Terrain != terrain)
@@ -440,16 +440,23 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		{
 			foreach (var chunk in cdlodChunks)
 			{
-				int div = Math.Max(2, 8 >> Math.Min(3, chunk.LodLevel));
-				float stepX = (chunk.Node.MaxX - chunk.Node.MinX) / div;
-				float stepZ = (chunk.Node.MaxZ - chunk.Node.MinZ) / div;
+				float chunkLenX = chunk.Node.MaxX - chunk.Node.MinX;
+				float chunkLenZ = chunk.Node.MaxZ - chunk.Node.MinZ;
+				float aspectXZ = chunkLenX / Math.Max(1.0f, chunkLenZ);
 
-				for (int j = 0; j < div; j++)
+				int baseDiv = Math.Max(4, 16 >> Math.Min(3, chunk.LodLevel));
+				int divX = Math.Min(48, Math.Max(4, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, aspectXZ)))));
+				int divZ = Math.Min(48, Math.Max(2, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, 1.0 / Math.Max(0.01, aspectXZ))))));
+
+				float stepX = chunkLenX / divX;
+				float stepZ = chunkLenZ / divZ;
+
+				for (int j = 0; j < divZ; j++)
 				{
 					float z0 = chunk.Node.MinZ + j * stepZ;
 					float z1 = chunk.Node.MinZ + (j + 1) * stepZ;
 
-					for (int i = 0; i < div; i++)
+					for (int i = 0; i < divX; i++)
 					{
 						float x0 = chunk.Node.MinX + i * stepX;
 						float x1 = chunk.Node.MinX + (i + 1) * stepX;
