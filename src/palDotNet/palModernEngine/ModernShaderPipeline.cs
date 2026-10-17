@@ -2808,6 +2808,161 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Screen-Space Reflection (SSR) Spatiotemporal Ray-Tracing Denoiser Pipeline.
+    /// Implements temporal reprojection with variance clamping, disocclusion rejection,
+    /// and spatial cross-bilateral edge-stopping filtering (normal, depth, luminance)
+    /// to transform noisy 1-spp stochastic specular ray hits into clean, sharp glossy reflections
+    /// on urban wet pavements, ocean surfaces, and glass skyscraper facades without silhouette bleed.
+    /// </summary>
+    public class SsrDenoiserPipeline
+    {
+        public float TemporalAlpha { get; set; } = 0.15f;           // 85% history / 15% current blend
+        public float VarianceGamma { get; set; } = 1.5f;            // Variance box clamping factor
+        public float DepthSigma { get; set; } = 0.10f;              // Depth edge-stopping sharpness
+        public float NormalPower { get; set; } = 32.0f;             // Normal orientation sensitivity
+        public float LuminanceSigma { get; set; } = 4.0f;           // Luminance variance weight factor
+        public int SpatialFilterPasses { get; set; } = 2;
+
+        /// <summary>
+        /// Computes relative luminance from linear RGB: L = 0.2126*R + 0.7152*G + 0.0722*B.
+        /// </summary>
+        public static float ComputeLuminance(float r, float g, float b)
+        {
+            return 0.2126f * r + 0.7152f * g + 0.0722f * b;
+        }
+
+        /// <summary>
+        /// Performs 3x3 local color variance bounding box calculation for anti-ghosting history clamping.
+        /// </summary>
+        public static void ComputeLocalVariance(float[] local3x3R, float[] local3x3G, float[] local3x3B, float gamma,
+            out float minR, out float maxR, out float minG, out float maxG, out float minB, out float maxB)
+        {
+            float sumR = 0f, sumG = 0f, sumB = 0f;
+            float sumSqR = 0f, sumSqG = 0f, sumSqB = 0f;
+            int n = Math.Min(9, Math.Min(local3x3R.Length, Math.Min(local3x3G.Length, local3x3B.Length)));
+
+            for (int i = 0; i < n; i++)
+            {
+                float r = local3x3R[i], g = local3x3G[i], b = local3x3B[i];
+                sumR += r; sumG += g; sumB += b;
+                sumSqR += r * r; sumSqG += g * g; sumSqB += b * b;
+            }
+
+            float invN = 1.0f / Math.Max(1, n);
+            float meanR = sumR * invN;
+            float meanG = sumG * invN;
+            float meanB = sumB * invN;
+
+            float varR = Math.Max(0.0f, (sumSqR * invN) - (meanR * meanR));
+            float varG = Math.Max(0.0f, (sumSqG * invN) - (meanG * meanG));
+            float varB = Math.Max(0.0f, (sumSqB * invN) - (meanB * meanB));
+
+            float stdR = (float)Math.Sqrt(varR) * gamma;
+            float stdG = (float)Math.Sqrt(varG) * gamma;
+            float stdB = (float)Math.Sqrt(varB) * gamma;
+
+            minR = Math.Max(0.0f, meanR - stdR);
+            maxR = meanR + stdR;
+            minG = Math.Max(0.0f, meanG - stdG);
+            maxG = meanG + stdG;
+            minB = Math.Max(0.0f, meanB - stdB);
+            maxB = meanB + stdB;
+        }
+
+        /// <summary>
+        /// Resolves temporal accumulation with motion vector reprojection, variance clamping, and disocclusion handling.
+        /// </summary>
+        public void ResolveTemporal(
+            float currR, float currG, float currB,
+            float histR, float histG, float histB,
+            float[] local3x3R, float[] local3x3G, float[] local3x3B,
+            bool isDisoccluded,
+            out float outR, out float outG, out float outB)
+        {
+            if (isDisoccluded || local3x3R == null || local3x3R.Length == 0)
+            {
+                outR = currR; outG = currG; outB = currB;
+                return;
+            }
+
+            ComputeLocalVariance(local3x3R, local3x3G, local3x3B, VarianceGamma,
+                out float minR, out float maxR, out float minG, out float maxG, out float minB, out float maxB);
+
+            float clampedHistR = Math.Max(minR, Math.Min(maxR, histR));
+            float clampedHistG = Math.Max(minG, Math.Min(maxG, histG));
+            float clampedHistB = Math.Max(minB, Math.Min(maxB, histB));
+
+            outR = (1.0f - TemporalAlpha) * clampedHistR + TemporalAlpha * currR;
+            outG = (1.0f - TemporalAlpha) * clampedHistG + TemporalAlpha * currG;
+            outB = (1.0f - TemporalAlpha) * clampedHistB + TemporalAlpha * currB;
+        }
+
+        /// <summary>
+        /// Evaluates edge-stopping cross-bilateral filter weight between center pixel p and neighbor pixel q.
+        /// Accounts for depth step, surface normal orientation difference, and luminance gradient.
+        /// </summary>
+        public float EvaluateEdgeStoppingWeight(
+            float centerDepth, float neighborDepth,
+            float cNormX, float cNormY, float cNormZ,
+            float nNormX, float nNormY, float nNormZ,
+            float centerLum, float neighborLum,
+            float spatialKernelWeight)
+        {
+            // Depth edge-stopping weight (exponential)
+            float depthDiff = Math.Abs(centerDepth - neighborDepth);
+            float wDepth = (float)Math.Exp(-depthDiff / Math.Max(0.001f, DepthSigma));
+
+            // Normal edge-stopping weight: dot(N_c, N_n)^power
+            float dotN = Math.Max(0.0f, cNormX * nNormX + cNormY * nNormY + cNormZ * nNormZ);
+            float wNormal = (float)Math.Pow(dotN, NormalPower);
+
+            // Luminance edge-stopping weight
+            float lumDiff = Math.Abs(centerLum - neighborLum);
+            float wLum = (float)Math.Exp(-lumDiff / Math.Max(0.001f, LuminanceSigma));
+
+            return spatialKernelWeight * wDepth * wNormal * wLum;
+        }
+
+        /// <summary>
+        /// Applies spatial edge-stopping cross-bilateral filtering across a 5-tap neighborhood.
+        /// </summary>
+        public void FilterCrossBilateral5Tap(
+            float cR, float cG, float cB, float cDepth, float cNx, float cNy, float cNz,
+            float[] nR4, float[] nG4, float[] nB4, float[] nDepth4,
+            float[] nNx4, float[] nNy4, float[] nNz4,
+            out float outR, out float outG, out float outB)
+        {
+            float cLum = ComputeLuminance(cR, cG, cB);
+            float sumW = 1.0f;
+            float sumR = cR;
+            float sumG = cG;
+            float sumB = cB;
+
+            float[] spatialWeights = { 0.5f, 0.5f, 0.5f, 0.5f };
+
+            for (int i = 0; i < 4; i++)
+            {
+                float nLum = ComputeLuminance(nR4[i], nG4[i], nB4[i]);
+                float w = EvaluateEdgeStoppingWeight(
+                    cDepth, nDepth4[i],
+                    cNx, cNy, cNz,
+                    nNx4[i], nNy4[i], nNz4[i],
+                    cLum, nLum,
+                    spatialWeights[i]);
+
+                sumR += nR4[i] * w;
+                sumG += nG4[i] * w;
+                sumB += nB4[i] * w;
+                sumW += w;
+            }
+
+            outR = sumR / sumW;
+            outG = sumG / sumW;
+            outB = sumB / sumW;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -2831,6 +2986,7 @@ namespace palDotNet.palModernEngine
         public SparseVirtualTexturePipeline VirtualTexturing { get; } = new SparseVirtualTexturePipeline();
         public AnisotropicSpecularPipeline AnisotropicSpecular { get; } = new AnisotropicSpecularPipeline();
         public CameraExposurePipeline CameraExposure { get; } = new CameraExposurePipeline();
+        public SsrDenoiserPipeline SsrDenoiser { get; } = new SsrDenoiserPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -4655,6 +4811,177 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("LuminanceHistogramCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslHistogramCs, Cache));
+
+            // 35. DirectX 12 HLSL SM6 Screen-Space Reflection Spatiotemporal Denoiser Pixel Shader
+            string hlslSsrDenoiserPs = @"
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+
+                Texture2D<float4> gCurrentReflection : register(t0);
+                Texture2D<float4> gHistoryReflection : register(t1);
+                Texture2D<float2> gVelocityTexture    : register(t2);
+                Texture2D<float>  gDepthTexture       : register(t3);
+                Texture2D<float4> gNormalTexture      : register(t4);
+                SamplerState      gPointSampler       : register(s0);
+                SamplerState      gLinearSampler      : register(s1);
+
+                cbuffer SsrDenoiserConstants : register(b0) {
+                    float2 gTexelSize;
+                    float  gTemporalAlpha;
+                    float  gVarianceGamma;
+                    float  gDepthSigma;
+                    float  gNormalPower;
+                    float2 gPadding;
+                };
+
+                float4 main(PSInput input) : SV_Target {
+                    float2 uv = input.uv;
+                    float2 velocity = gVelocityTexture.Sample(gPointSampler, uv).xy;
+                    float2 prevUv = uv - velocity;
+
+                    float3 current = gCurrentReflection.Sample(gPointSampler, uv).rgb;
+                    float currentDepth = gDepthTexture.Sample(gPointSampler, uv);
+                    float3 currentNormal = gNormalTexture.Sample(gPointSampler, uv).xyz * 2.0f - 1.0f;
+
+                    // 3x3 local color statistics
+                    float3 sumCol = current;
+                    float3 sumSqCol = current * current;
+                    float2 offsets[8] = {
+                        float2(-1, -1), float2(0, -1), float2(1, -1),
+                        float2(-1,  0),                float2(1,  0),
+                        float2(-1,  1), float2(0,  1), float2(1,  1)
+                    };
+
+                    [unroll]
+                    for (int i = 0; i < 8; i++) {
+                        float3 c = gCurrentReflection.Sample(gPointSampler, uv + offsets[i] * gTexelSize).rgb;
+                        sumCol += c;
+                        sumSqCol += c * c;
+                    }
+
+                    float3 mean = sumCol / 9.0f;
+                    float3 variance = max(0.0f.xxx, (sumSqCol / 9.0f) - (mean * mean));
+                    float3 stdDev = sqrt(variance) * gVarianceGamma;
+                    float3 boxMin = max(0.0f.xxx, mean - stdDev);
+                    float3 boxMax = mean + stdDev;
+
+                    bool offScreen = (prevUv.x < 0.0f || prevUv.x > 1.0f || prevUv.y < 0.0f || prevUv.y > 1.0f);
+                    if (offScreen) {
+                        return float4(current, 1.0f);
+                    }
+
+                    float3 history = gHistoryReflection.Sample(gLinearSampler, prevUv).rgb;
+                    float3 clampedHistory = clamp(history, boxMin, boxMax);
+                    float3 temporallyResolved = lerp(clampedHistory, current, gTemporalAlpha);
+
+                    // Cross-bilateral edge-stopping spatial filtering over 4 neighbors
+                    float sumW = 1.0f;
+                    float3 sumFiltered = temporallyResolved;
+                    float2 crossOffsets[4] = { float2(1, 0), float2(-1, 0), float2(0, 1), float2(0, -1) };
+
+                    [unroll]
+                    for (int j = 0; j < 4; j++) {
+                        float2 nUv = uv + crossOffsets[j] * gTexelSize;
+                        float3 nCol = gCurrentReflection.Sample(gPointSampler, nUv).rgb;
+                        float nDepth = gDepthTexture.Sample(gPointSampler, nUv);
+                        float3 nNormal = gNormalTexture.Sample(gPointSampler, nUv).xyz * 2.0f - 1.0f;
+
+                        float depthDiff = abs(currentDepth - nDepth);
+                        float wDepth = exp(-depthDiff / max(1e-3f, gDepthSigma));
+
+                        float dotN = saturate(dot(currentNormal, nNormal));
+                        float wNormal = pow(dotN, gNormalPower);
+
+                        float totalW = 0.5f * wDepth * wNormal;
+                        sumFiltered += nCol * totalW;
+                        sumW += totalW;
+                    }
+
+                    return float4(sumFiltered / sumW, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("SsrSpatiotemporalDenoiserPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslSsrDenoiserPs, Cache));
+
+            // 36. Vulkan SPIR-V Screen-Space Reflection Spatiotemporal Denoiser Fragment Shader
+            string glslSsrDenoiserPs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texCurrent;
+                layout(binding = 1) uniform sampler2D texHistory;
+                layout(binding = 2) uniform sampler2D texVelocity;
+                layout(binding = 3) uniform sampler2D texDepth;
+                layout(binding = 4) uniform sampler2D texNormal;
+
+                layout(binding = 5) uniform SsrUBO {
+                    vec2 texelSize;
+                    float temporalAlpha;
+                    float varianceGamma;
+                    float depthSigma;
+                    float normalPower;
+                } ubo;
+
+                void main() {
+                    vec2 vel = texture(texVelocity, inUV).xy;
+                    vec2 prevUv = inUV - vel;
+
+                    vec3 current = texture(texCurrent, inUV).rgb;
+                    float currentDepth = texture(texDepth, inUV).r;
+                    vec3 currentNormal = texture(texNormal, inUV).xyz * 2.0 - 1.0;
+
+                    vec3 sumCol = current;
+                    vec3 sumSq = current * current;
+                    ivec2 offs[8] = ivec2[](
+                        ivec2(-1,-1), ivec2(0,-1), ivec2(1,-1),
+                        ivec2(-1, 0),             ivec2(1, 0),
+                        ivec2(-1, 1), ivec2(0, 1), ivec2(1, 1)
+                    );
+
+                    for (int i = 0; i < 8; i++) {
+                        vec3 c = texture(texCurrent, inUV + vec2(offs[i]) * ubo.texelSize).rgb;
+                        sumCol += c;
+                        sumSq += c * c;
+                    }
+
+                    vec3 mean = sumCol / 9.0;
+                    vec3 sigma = sqrt(max(vec3(0.0), (sumSq / 9.0) - (mean * mean))) * ubo.varianceGamma;
+                    vec3 boxMin = max(vec3(0.0), mean - sigma);
+                    vec3 boxMax = mean + sigma;
+
+                    if (prevUv.x < 0.0 || prevUv.x > 1.0 || prevUv.y < 0.0 || prevUv.y > 1.0) {
+                        outColor = vec4(current, 1.0);
+                        return;
+                    }
+
+                    vec3 hist = texture(texHistory, prevUv).rgb;
+                    vec3 clampedHist = clamp(hist, boxMin, boxMax);
+                    vec3 temporal = mix(clampedHist, current, ubo.temporalAlpha);
+
+                    float sumW = 1.0;
+                    vec3 sumF = temporal;
+                    vec2 crossOffs[4] = vec2[](vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0));
+
+                    for (int j = 0; j < 4; j++) {
+                        vec2 nUv = inUV + crossOffs[j] * ubo.texelSize;
+                        vec3 nCol = texture(texCurrent, nUv).rgb;
+                        float nDepth = texture(texDepth, nUv).r;
+                        vec3 nNormal = texture(texNormal, nUv).xyz * 2.0 - 1.0;
+
+                        float wDepth = exp(-abs(currentDepth - nDepth) / max(0.001, ubo.depthSigma));
+                        float wNormal = pow(clamp(dot(currentNormal, nNormal), 0.0, 1.0), ubo.normalPower);
+                        float tw = 0.5 * wDepth * wNormal;
+
+                        sumF += nCol * tw;
+                        sumW += tw;
+                    }
+
+                    outColor = vec4(sumF / sumW, 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("SsrSpatiotemporalDenoiserPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslSsrDenoiserPs, Cache));
         }
     }
 }

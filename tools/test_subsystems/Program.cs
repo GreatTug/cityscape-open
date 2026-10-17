@@ -1643,6 +1643,61 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("LuminanceHistogramCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 LuminanceHistogramCs shader registered");
             Assert(pipeline.GetModule("LuminanceHistogramCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V LuminanceHistogramCs shader registered");
 
+            // Screen-Space Reflection (SSR) Spatiotemporal Ray-Tracing Denoiser Pipeline
+            var ssrDenoiser = pipeline.SsrDenoiser;
+            Assert(ssrDenoiser != null, "pipeline.SsrDenoiser initialized");
+            Assert(ssrDenoiser.TemporalAlpha == 0.15f && ssrDenoiser.VarianceGamma == 1.5f, "SSR denoiser defaults verified");
+
+            // Relative Luminance Calculation
+            float lumWhite = SsrDenoiserPipeline.ComputeLuminance(1f, 1f, 1f);
+            float lumGreen = SsrDenoiserPipeline.ComputeLuminance(0f, 1f, 0f);
+            float lumBlue = SsrDenoiserPipeline.ComputeLuminance(0f, 0f, 1f);
+            Assert(Math.Abs(lumWhite - 1.0f) < 1e-4f, "White RGB luminance is 1.0");
+            Assert(lumGreen > lumBlue * 5.0f, $"Human photopic curve weights green much higher than blue ({lumGreen:F4} vs {lumBlue:F4})");
+
+            // 3x3 Local Color Variance Bounding Box
+            float[] ssrTestR = { 0.50f, 0.52f, 0.48f, 0.51f, 0.49f, 0.53f, 0.47f, 0.50f, 0.51f };
+            float[] ssrTestG = { 0.70f, 0.72f, 0.68f, 0.71f, 0.69f, 0.73f, 0.67f, 0.70f, 0.71f };
+            float[] ssrTestB = { 0.90f, 0.92f, 0.88f, 0.91f, 0.89f, 0.93f, 0.87f, 0.90f, 0.91f };
+            SsrDenoiserPipeline.ComputeLocalVariance(ssrTestR, ssrTestG, ssrTestB, 1.5f,
+                out float ssrMinR, out float ssrMaxR, out _, out _, out _, out _);
+            Assert(ssrMinR > 0.44f && ssrMaxR < 0.56f, $"Variance box tightly bounds mid-tones: [{ssrMinR:F3}, {ssrMaxR:F3}]");
+
+            // Temporal Accumulation with Variance Clamping & Disocclusion Rejection
+            ssrDenoiser.ResolveTemporal(0.50f, 0.70f, 0.90f, histR: 2.50f, histG: 2.50f, histB: 2.50f, ssrTestR, ssrTestG, ssrTestB,
+                isDisoccluded: false, out float rOut, out float gOut, out float bOut);
+            Assert(rOut < 0.60f, $"Outlier history clamped into variance envelope without specular blowout: R={rOut:F3}");
+
+            ssrDenoiser.ResolveTemporal(0.50f, 0.70f, 0.90f, histR: 2.50f, histG: 2.50f, histB: 2.50f, ssrTestR, ssrTestG, ssrTestB,
+                isDisoccluded: true, out float rDisoc, out float gDisoc, out float bDisoc);
+            Assert(rDisoc == 0.50f && gDisoc == 0.70f && bDisoc == 0.90f, "Disoccluded reflection edge immediately accepts current frame sample");
+
+            // Edge-Stopping Cross-Bilateral Weights (Depth, Normal, Luminance)
+            float wFlat = ssrDenoiser.EvaluateEdgeStoppingWeight(10.0f, 10.01f, 0f, 1f, 0f, 0f, 1f, 0f, 0.5f, 0.5f, 0.5f);
+            Assert(wFlat > 0.45f, $"Flat continuous specular surface maintains high filter weight: {wFlat:F3}");
+
+            float wDepthEdge = ssrDenoiser.EvaluateEdgeStoppingWeight(10.0f, 25.0f, 0f, 1f, 0f, 0f, 1f, 0f, 0.5f, 0.5f, 0.5f);
+            Assert(wDepthEdge < 0.001f, $"Discontinuous depth edge rejected by edge-stopping kernel: {wDepthEdge:F6}");
+
+            float wCorner = ssrDenoiser.EvaluateEdgeStoppingWeight(10.0f, 10.0f, 0f, 1f, 0f, 1f, 0f, 0f, 0.5f, 0.5f, 0.5f);
+            Assert(wCorner == 0.0f, "Orthogonal surface normal corner edge completely culled (weight = 0)");
+
+            // 5-Tap Cross-Bilateral Spatial Denoising
+            float[] nR4 = { 0.48f, 0.52f, 0.50f, 0.51f };
+            float[] nG4 = { 0.68f, 0.72f, 0.70f, 0.71f };
+            float[] nB4 = { 0.88f, 0.92f, 0.90f, 0.91f };
+            float[] nD4 = { 10.0f, 10.01f, 10.02f, 9.99f };
+            float[] nNx4 = { 0f, 0f, 0f, 0f };
+            float[] nNy4 = { 1f, 1f, 1f, 1f };
+            float[] nNz4 = { 0f, 0f, 0f, 0f };
+            ssrDenoiser.FilterCrossBilateral5Tap(0.60f, 0.70f, 0.80f, 10.0f, 0f, 1f, 0f,
+                nR4, nG4, nB4, nD4, nNx4, nNy4, nNz4, out float fR, out float fG, out float fB);
+            Assert(fR > 0.49f && fR < 0.58f, $"5-tap spatial cross-bilateral filter smoothed stochastic specular hit: R={fR:F3}");
+
+            // SSR Denoiser Shaders Registered
+            Assert(pipeline.GetModule("SsrSpatiotemporalDenoiserPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 SsrSpatiotemporalDenoiserPs shader registered");
+            Assert(pipeline.GetModule("SsrSpatiotemporalDenoiserPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V SsrSpatiotemporalDenoiserPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
