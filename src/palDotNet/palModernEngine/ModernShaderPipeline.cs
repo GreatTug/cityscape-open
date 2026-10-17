@@ -2218,6 +2218,250 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Represents a unique page in a hierarchical sparse virtual megatexture.
+    /// </summary>
+    public struct VirtualPageId : IEquatable<VirtualPageId>
+    {
+        public ushort PageX;
+        public ushort PageY;
+        public byte Mip;
+
+        public VirtualPageId(ushort x, ushort y, byte mip)
+        {
+            PageX = x;
+            PageY = y;
+            Mip = mip;
+        }
+
+        public bool Equals(VirtualPageId other)
+        {
+            return PageX == other.PageX && PageY == other.PageY && Mip == other.Mip;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is VirtualPageId other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return (PageX << 16) ^ (PageY << 4) ^ Mip;
+        }
+
+        public override string ToString()
+        {
+            return $"Page({PageX}, {PageY}, Mip={Mip})";
+        }
+    }
+
+    /// <summary>
+    /// Physical texture atlas cache entry in VRAM.
+    /// </summary>
+    public struct PhysicalAtlasSlot
+    {
+        public ushort SlotX;
+        public ushort SlotY;
+        public VirtualPageId VirtualPage;
+        public uint LastUsedFrame;
+        public bool IsResident;
+    }
+
+    /// <summary>
+    /// Sparse Virtual Texturing (SVT / Megatexture) Pipeline with GPU Feedback Buffer Analysis.
+    /// Manages multi-gigabyte virtual textures (e.g. 65,536 x 65,536 satellite orthophotos and terrain splat maps)
+    /// streamed into a compact physical VRAM cache atlas (2048x2048) driven by real-time GPU feedback requests.
+    /// </summary>
+    public class SparseVirtualTexturePipeline
+    {
+        public int VirtualDimension { get; set; } = 65536;
+        public int PageSize { get; set; } = 128;
+        public int PhysicalAtlasSlots { get; } = 16;
+        public int PhysicalAtlasDimension { get; } = 2048;
+
+        public int PagesPerAxis => Math.Max(1, VirtualDimension / PageSize);
+        public int TotalCacheSlots => PhysicalAtlasSlots * PhysicalAtlasSlots;
+
+        private readonly PhysicalAtlasSlot[] _cacheSlots;
+        private readonly Dictionary<VirtualPageId, int> _pageToSlotMap = new Dictionary<VirtualPageId, int>();
+        private readonly HashSet<VirtualPageId> _pendingRequests = new HashSet<VirtualPageId>();
+        private readonly Queue<VirtualPageId> _requestQueue = new Queue<VirtualPageId>();
+
+        public int ActiveResidentPages => _pageToSlotMap.Count;
+        public int PendingRequestsCount => _pendingRequests.Count;
+
+        public SparseVirtualTexturePipeline()
+        {
+            _cacheSlots = new PhysicalAtlasSlot[TotalCacheSlots];
+            for (int y = 0; y < PhysicalAtlasSlots; y++)
+            {
+                for (int x = 0; x < PhysicalAtlasSlots; x++)
+                {
+                    int idx = y * PhysicalAtlasSlots + x;
+                    _cacheSlots[idx] = new PhysicalAtlasSlot
+                    {
+                        SlotX = (ushort)x,
+                        SlotY = (ushort)y,
+                        IsResident = false,
+                        LastUsedFrame = 0
+                    };
+                }
+            }
+        }
+
+        /// <summary>
+        /// Computes virtual page coordinates for normalized UV coordinates at a target mip level.
+        /// </summary>
+        public void ComputePageCoords(float u, float v, int mip, out ushort pageX, out ushort pageY)
+        {
+            int mipPagesPerAxis = Math.Max(1, PagesPerAxis >> mip);
+            float uClamped = Math.Max(0.0f, Math.Min(0.99999f, u));
+            float vClamped = Math.Max(0.0f, Math.Min(0.99999f, v));
+
+            pageX = (ushort)(uClamped * mipPagesPerAxis);
+            pageY = (ushort)(vClamped * mipPagesPerAxis);
+        }
+
+        /// <summary>
+        /// Calculates optimal mip level based on screen-space UV derivatives ddx and ddy.
+        /// </summary>
+        public static float ComputeMipLevel(float ddxU, float ddxV, float ddyU, float ddyV, float virtualDim = 65536f)
+        {
+            float lenX = (float)Math.Sqrt(ddxU * ddxU + ddxV * ddxV) * virtualDim;
+            float lenY = (float)Math.Sqrt(ddyU * ddyU + ddyV * ddyV) * virtualDim;
+            float maxDelta = Math.Max(lenX, lenY);
+            if (maxDelta <= 1.0f) return 0.0f;
+            return (float)Math.Log(maxDelta, 2.0);
+        }
+
+        /// <summary>
+        /// Enqueues a GPU feedback page request into the streaming loader.
+        /// </summary>
+        public bool EnqueuePageRequest(ushort pageX, ushort pageY, byte mip)
+        {
+            var pid = new VirtualPageId(pageX, pageY, mip);
+            if (_pageToSlotMap.ContainsKey(pid)) return false; // Already resident
+            if (_pendingRequests.Add(pid))
+            {
+                _requestQueue.Enqueue(pid);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Translates virtual texture coordinates (u, v) into physical cache atlas coordinates (physU, physV).
+        /// Falls back to parent mip pages if the requested mip level is not yet resident in the cache.
+        /// </summary>
+        public bool TryTranslateCoordinates(float u, float v, int desiredMip, uint currentFrame,
+            out float physicalU, out float physicalV, out int residentMip)
+        {
+            u = Math.Max(0.0f, Math.Min(0.99999f, u));
+            v = Math.Max(0.0f, Math.Min(0.99999f, v));
+
+            int maxMip = (int)Math.Floor(Math.Log(PagesPerAxis, 2.0));
+            desiredMip = Math.Max(0, Math.Min(maxMip, desiredMip));
+
+            for (int m = desiredMip; m <= maxMip; m++)
+            {
+                ComputePageCoords(u, v, m, out ushort px, out ushort py);
+                var pid = new VirtualPageId(px, py, (byte)m);
+
+                if (_pageToSlotMap.TryGetValue(pid, out int slotIdx))
+                {
+                    ref PhysicalAtlasSlot slot = ref _cacheSlots[slotIdx];
+                    slot.LastUsedFrame = currentFrame;
+
+                    // Compute normalized offset within the page
+                    int pagesThisMip = Math.Max(1, PagesPerAxis >> m);
+                    float pageLocalU = (u * pagesThisMip) - px;
+                    float pageLocalV = (v * pagesThisMip) - py;
+
+                    // Atlas slot footprint in normalized coordinates
+                    float slotSizeNorm = 1.0f / PhysicalAtlasSlots;
+                    physicalU = (slot.SlotX + pageLocalU) * slotSizeNorm;
+                    physicalV = (slot.SlotY + pageLocalV) * slotSizeNorm;
+                    residentMip = m;
+                    return true;
+                }
+                else
+                {
+                    // Request missing page
+                    EnqueuePageRequest(px, py, (byte)m);
+                }
+            }
+
+            physicalU = 0f;
+            physicalV = 0f;
+            residentMip = -1;
+            return false;
+        }
+
+        /// <summary>
+        /// Processes streaming queue, uploading pages to the physical cache using Least-Recently-Used (LRU) replacement.
+        /// </summary>
+        public int ProcessStreamingQueue(uint currentFrame, int maxUploadsPerFrame = 8)
+        {
+            int uploaded = 0;
+
+            while (_requestQueue.Count > 0 && uploaded < maxUploadsPerFrame)
+            {
+                var pid = _requestQueue.Dequeue();
+                _pendingRequests.Remove(pid);
+
+                if (_pageToSlotMap.ContainsKey(pid)) continue;
+
+                // Find free slot or evict oldest LRU slot
+                int bestSlot = -1;
+                uint oldestFrame = uint.MaxValue;
+
+                for (int i = 0; i < TotalCacheSlots; i++)
+                {
+                    if (!_cacheSlots[i].IsResident)
+                    {
+                        bestSlot = i;
+                        break;
+                    }
+                    if (_cacheSlots[i].LastUsedFrame < oldestFrame)
+                    {
+                        oldestFrame = _cacheSlots[i].LastUsedFrame;
+                        bestSlot = i;
+                    }
+                }
+
+                if (bestSlot >= 0)
+                {
+                    // Evict old page if needed
+                    if (_cacheSlots[bestSlot].IsResident)
+                    {
+                        _pageToSlotMap.Remove(_cacheSlots[bestSlot].VirtualPage);
+                    }
+
+                    // Install new page
+                    _cacheSlots[bestSlot].VirtualPage = pid;
+                    _cacheSlots[bestSlot].IsResident = true;
+                    _cacheSlots[bestSlot].LastUsedFrame = currentFrame;
+                    _pageToSlotMap[pid] = bestSlot;
+                    uploaded++;
+                }
+            }
+
+            return uploaded;
+        }
+
+        public void Clear()
+        {
+            _pageToSlotMap.Clear();
+            _pendingRequests.Clear();
+            _requestQueue.Clear();
+            for (int i = 0; i < TotalCacheSlots; i++)
+            {
+                _cacheSlots[i].IsResident = false;
+                _cacheSlots[i].LastUsedFrame = 0;
+            }
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -2238,6 +2482,7 @@ namespace palDotNet.palModernEngine
         public VolumetricFogPipeline VolumetricFog { get; } = new VolumetricFogPipeline();
         public GpuClusterLodPipeline MeshClustering { get; } = new GpuClusterLodPipeline();
         public DepthAwareBilateralUpsamplePipeline BilateralUpsample { get; } = new DepthAwareBilateralUpsamplePipeline();
+        public SparseVirtualTexturePipeline VirtualTexturing { get; } = new SparseVirtualTexturePipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -3662,6 +3907,103 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("DepthAwareBilateralUpsamplePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslBilateralPs, Cache));
+
+            // 29. DirectX 12 HLSL SM6 Sparse Virtual Texture Feedback & Indirection Pixel Shader
+            string hlslVirtualTexturePs = @"
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+
+                Texture2D<float4> gPageTableTexture : register(t0);
+                Texture2D<float4> gPhysicalAtlas    : register(t1);
+                SamplerState      gPointClampSampler : register(s0);
+                SamplerState      gLinearSampler     : register(s1);
+
+                RWStructuredBuffer<uint> gFeedbackBuffer : register(u0);
+
+                cbuffer VirtualTextureConstants : register(b0) {
+                    float2 gVirtualDimensions;
+                    float2 gPageTableDimensions;
+                    float  gPageSize;
+                    float  gPhysicalAtlasSlots;
+                    uint   gFeedbackResolutionScale;
+                    uint   gFrameId;
+                };
+
+                float4 main(PSInput input) : SV_Target {
+                    float2 uv = input.uv;
+                    float2 ddxUv = ddx(uv) * gVirtualDimensions;
+                    float2 ddyUv = ddy(uv) * gVirtualDimensions;
+                    float maxDelta = max(length(ddxUv), length(ddyUv));
+                    float mipLevel = clamp(log2(max(1.0f, maxDelta)), 0.0f, 12.0f);
+
+                    float2 pageCoords = uv * gPageTableDimensions;
+                    uint pageX = (uint)pageCoords.x;
+                    uint pageY = (uint)pageCoords.y;
+
+                    // Record GPU feedback request (packed into uint: 12-bit X, 12-bit Y, 4-bit Mip)
+                    uint packedFeedback = (pageX & 0x0FFFu) | ((pageY & 0x0FFFu) << 12) | (((uint)mipLevel & 0x0Fu) << 24);
+                    uint pixelIndex = ((uint)input.position.y / max(1u, gFeedbackResolutionScale)) * 128u + ((uint)input.position.x / max(1u, gFeedbackResolutionScale));
+                    gFeedbackBuffer[pixelIndex % 8192u] = packedFeedback;
+
+                    float4 pageEntry = gPageTableTexture.Sample(gPointClampSampler, uv);
+                    float2 physicalSlot = pageEntry.xy * 255.0f;
+                    float residentMip = pageEntry.z * 255.0f;
+
+                    float2 pageLocalUv = frac(uv * (gPageTableDimensions / exp2(residentMip)));
+                    float2 physicalUv = (physicalSlot + pageLocalUv) / gPhysicalAtlasSlots;
+
+                    return gPhysicalAtlas.Sample(gLinearSampler, physicalUv);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("VirtualTextureFeedbackPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslVirtualTexturePs, Cache));
+
+            // 30. Vulkan SPIR-V Sparse Virtual Texture Feedback & Indirection Fragment Shader
+            string glslVirtualTexturePs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texPageTable;
+                layout(binding = 1) uniform sampler2D texPhysicalAtlas;
+
+                layout(binding = 2) writeonly buffer FeedbackBuffer {
+                    uint feedbackEntries[];
+                };
+
+                layout(binding = 3) uniform VirtualTextureUBO {
+                    vec2 virtualDims;
+                    vec2 pageTableDims;
+                    float pageSize;
+                    float physicalSlots;
+                    uint feedbackScale;
+                    uint frameId;
+                } ubo;
+
+                void main() {
+                    vec2 ddxUv = dFdx(inUV) * ubo.virtualDims;
+                    vec2 ddyUv = dFdy(inUV) * ubo.virtualDims;
+                    float maxDelta = max(length(ddxUv), length(ddyUv));
+                    float mip = clamp(log2(max(1.0, maxDelta)), 0.0, 12.0);
+
+                    uvec2 pageCoords = uvec2(inUV * ubo.pageTableDims);
+                    uint packedRequest = (pageCoords.x & 0x0FFFu) | ((pageCoords.y & 0x0FFFu) << 12) | ((uint(mip) & 0x0Fu) << 24);
+
+                    uint slot = (uint(gl_FragCoord.y) / max(1u, ubo.feedbackScale)) * 128u + (uint(gl_FragCoord.x) / max(1u, ubo.feedbackScale));
+                    feedbackEntries[slot % 8192u] = packedRequest;
+
+                    vec4 pageEntry = texture(texPageTable, inUV);
+                    vec2 physSlot = pageEntry.xy * 255.0;
+                    float resMip = pageEntry.z * 255.0;
+
+                    vec2 pageLocal = fract(inUV * (ubo.pageTableDims / pow(2.0, resMip)));
+                    vec2 physUv = (physSlot + pageLocal) / ubo.physicalSlots;
+
+                    outColor = texture(texPhysicalAtlas, physUv);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("VirtualTextureFeedbackPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslVirtualTexturePs, Cache));
         }
     }
 }

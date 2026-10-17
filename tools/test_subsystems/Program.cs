@@ -1509,6 +1509,46 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("DepthAwareBilateralUpsamplePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 DepthAwareBilateralUpsamplePs shader registered");
             Assert(pipeline.GetModule("DepthAwareBilateralUpsamplePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V DepthAwareBilateralUpsamplePs shader registered");
 
+            // Sparse Virtual Texturing (SVT / Megatexture) Pipeline
+            var svt = pipeline.VirtualTexturing;
+            Assert(svt != null, "pipeline.VirtualTexturing initialized");
+            Assert(svt.VirtualDimension == 65536 && svt.PageSize == 128, "SVT configured for 64K megatexture with 128px pages");
+            Assert(svt.PagesPerAxis == 512, "SVT grid spans 512x512 virtual pages at Mip 0 (262,144 total pages)");
+            Assert(svt.TotalCacheSlots == 256, "Physical VRAM cache atlas holds 16x16 = 256 physical slots");
+
+            // Page Coordinate Calculation across Mip Levels
+            svt.ComputePageCoords(0.5f, 0.25f, mip: 0, out ushort px0, out ushort py0);
+            Assert(px0 == 256 && py0 == 128, $"Page coordinates at Mip 0: ({px0}, {py0}) matches expected cell (256, 128)");
+            svt.ComputePageCoords(0.5f, 0.25f, mip: 2, out ushort px2, out ushort py2);
+            Assert(px2 == 64 && py2 == 32, $"Page coordinates at Mip 2: ({px2}, {py2}) matches expected cell (64, 32)");
+
+            // Screen-Space UV Derivative Mip Calculation
+            float mipClose = SparseVirtualTexturePipeline.ComputeMipLevel(1f / 65536f, 0f, 0f, 1f / 65536f, 65536f);
+            float mipDist = SparseVirtualTexturePipeline.ComputeMipLevel(8f / 65536f, 0f, 0f, 8f / 65536f, 65536f);
+            Assert(Math.Abs(mipClose - 0.0f) < 1e-3f && Math.Abs(mipDist - 3.0f) < 1e-3f, "SVT derivative-based mip calculation: close=0.0, distant=3.0");
+
+            // Streaming Queue & Coordinate Indirection Translation
+            svt.Clear();
+            bool initFound = svt.TryTranslateCoordinates(0.5f, 0.25f, desiredMip: 0, currentFrame: 1, out float physU, out float physV, out int resMip);
+            Assert(!initFound && svt.PendingRequestsCount > 0, "Initial unmapped lookup safely enqueues missing page request");
+
+            int uploaded = svt.ProcessStreamingQueue(currentFrame: 1, maxUploadsPerFrame: 4);
+            Assert(uploaded > 0 && svt.ActiveResidentPages > 0, $"Streaming loader uploaded {uploaded} pages into physical VRAM cache");
+
+            bool hit = svt.TryTranslateCoordinates(0.5f, 0.25f, desiredMip: 0, currentFrame: 1, out float svtHitU, out float svtHitV, out int hitMip);
+            Assert(hit && hitMip >= 0, $"SVT coordinate translation succeeded: residentMip={hitMip}, PhysicalUV=({svtHitU:F4}, {svtHitV:F4})");
+            Assert(svtHitU >= 0.0f && svtHitU <= 1.0f && svtHitV >= 0.0f && svtHitV <= 1.0f, "Translated physical UV within [0, 1] physical atlas bounds");
+
+            // LRU Cache Eviction Bound
+            for (ushort p = 0; p < 300; p++) svt.EnqueuePageRequest(p, 0, 0);
+            svt.ProcessStreamingQueue(currentFrame: 2, maxUploadsPerFrame: 300);
+            Assert(svt.ActiveResidentPages <= svt.TotalCacheSlots,
+                $"LRU cache eviction maintains bounded VRAM footprint: {svt.ActiveResidentPages}/{svt.TotalCacheSlots} active pages");
+
+            // Virtual Texture Shaders Registered
+            Assert(pipeline.GetModule("VirtualTextureFeedbackPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 VirtualTextureFeedbackPs shader registered");
+            Assert(pipeline.GetModule("VirtualTextureFeedbackPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V VirtualTextureFeedbackPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
