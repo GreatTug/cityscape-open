@@ -1698,6 +1698,43 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("SsrSpatiotemporalDenoiserPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 SsrSpatiotemporalDenoiserPs shader registered");
             Assert(pipeline.GetModule("SsrSpatiotemporalDenoiserPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V SsrSpatiotemporalDenoiserPs shader registered");
 
+            // Procedural Wet Road, Rain Puddles & Dynamic Raindrop Ripples Pipeline
+            var wetRoads = pipeline.WetRoads;
+            Assert(wetRoads != null, "pipeline.WetRoads initialized");
+            Assert(wetRoads.RainAccumulation == 0.65f && wetRoads.WetRoughnessFloor == 0.02f, "Wet roads pipeline defaults verified");
+
+            // Depression Puddle Accumulation Mask
+            float pDeep = wetRoads.EvaluatePuddleMask(0.10f);
+            Assert(pDeep == 1.0f, "Deep depression fills 100% with standing rainwater puddle");
+            float pHigh = wetRoads.EvaluatePuddleMask(0.80f);
+            Assert(pHigh == 0.0f, "Elevated curb remains free of standing puddle water");
+            float pEdge = wetRoads.EvaluatePuddleMask(0.425f);
+            Assert(pEdge > 0.0f && pEdge < 1.0f, $"Puddle shoreline exhibits smooth transition: {pEdge:F2}");
+
+            // PBR Porous Darkening & Roughness Floor
+            wetRoads.EvaluateWetAlbedo(0.40f, 0.40f, 0.40f, puddleFactor: 0.0f, wetness: 0.8f, out float wR, out float wG, out float wB);
+            Assert(wR < 0.30f, $"Porous asphalt darkening under rain: Dry(0.400) -> Wet({wR:F3})");
+            float rPuddle = wetRoads.EvaluateWetRoughness(0.80f, puddleFactor: 1.0f, wetness: 1.0f);
+            Assert(rPuddle == 0.02f, "Deep water puddle surface exhibits mirror-like specular roughness floor (0.02)");
+
+            // Dynamic Raindrop Capillary Waves & Normal Perturbations
+            wetRoads.ClearRaindrops();
+            wetRoads.AddRaindrop(0.5f, 0.5f, currentTime: 1.0f, amplitude: 0.05f);
+            Assert(wetRoads.ActiveDropCount == 1, "Active raindrop registered in ripple pipeline");
+
+            wetRoads.EvaluateRippleNormalPerturbation(0.5f + 0.10f, 0.5f, currentTime: 1.2f, out float dU, out float dV, out float waveH);
+            Assert(Math.Abs(dU) > 0.01f && Math.Abs(dV) < 1e-4f, $"Capillary wave normal gradient aligned with radial direction: dU={dU:F4}, dV={dV:F4}");
+
+            wetRoads.PerturbNormal(0f, 1f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, 0.6f, 0.5f, currentTime: 1.2f, puddleFactor: 1.0f,
+                out float pNx, out float pNy, out float pNz);
+            float pLen = (float)Math.Sqrt(pNx * pNx + pNy * pNy + pNz * pNz);
+            Assert(Math.Abs(pLen - 1.0f) < 1e-4f, "Perturbed puddle normal maintains unit vector length");
+            Assert(Math.Abs(pNx) > 0.01f, $"Raindrop ripple perturbs flat puddle normal: ({pNx:F3}, {pNy:F3}, {pNz:F3})");
+
+            // Wet Road Shaders Registered
+            Assert(pipeline.GetModule("WetAsphaltRipplesPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 WetAsphaltRipplesPs shader registered");
+            Assert(pipeline.GetModule("WetAsphaltRipplesPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V WetAsphaltRipplesPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

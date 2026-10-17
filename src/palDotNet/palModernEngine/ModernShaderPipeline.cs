@@ -2963,6 +2963,179 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Represents a dynamic raindrop impact creating concentric capillary ripple waves.
+    /// </summary>
+    public struct RaindropImpact
+    {
+        public float U;
+        public float V;
+        public float BirthTime;
+        public float Amplitude;
+        public float Wavelength;
+        public float PhaseSpeed;
+        public float DecayRate;
+
+        public RaindropImpact(float u, float v, float birthTime, float amplitude = 0.05f, float wavelength = 0.04f, float phaseSpeed = 1.2f, float decayRate = 2.5f)
+        {
+            U = u;
+            V = v;
+            BirthTime = birthTime;
+            Amplitude = amplitude;
+            Wavelength = wavelength;
+            PhaseSpeed = phaseSpeed;
+            DecayRate = decayRate;
+        }
+    }
+
+    /// <summary>
+    /// Procedural Wet Road, Rain Puddles & Dynamic Raindrop Ripples Pipeline.
+    /// Implements heightmap-based depression puddle accumulation, PBR porous road darkening,
+    /// dynamic roughness reduction, and analytical concentric circular capillary wave ripples.
+    /// </summary>
+    public class WetRoadRipplesPipeline
+    {
+        public float RainAccumulation { get; set; } = 0.65f;        // [0, 1] dry to deep puddles
+        public float PuddleEdgeSharpness { get; set; } = 0.15f;     // Transition softness at puddle edges
+        public float PorousDarkeningFactor { get; set; } = 0.35f;   // Albedo darkening in damp areas
+        public float WetRoughnessFloor { get; set; } = 0.02f;       // Mirror smoothness in deep puddles
+        public float RippleIntensity { get; set; } = 1.0f;
+
+        private readonly List<RaindropImpact> _activeDrops = new List<RaindropImpact>();
+
+        public IReadOnlyList<RaindropImpact> ActiveDrops => _activeDrops;
+        public int ActiveDropCount => _activeDrops.Count;
+
+        public void AddRaindrop(float u, float v, float currentTime, float amplitude = 0.05f)
+        {
+            _activeDrops.Add(new RaindropImpact(u, v, currentTime, amplitude));
+        }
+
+        public void ClearRaindrops()
+        {
+            _activeDrops.Clear();
+        }
+
+        /// <summary>
+        /// Computes puddle accumulation factor p in [0, 1] based on road surface micro-elevation and rain level.
+        /// Low depression areas fill first with water.
+        /// </summary>
+        public float EvaluatePuddleMask(float surfaceElevationNorm)
+        {
+            float threshold = 1.0f - RainAccumulation;
+            float diff = surfaceElevationNorm - threshold;
+            float p = 1.0f - (diff / Math.Max(0.01f, PuddleEdgeSharpness));
+            return Math.Max(0.0f, Math.Min(1.0f, p));
+        }
+
+        /// <summary>
+        /// Applies wetness darkening to dry asphalt albedo.
+        /// </summary>
+        public void EvaluateWetAlbedo(float dryR, float dryG, float dryB, float puddleFactor, float wetness,
+            out float wetR, out float wetG, out float wetB)
+        {
+            float darkScale = 1.0f - (PorousDarkeningFactor * wetness);
+            // Non-linear absorption exponent for wet porous surface
+            float rPow = (float)Math.Pow(Math.Max(0f, dryR), 1.3);
+            float gPow = (float)Math.Pow(Math.Max(0f, dryG), 1.3);
+            float bPow = (float)Math.Pow(Math.Max(0f, dryB), 1.3);
+
+            wetR = (1.0f - puddleFactor) * (rPow * darkScale) + puddleFactor * (rPow * 0.85f);
+            wetG = (1.0f - puddleFactor) * (gPow * darkScale) + puddleFactor * (gPow * 0.85f);
+            wetB = (1.0f - puddleFactor) * (bPow * darkScale) + puddleFactor * (bPow * 0.85f);
+        }
+
+        /// <summary>
+        /// Evaluates wet asphalt roughness from dry roughness and puddle factor.
+        /// </summary>
+        public float EvaluateWetRoughness(float dryRoughness, float puddleFactor, float wetness)
+        {
+            float dampRoughness = dryRoughness * (1.0f - 0.45f * wetness);
+            return (1.0f - puddleFactor) * dampRoughness + puddleFactor * WetRoughnessFloor;
+        }
+
+        /// <summary>
+        /// Computes normal perturbation vector (du, dv) from dynamic raindrop ripples at location (u, v) and time t.
+        /// </summary>
+        public void EvaluateRippleNormalPerturbation(float u, float v, float currentTime,
+            out float deltaU, out float deltaV, out float waveHeight)
+        {
+            deltaU = 0f;
+            deltaV = 0f;
+            waveHeight = 0f;
+
+            int count = _activeDrops.Count;
+            for (int i = 0; i < count; i++)
+            {
+                RaindropImpact drop = _activeDrops[i];
+                float dt = currentTime - drop.BirthTime;
+                if (dt <= 0.0f || dt > 3.0f) continue; // Ripple decayed
+
+                float du = u - drop.U;
+                float dv = v - drop.V;
+                float dist = (float)Math.Sqrt(du * du + dv * dv);
+                if (dist < 1e-4f) dist = 1e-4f;
+
+                float maxRadius = drop.PhaseSpeed * dt;
+                if (dist > maxRadius) continue; // Wave hasn't arrived yet
+
+                float decay = (float)Math.Exp(-dt * drop.DecayRate);
+                float k = 2.0f * (float)Math.PI / Math.Max(0.005f, drop.Wavelength);
+                float phase = k * dist - dt * 15.0f;
+
+                float amp = drop.Amplitude * decay * RippleIntensity;
+                float h = amp * (float)Math.Cos(phase);
+                waveHeight += h;
+
+                // Analytical gradient of concentric circular wave
+                float dH_dDist = -amp * k * (float)Math.Sin(phase);
+                deltaU += dH_dDist * (du / dist);
+                deltaV += dH_dDist * (dv / dist);
+            }
+        }
+
+        /// <summary>
+        /// Perturbs a road surface normal vector with puddle ripples.
+        /// </summary>
+        public void PerturbNormal(
+            float nx, float ny, float nz,
+            float tx, float ty, float tz,
+            float bx, float by, float bz,
+            float u, float v, float currentTime, float puddleFactor,
+            out float outNx, out float outNy, out float outNz)
+        {
+            if (puddleFactor <= 0.01f || _activeDrops.Count == 0)
+            {
+                outNx = nx; outNy = ny; outNz = nz;
+                return;
+            }
+
+            EvaluateRippleNormalPerturbation(u, v, currentTime, out float dU, out float dV, out _);
+
+            // Blend flat puddle normal (0, 1, 0) with asphalt normal
+            float baseNx = (1.0f - puddleFactor) * nx;
+            float baseNy = (1.0f - puddleFactor) * ny + puddleFactor * 1.0f;
+            float baseNz = (1.0f - puddleFactor) * nz;
+
+            // Perturb by ripple tangents
+            float pNx = baseNx + (tx * dU + bx * dV) * puddleFactor;
+            float pNy = baseNy;
+            float pNz = baseNz + (tz * dU + bz * dV) * puddleFactor;
+
+            float len = (float)Math.Sqrt(pNx * pNx + pNy * pNy + pNz * pNz);
+            if (len > 1e-5f)
+            {
+                outNx = pNx / len;
+                outNy = pNy / len;
+                outNz = pNz / len;
+            }
+            else
+            {
+                outNx = nx; outNy = ny; outNz = nz;
+            }
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -2987,6 +3160,7 @@ namespace palDotNet.palModernEngine
         public AnisotropicSpecularPipeline AnisotropicSpecular { get; } = new AnisotropicSpecularPipeline();
         public CameraExposurePipeline CameraExposure { get; } = new CameraExposurePipeline();
         public SsrDenoiserPipeline SsrDenoiser { get; } = new SsrDenoiserPipeline();
+        public WetRoadRipplesPipeline WetRoads { get; } = new WetRoadRipplesPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -4982,6 +5156,139 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("SsrSpatiotemporalDenoiserPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslSsrDenoiserPs, Cache));
+
+            // 37. DirectX 12 HLSL SM6 Wet Asphalt Puddles & Dynamic Raindrop Ripples Pixel Shader
+            string hlslWetRoadPs = @"
+                struct PSInput {
+                    float4 position  : SV_Position;
+                    float3 worldPos  : WORLDPOS;
+                    float3 normal    : NORMAL;
+                    float3 tangent   : TANGENT;
+                    float3 bitangent : BITANGENT;
+                    float2 uv        : TEXCOORD0;
+                };
+
+                Texture2D gAlbedoMap      : register(t0);
+                Texture2D gRoughnessMap   : register(t1);
+                Texture2D gDepressionMap  : register(t2);
+                SamplerState gSampler     : register(s0);
+
+                cbuffer WetRoadConstants : register(b0) {
+                    float4 gRaindrop0;
+                    float4 gRaindrop1;
+                    float4 gRaindrop2;
+                    float4 gRaindrop3;
+                    float  gCurrentTime;
+                    float  gRainAccumulation;
+                    float  gPuddleSharpness;
+                    float  gRippleStrength;
+                };
+
+                float4 main(PSInput input) : SV_Target {
+                    float3 N = normalize(input.normal);
+                    float3 T = normalize(input.tangent);
+                    float3 B = normalize(input.bitangent);
+
+                    float depression = gDepressionMap.Sample(gSampler, input.uv).r;
+                    float threshold = 1.0f - gRainAccumulation;
+                    float puddleMask = saturate(1.0f - (depression - threshold) / max(0.01f, gPuddleSharpness));
+
+                    float4 dryAlbedo = gAlbedoMap.Sample(gSampler, input.uv);
+                    float dryRoughness = gRoughnessMap.Sample(gSampler, input.uv).r;
+
+                    float2 dRipple = float2(0.0f, 0.0f);
+                    float4 drops[4] = { gRaindrop0, gRaindrop1, gRaindrop2, gRaindrop3 };
+
+                    [unroll]
+                    for (int i = 0; i < 4; i++) {
+                        float dt = gCurrentTime - drops[i].z;
+                        if (dt > 0.0f && dt < 3.0f) {
+                            float2 delta = input.uv - drops[i].xy;
+                            float dist = max(1e-4f, length(delta));
+                            float maxR = 1.2f * dt;
+                            if (dist <= maxR) {
+                                float decay = exp(-dt * 2.5f);
+                                float k = 6.283185f / 0.04f;
+                                float phase = k * dist - dt * 15.0f;
+                                float dH = -drops[i].w * decay * k * sin(phase) * gRippleStrength;
+                                dRipple += dH * (delta / dist);
+                            }
+                        }
+                    }
+
+                    float3 perturbedN = normalize(lerp(N, float3(0, 1, 0), puddleMask) + (T * dRipple.x + B * dRipple.y) * puddleMask);
+                    float3 wetAlbedo = lerp(pow(dryAlbedo.rgb, 1.3f) * (1.0f - 0.35f * gRainAccumulation), pow(dryAlbedo.rgb, 1.3f) * 0.85f, puddleMask);
+                    float wetRoughness = lerp(dryRoughness * (1.0f - 0.45f * gRainAccumulation), 0.02f, puddleMask);
+
+                    return float4(wetAlbedo, wetRoughness);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WetAsphaltRipplesPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslWetRoadPs, Cache));
+
+            // 38. Vulkan SPIR-V Wet Asphalt Puddles & Dynamic Raindrop Ripples Fragment Shader
+            string glslWetRoadPs = @"
+                #version 460
+                layout(location = 0) in vec3 inWorldPos;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec3 inTangent;
+                layout(location = 3) in vec3 inBitangent;
+                layout(location = 4) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texAlbedo;
+                layout(binding = 1) uniform sampler2D texRoughness;
+                layout(binding = 2) uniform sampler2D texDepression;
+
+                layout(binding = 3) uniform WetRoadUBO {
+                    vec4 raindrop0;
+                    vec4 raindrop1;
+                    vec4 raindrop2;
+                    vec4 raindrop3;
+                    float currentTime;
+                    float rainAccumulation;
+                    float puddleSharpness;
+                    float rippleStrength;
+                } ubo;
+
+                void main() {
+                    vec3 N = normalize(inNormal);
+                    vec3 T = normalize(inTangent);
+                    vec3 B = normalize(inBitangent);
+
+                    float depression = texture(texDepression, inUV).r;
+                    float threshold = 1.0 - ubo.rainAccumulation;
+                    float puddleMask = clamp(1.0 - (depression - threshold) / max(0.01, ubo.puddleSharpness), 0.0, 1.0);
+
+                    vec4 dryAlbedo = texture(texAlbedo, inUV);
+                    float dryRoughness = texture(texRoughness, inUV).r;
+
+                    vec2 dRipple = vec2(0.0);
+                    vec4 drops[4] = vec4[](ubo.raindrop0, ubo.raindrop1, ubo.raindrop2, ubo.raindrop3);
+
+                    for (int i = 0; i < 4; i++) {
+                        float dt = ubo.currentTime - drops[i].z;
+                        if (dt > 0.0 && dt < 3.0) {
+                            vec2 delta = inUV - drops[i].xy;
+                            float dist = max(1e-4, length(delta));
+                            float maxR = 1.2 * dt;
+                            if (dist <= maxR) {
+                                float decay = exp(-dt * 2.5);
+                                float k = 6.283185 / 0.04;
+                                float phase = k * dist - dt * 15.0;
+                                float dH = -drops[i].w * decay * k * sin(phase) * ubo.rippleStrength;
+                                dRipple += dH * (delta / dist);
+                            }
+                        }
+                    }
+
+                    vec3 perturbedN = normalize(mix(N, vec3(0.0, 1.0, 0.0), puddleMask) + (T * dRipple.x + B * dRipple.y) * puddleMask);
+                    vec3 wetAlbedo = mix(pow(dryAlbedo.rgb, vec3(1.3)) * (1.0 - 0.35 * ubo.rainAccumulation), pow(dryAlbedo.rgb, vec3(1.3)) * 0.85, puddleMask);
+                    float wetRoughness = mix(dryRoughness * (1.0 - 0.45 * ubo.rainAccumulation), 0.02, puddleMask);
+
+                    outColor = vec4(wetAlbedo, wetRoughness);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WetAsphaltRipplesPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslWetRoadPs, Cache));
         }
     }
 }
