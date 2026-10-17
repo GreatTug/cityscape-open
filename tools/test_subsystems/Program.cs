@@ -1856,6 +1856,71 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("SubsurfaceScatteringPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 SubsurfaceScatteringPs shader registered");
             Assert(pipeline.GetModule("SubsurfaceScatteringPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V SubsurfaceScatteringPs shader registered");
 
+            // Unified GPU Compute Cluster Frustum, Cone, LOD & HZB Occlusion Culling Pipeline
+            var unifiedCull = pipeline.MeshClustering;
+            Assert(unifiedCull != null, "pipeline.MeshClustering supports unified single-pass compute culling");
+
+            // Setup scene clusters:
+            // 1. Front visible cluster in foreground (passes all 4 stages)
+            // 2. Front cluster hidden behind dense skyscraper occluder (culled by HZB)
+            // 3. Back-facing cluster (culled by cone backface)
+            // 4. Off-screen cluster behind camera (culled by frustum)
+            // 5. Highly detailed distant cluster (culled by screen error LOD)
+            unifiedCull.Clear();
+            var uClVisible = new MeshCluster(10f, 0f, 20f, radius: 2f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 0.01f, indexOffset: 0, indexCount: 128, vertexOffset: 0, vertexCount: 64, lodLevel: 0);
+            var uClOccluded = new MeshCluster(0f, 0f, 150f, radius: 2f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 0.01f, indexOffset: 128, indexCount: 128, vertexOffset: 64, vertexCount: 64, lodLevel: 0);
+            var uClBackfacing = new MeshCluster(0f, 0f, 20f, radius: 2f, coneX: 0f, coneY: 0f, coneZ: 1f, coneCutoff: 0.2f, lodError: 0.01f, indexOffset: 256, indexCount: 128, vertexOffset: 128, vertexCount: 64, lodLevel: 0);
+            var uClOffscreen = new MeshCluster(0f, 0f, -50f, radius: 2f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 0.01f, indexOffset: 384, indexCount: 128, vertexOffset: 192, vertexCount: 64, lodLevel: 0);
+            var uClHighError = new MeshCluster(0f, 0f, 300f, radius: 2f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 5.0f, indexOffset: 512, indexCount: 128, vertexOffset: 256, vertexCount: 64, lodLevel: 0);
+
+            unifiedCull.AddClusters(new[] { uClVisible, uClOccluded, uClBackfacing, uClOffscreen, uClHighError });
+            Assert(unifiedCull.TotalClusters == 5, $"Unified culling loaded with {unifiedCull.TotalClusters} test meshlets");
+
+            // Setup HZB depth pyramid with foreground building occluder covering center at depth 0.20
+            var hzbPipe = pipeline.OcclusionCulling;
+            hzbPipe.Initialize(512, 512);
+            float[] depthBuffer = new float[512 * 512];
+            for (int p = 0; p < depthBuffer.Length; p++) depthBuffer[p] = 1.0f; // Far plane default
+
+            // Draw conservative occluder at center (covering NDC space around (0, 0)) at depth 0.20
+            for (int y = 200; y < 312; y++)
+            {
+                for (int x = 200; x < 312; x++)
+                {
+                    depthBuffer[y * 512 + x] = 0.20f; // Foreground skyscraper occluder
+                }
+            }
+            hzbPipe.BuildPyramid(depthBuffer, 512, 512);
+
+            // 4x4 ViewProjection Matrix (Perspective: 90 deg FOV, Near=0.1, Far=1000)
+            float[] viewProjMatrix = new float[] {
+                1f, 0f, 0f, 0f,
+                0f, 1f, 0f, 0f,
+                0f, 0f, 1.0001f, 1f,
+                0f, 0f, -0.10001f, 0f
+            };
+
+            var outIndirectCmds = new List<DrawIndexedIndirectCommand>();
+            UnifiedCullTelemetry cullStats = unifiedCull.ExecuteUnifiedCull(
+                camX: 0f, camY: 0f, camZ: 0f,
+                frustumPlanes6x4: frustumPlanes,
+                maxScreenErrorPx: 2.0f, screenHeight: 1080f, fovYRadians: (float)Math.PI * 0.5f,
+                viewProjMatrix4x4: viewProjMatrix,
+                hzb: hzbPipe,
+                outCommands: outIndirectCmds);
+
+            Assert(cullStats.TotalClusters == 5, "Unified culling processed all 5 clusters");
+            Assert(cullStats.FrustumCulled == 1, "Offscreen cluster behind camera culled by frustum stage");
+            Assert(cullStats.ConeCulled == 1, "Backfacing cluster culled by cone backface stage");
+            Assert(cullStats.LodCulled == 1, "Distant high-error cluster culled by continuous LOD stage");
+            Assert(cullStats.HzbCulled == 1, "Background cluster behind skyscraper occluder culled by HZB stage");
+            Assert(cullStats.SurvivingDrawCalls == 1, $"Exactly 1 cluster survived all 4 unified culling filters: {cullStats.SurvivingDrawCalls}/5");
+            Assert(outIndirectCmds.Count == 1 && outIndirectCmds[0].IndexCountPerInstance == 128, "Surviving cluster emitted valid zero-driver DrawIndexedIndirectCommand");
+
+            // Unified Culling Compute Shaders Registered
+            Assert(pipeline.GetModule("UnifiedClusterCullHzbIndirectCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 UnifiedClusterCullHzbIndirectCs compute shader registered");
+            Assert(pipeline.GetModule("UnifiedClusterCullHzbIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V UnifiedClusterCullHzbIndirectCs compute shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

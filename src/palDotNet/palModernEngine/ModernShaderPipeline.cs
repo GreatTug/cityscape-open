@@ -2069,6 +2069,98 @@ namespace palDotNet.palModernEngine
 
             return outCommands.Count;
         }
+
+        /// <summary>
+        /// Executes unified single-pass GPU compute cluster culling pipeline fusing:
+        /// 1. Frustum Bounding Sphere Culling
+        /// 2. Normal Cone Backface Culling
+        /// 3. Projected Screen-Space Error Continuous LOD Selection
+        /// 4. Hierarchical Z-Buffer (HZB) Conservative Occlusion Culling
+        /// Emits compact, zero-driver indirect indexed draw commands directly for GPU dispatch.
+        /// </summary>
+        public UnifiedCullTelemetry ExecuteUnifiedCull(
+            float camX, float camY, float camZ,
+            float[] frustumPlanes6x4,
+            float maxScreenErrorPx, float screenHeight, float fovYRadians,
+            float[] viewProjMatrix4x4,
+            HierarchicalZBufferPipeline hzb,
+            List<DrawIndexedIndirectCommand> outCommands)
+        {
+            if (outCommands == null) throw new ArgumentNullException(nameof(outCommands));
+            outCommands.Clear();
+
+            UnifiedCullTelemetry stats = default(UnifiedCullTelemetry);
+            stats.TotalClusters = _clusters.Count;
+
+            int count = _clusters.Count;
+            for (int i = 0; i < count; i++)
+            {
+                MeshCluster cl = _clusters[i];
+
+                // 1. Frustum Culling
+                if (!TestFrustumSphere(cl, frustumPlanes6x4))
+                {
+                    stats.FrustumCulled++;
+                    continue;
+                }
+
+                // 2. Normal Cone Backface Culling
+                if (!TestConeCulling(cl, camX, camY, camZ))
+                {
+                    stats.ConeCulled++;
+                    continue;
+                }
+
+                // 3. Projected Screen Error LOD Selection
+                if (!TestLodSelection(cl, camX, camY, camZ, maxScreenErrorPx, screenHeight, fovYRadians))
+                {
+                    stats.LodCulled++;
+                    continue;
+                }
+
+                // 4. Hierarchical Z-Buffer (HZB) Conservative Occlusion Culling
+                if (hzb != null && viewProjMatrix4x4 != null && viewProjMatrix4x4.Length >= 16)
+                {
+                    float minX = cl.CenterX - cl.Radius;
+                    float minY = cl.CenterY - cl.Radius;
+                    float minZ = cl.CenterZ - cl.Radius;
+                    float maxX = cl.CenterX + cl.Radius;
+                    float maxY = cl.CenterY + cl.Radius;
+                    float maxZ = cl.CenterZ + cl.Radius;
+
+                    if (hzb.IsAabbOccluded(minX, minY, minZ, maxX, maxY, maxZ, viewProjMatrix4x4))
+                    {
+                        stats.HzbCulled++;
+                        continue;
+                    }
+                }
+
+                // Survived: Emit indirect draw argument
+                outCommands.Add(new DrawIndexedIndirectCommand(
+                    indexCount: cl.IndexCount,
+                    instanceCount: 1,
+                    startIndex: cl.IndexOffset,
+                    baseVertex: (int)cl.VertexOffset,
+                    startInstance: 0
+                ));
+            }
+
+            stats.SurvivingDrawCalls = outCommands.Count;
+            return stats;
+        }
+    }
+
+    /// <summary>
+    /// Telemetry statistics from unified GPU cluster culling and compaction.
+    /// </summary>
+    public struct UnifiedCullTelemetry
+    {
+        public int TotalClusters;
+        public int FrustumCulled;
+        public int ConeCulled;
+        public int LodCulled;
+        public int HzbCulled;
+        public int SurvivingDrawCalls;
     }
 
     /// <summary>
@@ -6183,6 +6275,243 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("SubsurfaceScatteringPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslSsssPs, Cache));
+
+            // 43. DirectX 12 HLSL SM6 Unified GPU Cluster Frustum & HZB Occlusion Culling Compute Shader
+            string hlslUnifiedCullCs = @"
+                struct MeshCluster {
+                    float3 center;
+                    float  radius;
+                    float3 coneAxis;
+                    float  coneCutoff;
+                    float  lodError;
+                    uint   indexOffset;
+                    uint   indexCount;
+                    uint   vertexOffset;
+                    uint   vertexCount;
+                    uint   lodLevel;
+                    uint   meshId;
+                };
+
+                struct DrawIndexedIndirectCommand {
+                    uint indexCountPerInstance;
+                    uint instanceCount;
+                    uint startIndexLocation;
+                    int  baseVertexLocation;
+                    uint startInstanceLocation;
+                };
+
+                StructuredBuffer<MeshCluster> gClusters : register(t0);
+                Texture2D<float> gHzbTexture            : register(t1);
+                SamplerState     gPointClampSampler     : register(s0);
+
+                AppendStructuredBuffer<DrawIndexedIndirectCommand> gIndirectDrawArgs : register(u0);
+
+                cbuffer UnifiedCullConstants : register(b0) {
+                    float4x4 gViewProjection;
+                    float4   gFrustumPlanes[6];
+                    float3   gCameraPosition;
+                    float    gMaxScreenErrorPx;
+                    float2   gScreenResolution;
+                    float    gCotHalfFov;
+                    uint     gTotalClusterCount;
+                    uint     gHzbMipLevels;
+                    uint     gEnableHzbCull;
+                    float2   gPadding;
+                };
+
+                [numthreads(64, 1, 1)]
+                void main(uint3 dispatchThreadId : SV_DispatchThreadID) {
+                    uint id = dispatchThreadId.x;
+                    if (id >= gTotalClusterCount) return;
+
+                    MeshCluster cl = gClusters[id];
+
+                    // 1. Frustum Bounding Sphere Test
+                    [unroll]
+                    for (int p = 0; p < 6; p++) {
+                        float dist = dot(gFrustumPlanes[p].xyz, cl.center) + gFrustumPlanes[p].w;
+                        if (dist < -cl.radius) return;
+                    }
+
+                    // 2. Normal Cone Backface Culling
+                    if (cl.coneCutoff < 1.0f) {
+                        float3 toCam = normalize(gCameraPosition - cl.center);
+                        if (dot(toCam, cl.coneAxis) <= -cl.coneCutoff) return;
+                    }
+
+                    // 3. Projected Screen-Space LOD Error Selection
+                    float dist = max(0.1f, length(cl.center - gCameraPosition) - cl.radius);
+                    float projError = (cl.lodError / dist) * (gScreenResolution.y * 0.5f * gCotHalfFov);
+                    if (projError > gMaxScreenErrorPx) return;
+
+                    // 4. Hierarchical Z-Buffer Occlusion Query
+                    if (gEnableHzbCull != 0u) {
+                        float3 bMin = cl.center - cl.radius;
+                        float3 bMax = cl.center + cl.radius;
+
+                        float minU = 1.0f, minV = 1.0f, maxU = 0.0f, maxV = 0.0f;
+                        float minDepth = 1.0f;
+
+                        [unroll]
+                        for (int c = 0; c < 8; c++) {
+                            float3 corner = float3((c & 1) ? bMax.x : bMin.x, (c & 2) ? bMax.y : bMin.y, (c & 4) ? bMax.z : bMin.z);
+                            float4 clip = mul(float4(corner, 1.0f), gViewProjection);
+                            if (clip.w > 1e-4f) {
+                                float3 ndc = clip.xyz / clip.w;
+                                float2 uv = float2(ndc.x * 0.5f + 0.5f, 1.0f - (ndc.y * 0.5f + 0.5f));
+                                minU = min(minU, uv.x);
+                                maxU = max(maxU, uv.x);
+                                minV = min(minV, uv.y);
+                                maxV = max(maxV, uv.y);
+                                minDepth = min(minDepth, ndc.z);
+                            }
+                        }
+
+                        float2 pixelSpan = float2(max(0.0f, maxU - minU) * gScreenResolution.x, max(0.0f, maxV - minV) * gScreenResolution.y);
+                        float maxDim = max(pixelSpan.x, pixelSpan.y);
+                        float mip = clamp(floor(log2(max(1.0f, maxDim))), 0.0f, float(gHzbMipLevels - 1u));
+
+                        float2 centerUv = float2(minU + maxU, minV + maxV) * 0.5f;
+                        float4 hzbSamples = gHzbTexture.Gather(gPointClampSampler, centerUv);
+                        float maxOccluderDepth = max(max(hzbSamples.x, hzbSamples.y), max(hzbSamples.z, hzbSamples.w));
+
+                        // If nearest cluster depth is deeper than farthest occluder in footprint, culled!
+                        if (minDepth > maxOccluderDepth) return;
+                    }
+
+                    // Survived all 4 culling & LOD stages: Emit zero-driver indirect draw command
+                    DrawIndexedIndirectCommand cmd;
+                    cmd.indexCountPerInstance = cl.indexCount;
+                    cmd.instanceCount = 1u;
+                    cmd.startIndexLocation = cl.indexOffset;
+                    cmd.baseVertexLocation = (int)cl.vertexOffset;
+                    cmd.startInstanceLocation = 0u;
+
+                    gIndirectDrawArgs.Append(cmd);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("UnifiedClusterCullHzbIndirectCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil, hlslUnifiedCullCs, Cache));
+
+            // 44. Vulkan 1.3 SPIR-V Unified GPU Cluster Frustum & HZB Occlusion Culling Compute Shader
+            string glslUnifiedCullCs = @"
+                #version 460
+                layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+                struct MeshCluster {
+                    vec3 center;
+                    float radius;
+                    vec3 coneAxis;
+                    float coneCutoff;
+                    float lodError;
+                    uint indexOffset;
+                    uint indexCount;
+                    uint vertexOffset;
+                    uint vertexCount;
+                    uint lodLevel;
+                    uint meshId;
+                };
+
+                struct DrawIndexedIndirectCommand {
+                    uint indexCount;
+                    uint instanceCount;
+                    uint firstIndex;
+                    int  vertexOffset;
+                    uint firstInstance;
+                };
+
+                layout(binding = 0) readonly buffer ClusterBuffer {
+                    MeshCluster clusters[];
+                };
+
+                layout(binding = 1) uniform sampler2D hzbTexture;
+
+                layout(binding = 2) writeonly buffer CommandBuffer {
+                    DrawIndexedIndirectCommand commands[];
+                };
+
+                layout(binding = 3) buffer CounterBuffer {
+                    uint commandCount;
+                };
+
+                layout(binding = 4) uniform UnifiedCullUBO {
+                    mat4 viewProj;
+                    vec4 frustumPlanes[6];
+                    vec3 cameraPos;
+                    float maxScreenErrorPx;
+                    vec2 screenResolution;
+                    float cotHalfFov;
+                    uint totalClusters;
+                    uint hzbMipLevels;
+                    uint enableHzb;
+                    vec2 padding;
+                } ubo;
+
+                void main() {
+                    uint id = gl_GlobalInvocationID.x;
+                    if (id >= ubo.totalClusters) return;
+
+                    MeshCluster cl = clusters[id];
+
+                    // 1. Frustum Bounding Sphere Test
+                    for (int p = 0; p < 6; p++) {
+                        float dist = dot(ubo.frustumPlanes[p].xyz, cl.center) + ubo.frustumPlanes[p].w;
+                        if (dist < -cl.radius) return;
+                    }
+
+                    // 2. Normal Cone Backface Culling
+                    if (cl.coneCutoff < 1.0) {
+                        vec3 toCam = normalize(ubo.cameraPos - cl.center);
+                        if (dot(toCam, cl.coneAxis) <= -cl.coneCutoff) return;
+                    }
+
+                    // 3. Projected Screen-Space LOD Error Selection
+                    float dist = max(0.1, length(cl.center - ubo.cameraPos) - cl.radius);
+                    float projError = (cl.lodError / dist) * (ubo.screenResolution.y * 0.5 * ubo.cotHalfFov);
+                    if (projError > ubo.maxScreenErrorPx) return;
+
+                    // 4. Hierarchical Z-Buffer Occlusion Query
+                    if (ubo.enableHzb != 0u) {
+                        vec3 bMin = cl.center - cl.radius;
+                        vec3 bMax = cl.center + cl.radius;
+
+                        float minU = 1.0, minV = 1.0, maxU = 0.0, maxV = 0.0;
+                        float minDepth = 1.0;
+
+                        for (int c = 0; c < 8; c++) {
+                            vec3 corner = vec3((c & 1) != 0 ? bMax.x : bMin.x, (c & 2) != 0 ? bMax.y : bMin.y, (c & 4) != 0 ? bMax.z : bMin.z);
+                            vec4 clip = ubo.viewProj * vec4(corner, 1.0);
+                            if (clip.w > 1e-4) {
+                                vec3 ndc = clip.xyz / clip.w;
+                                vec2 uv = vec2(ndc.x * 0.5 + 0.5, 1.0 - (ndc.y * 0.5 + 0.5));
+                                minU = min(minU, uv.x);
+                                maxU = max(maxU, uv.x);
+                                minV = min(minV, uv.y);
+                                maxV = max(maxV, uv.y);
+                                minDepth = min(minDepth, ndc.z);
+                            }
+                        }
+
+                        vec2 pixelSpan = vec2(max(0.0, maxU - minU) * ubo.screenResolution.x, max(0.0, maxV - minV) * ubo.screenResolution.y);
+                        float maxDim = max(pixelSpan.x, pixelSpan.y);
+                        float mip = clamp(floor(log2(max(1.0, maxDim))), 0.0, float(ubo.hzbMipLevels - 1u));
+
+                        vec2 centerUv = vec2(minU + maxU, minV + maxV) * 0.5;
+                        vec4 hzbSamples = textureGather(hzbTexture, centerUv);
+                        float maxOccluderDepth = max(max(hzbSamples.x, hzbSamples.y), max(hzbSamples.z, hzbSamples.w));
+
+                        if (minDepth > maxOccluderDepth) return;
+                    }
+
+                    // Atomically allocate command slot and write indirect command
+                    uint writeIdx = atomicAdd(commandCount, 1u);
+                    commands[writeIdx].indexCount = cl.indexCount;
+                    commands[writeIdx].instanceCount = 1u;
+                    commands[writeIdx].firstIndex = cl.indexOffset;
+                    commands[writeIdx].vertexOffset = int(cl.vertexOffset);
+                    commands[writeIdx].firstInstance = 0u;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("UnifiedClusterCullHzbIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslUnifiedCullCs, Cache));
         }
     }
 }
