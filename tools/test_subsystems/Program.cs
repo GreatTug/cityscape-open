@@ -981,6 +981,10 @@ namespace CityScape.Tests
             // 6. Modern Shader Pipeline & Mathematical Models
             var pipeline = new ModernShaderPipeline();
             Assert(pipeline.RegisteredModuleCount >= 4, $"ModernShaderPipeline loaded {pipeline.RegisteredModuleCount} shader modules (>= 4)");
+            Assert(pipeline.Cache != null, "ModernShaderPipeline persistent on-disk cache initialized");
+
+            var pipeline2 = new ModernShaderPipeline();
+            Assert(pipeline2.Cache.CacheHits >= 4, $"Shader compilation cache hit {pipeline2.Cache.CacheHits} times on warm start");
 
             var pbrVs = pipeline.GetModule("StandardPBR", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil);
             Assert(pbrVs != null && pbrVs.SourceCode.Contains("gViewProjection"), "HLSL SM6+ Vertex shader verified");
