@@ -87,8 +87,6 @@
   <ItemGroup>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
-    <Reference Include="palDotNet">
-      <HintPath>..\..\lib\palDotNet.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\palDotNet\palDotNet.csproj" />
   </ItemGroup>
 </Project>

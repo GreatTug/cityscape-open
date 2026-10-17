@@ -15,12 +15,51 @@ internal class edTerrainSettingsDialogManagedImpl
 
 	private bool IsHandling = false;
 
+	public unsafe void WriteValuesToNative()
+	{
+		if (Dialog == null || SettingsPanel == null)
+		{
+			return;
+		}
+		((float*)Dialog)[40] = (float)SettingsPanel.TerrainSizeX.Value;
+		((float*)Dialog)[41] = (float)SettingsPanel.TerrainSizeY.Value;
+		((float*)Dialog)[42] = (float)SettingsPanel.TileSizeX.Value;
+		((float*)Dialog)[43] = (float)SettingsPanel.TileSizeY.Value;
+		((float*)Dialog)[44] = (float)SettingsPanel.SamplingDistance.Value;
+		((int*)Dialog)[54] = (int)SettingsPanel.GetTerrainMaxSizeX();
+		((int*)Dialog)[55] = (int)SettingsPanel.GetTerrainMaxSizeY();
+		((bool*)Dialog)[157] = true;
+		((bool*)Dialog)[158] = false;
+		((bool*)Dialog)[159] = true;
+		((bool*)Dialog)[188] = SettingsPanel.IsGeolocatedTerrain();
+		if (SettingsPanel.IsGeolocatedTerrain())
+		{
+			((double*)Dialog)[24] = (double)SettingsPanel.TerrainOriginLongitude.Value;
+			((double*)Dialog)[25] = (double)SettingsPanel.TerrainOriginLatitude.Value;
+		}
+	}
+
 	public unsafe void Init()
 	{
 		SettingsPanel = ManagedDialog.GetTerrainSettingsPanel();
+		SettingsPanel.SetEnableTessellationSampleDist(true);
+		SettingsPanel.SamplingDistance.Enabled = true;
 		System.Runtime.CompilerServices.Unsafe.SkipInit(out gisAlignedBox2d gisAlignedBox2d2);
 		GetGeoRegionValues(&gisAlignedBox2d2);
 		CheckTerrainRegionSize(&gisAlignedBox2d2);
+
+		ManagedDialog.FormClosing += (s, e) =>
+		{
+			if (ManagedDialog.DialogResult == DialogResult.OK)
+			{
+				WriteValuesToNative();
+			}
+		};
+		SettingsPanel.TerrainValueChanged += (s, e) =>
+		{
+			WriteValuesToNative();
+		};
+		WriteValuesToNative();
 	}
 
 	public void HandleGeolocatedCheckChanged(object obj, EventArgs eventArgs)

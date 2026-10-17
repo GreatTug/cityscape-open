@@ -68,6 +68,13 @@ foreach ($proj in $projects) {
         exit $LASTEXITCODE
     }
     Write-Host "[OK] $proj compiled successfully!" -ForegroundColor Green
+
+    if ($proj -eq "src\palDotNet\palDotNet.csproj") {
+        if (Test-Path "src\palDotNet\bin\Release\net48\palDotNet.dll") {
+            Copy-Item "src\palDotNet\bin\Release\net48\palDotNet.dll" -Destination "lib\palDotNet.dll" -Force
+            Copy-Item "src\palDotNet\bin\Release\net48\palDotNet.pdb" -Destination "lib\palDotNet.pdb" -Force -ErrorAction SilentlyContinue
+        }
+    }
 }
 
 # Stage distribution to bin/Release/net48

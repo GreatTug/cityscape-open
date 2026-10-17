@@ -67649,8 +67649,9 @@ internal class _003CModule_003E
 			terrainSettingsPanel.ComputeTileCountValues();
 		}
 		((bool*)P_0)[158] = false;
+		((bool*)P_0)[159] = true;
 		terrainSettingsPanel.SetForceSingleTile(((bool*)P_0)[158]);
-		terrainSettingsPanel.SetEnableTessellationSampleDist(((bool*)P_0)[159]);
+		terrainSettingsPanel.SetEnableTessellationSampleDist(true);
 		IntPtr intPtr3 = new IntPtr((void*)(int)((uint*)P_0)[38]);
 		edTerrainSettingsDialogManagedImpl target = (edTerrainSettingsDialogManagedImpl)((GCHandle)intPtr3).Target;
 		terrainSettingsPanel.GeolocatedCheckGroupBox.CheckedChanged += target.HandleGeolocatedCheckChanged;
@@ -67686,6 +67687,47 @@ internal class _003CModule_003E
 		terrainSettingsPanel.RegionEastLongitude.ValueChanged += target11.HandleGeoRegionValueChanged;
 		IntPtr intPtr14 = new IntPtr((void*)(int)((uint*)P_0)[38]);
 		((edTerrainSettingsDialogManagedImpl)((GCHandle)intPtr14).Target).Init();
+		terrainSettingsDialog.FormClosing += delegate
+		{
+			if (terrainSettingsDialog.DialogResult == DialogResult.OK)
+			{
+				((float*)P_0)[40] = (float)terrainSettingsPanel.TerrainSizeX.Value;
+				((float*)P_0)[41] = (float)terrainSettingsPanel.TerrainSizeY.Value;
+				((float*)P_0)[42] = (float)terrainSettingsPanel.TileSizeX.Value;
+				((float*)P_0)[43] = (float)terrainSettingsPanel.TileSizeY.Value;
+				((float*)P_0)[44] = (float)terrainSettingsPanel.SamplingDistance.Value;
+				((int*)P_0)[54] = (int)terrainSettingsPanel.GetTerrainMaxSizeX();
+				((int*)P_0)[55] = (int)terrainSettingsPanel.GetTerrainMaxSizeY();
+				((bool*)P_0)[157] = true;
+				((bool*)P_0)[158] = false;
+				((bool*)P_0)[159] = true;
+				((bool*)P_0)[188] = terrainSettingsPanel.IsGeolocatedTerrain();
+				if (terrainSettingsPanel.IsGeolocatedTerrain())
+				{
+					((double*)P_0)[24] = (double)terrainSettingsPanel.TerrainOriginLongitude.Value;
+					((double*)P_0)[25] = (double)terrainSettingsPanel.TerrainOriginLatitude.Value;
+				}
+			}
+		};
+		terrainSettingsPanel.TerrainValueChanged += delegate
+		{
+			((float*)P_0)[40] = (float)terrainSettingsPanel.TerrainSizeX.Value;
+			((float*)P_0)[41] = (float)terrainSettingsPanel.TerrainSizeY.Value;
+			((float*)P_0)[42] = (float)terrainSettingsPanel.TileSizeX.Value;
+			((float*)P_0)[43] = (float)terrainSettingsPanel.TileSizeY.Value;
+			((float*)P_0)[44] = (float)terrainSettingsPanel.SamplingDistance.Value;
+			((int*)P_0)[54] = (int)terrainSettingsPanel.GetTerrainMaxSizeX();
+			((int*)P_0)[55] = (int)terrainSettingsPanel.GetTerrainMaxSizeY();
+			((bool*)P_0)[157] = true;
+			((bool*)P_0)[158] = false;
+			((bool*)P_0)[159] = true;
+			((bool*)P_0)[188] = terrainSettingsPanel.IsGeolocatedTerrain();
+			if (terrainSettingsPanel.IsGeolocatedTerrain())
+			{
+				((double*)P_0)[24] = (double)terrainSettingsPanel.TerrainOriginLongitude.Value;
+				((double*)P_0)[25] = (double)terrainSettingsPanel.TerrainOriginLatitude.Value;
+			}
+		};
 	}
 
 	internal unsafe static int arValueStorage_003CgisVector2d_002Cvoid_003E_002EGetIntValue(arValueStorage_003CgisVector2d_002Cvoid_003E* P_0)

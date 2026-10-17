@@ -15,6 +15,12 @@ using edEditorDotNet.ExportDialogItems;
 
 namespace CityScape.Tests
 {
+    unsafe class MockNativeDialogWrapper
+    {
+        public void* Dialog;
+        public void OnValueChanged(object sender, EventArgs e) { }
+    }
+
     class Program
     {
         private static int _passedTests = 0;
@@ -566,9 +572,33 @@ namespace CityScape.Tests
                 Assert(panel.TileCountX.Enabled, "TileCountX is unlocked and enabled");
                 Assert(panel.TileCountY.Enabled, "TileCountY is unlocked and enabled");
 
+                // 1. ForceEnabled immunity test on DialogNumericUpDownFloat
+                panel.SamplingDistance.ForceEnabled = true;
+                panel.SamplingDistance.Enabled = false;
+                Assert(panel.SamplingDistance.Enabled, "SamplingDistance cannot be disabled when ForceEnabled is true");
+                panel.SamplingDistance.ReadOnly = true;
+                Assert(!panel.SamplingDistance.ReadOnly, "SamplingDistance cannot be made read-only when ForceEnabled is true");
+
+                // Range validation (0.01m to 100,000m)
+                panel.SetTessellationSampleDistRange(0f, 0f);
+                Assert(panel.SamplingDistance.Maximum >= 100000m, "SamplingDistance maximum range is healthy (>= 100,000m) and not clamped to 0");
+                Assert(panel.SamplingDistance.Minimum <= 0.01m, "SamplingDistance minimum range is healthy (<= 0.01m)");
+
+                panel.SamplingDistance.Value = 0.01m;
+                Assert(panel.SamplingDistance.Value == 0.01m, "SamplingDistance minimum 0.01m accepted");
+                panel.SamplingDistance.Value = 100000m;
+                Assert(panel.SamplingDistance.Value == 100000m, "SamplingDistance maximum 100,000m accepted");
+                panel.SamplingDistance.Value = 3.5m;
+                Assert(panel.SamplingDistance.Value == 3.5m, "SamplingDistance value set to 3.5m");
+
+                // Native call simulation: SetEnableTessellationSampleDist(false)
+                panel.SetEnableTessellationSampleDist(false);
+                Assert(panel.SamplingDistance.Enabled, "SamplingDistance input remains unlocked and enabled even if SetEnableTessellationSampleDist(false) is called");
+
                 // Trigger OnShown lifecycle
                 var onShownMethod = typeof(TerrainSettingsDialog).GetMethod("OnShown", BindingFlags.NonPublic | BindingFlags.Instance);
                 onShownMethod.Invoke(dlg, new object[] { EventArgs.Empty });
+                Assert(panel.SamplingDistance.Enabled, "SamplingDistance is unlocked after OnShown");
 
                 // Multi-tile calculation verification: Set Terrain size to 10,000m and TileCount to 5
                 panel.TerrainSizeX.Value = 10000m;
@@ -582,6 +612,49 @@ namespace CityScape.Tests
                 panel.TileSizeX.Value = 2500m;
                 Assert(panel.TileCountX.Value == 4m, $"TileCountX recomputed correctly: {panel.TileCountX.Value} == 4");
                 Assert(panel.IsDataValid(), "Multi-tile terrain data is fully valid");
+
+                // 2. Real Native Pointer Discovery & Live Memory Write-Back Verification
+                unsafe
+                {
+                    byte[] mockNativeBuffer = new byte[224];
+                    fixed (byte* pNative = mockNativeBuffer)
+                    {
+                        var mockListener = new MockNativeDialogWrapper();
+                        mockListener.Dialog = pNative;
+                        panel.TerrainSizeX.ValueChanged += mockListener.OnValueChanged;
+
+                        void* discoveredPtr = panel.FindNativeDialogPointer();
+                        Assert(discoveredPtr == pNative, "FindNativeDialogPointer() dynamically discovered native struct pointer via delegate reflection");
+
+                        // Modify panel values to 10,000m
+                        panel.TerrainSizeX.Value = 10000m;
+                        panel.TerrainSizeY.Value = 10000m;
+                        panel.TileSizeX.Value = 2500m;
+                        panel.TileSizeY.Value = 2000m;
+                        panel.SamplingDistance.Value = 3.5m;
+
+                        // Execute live write-back from panel into native memory
+                        bool writeSuccess = panel.WriteValuesToNativeStorage();
+                        Assert(writeSuccess, "panel.WriteValuesToNativeStorage() returned true");
+
+                        // Inspect actual memory inside pNative
+                        Assert(((float*)pNative)[40] == 10000f, "Live write: Native struct TerrainSizeX (offset 40) is 10,000m");
+                        Assert(((float*)pNative)[41] == 10000f, "Live write: Native struct TerrainSizeY (offset 41) is 10,000m");
+                        Assert(((float*)pNative)[42] == 2500f, "Live write: Native struct TileSizeX (offset 42) is 2500m");
+                        Assert(((float*)pNative)[43] == 2000f, "Live write: Native struct TileSizeY (offset 43) is 2000m");
+                        Assert(((float*)pNative)[44] == 3.5f, "Live write: Native struct SamplingDistance (offset 44) is 3.5m");
+                        Assert(((int*)pNative)[54] >= 10000, "Live write: Native struct MaxTerrainSizeX (offset 54) updated");
+                        Assert(((bool*)pNative)[157] == true, "Live write: Native struct IsCustomTerrain flag (offset 157) enabled");
+                        Assert(((bool*)pNative)[159] == true, "Live write: Native struct EnableTessellationSampleDist flag (offset 159) enabled");
+
+                        // Simulate OkButton click in dialog and verify write-back to native memory
+                        panel.TerrainSizeX.Value = 15000m;
+                        panel.SamplingDistance.Value = 7.5m;
+                        dlg.OkButton.PerformClick();
+                        Assert(((float*)pNative)[40] == 15000f, "OkButton click write-back: Native struct TerrainSizeX updated to 15,000m");
+                        Assert(((float*)pNative)[44] == 7.5f, "OkButton click write-back: Native struct SamplingDistance updated to 7.5m");
+                    }
+                }
 
                 // Render screenshot for visual confirmation
                 dlg.Show();
