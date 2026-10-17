@@ -1233,6 +1233,36 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("TemporalAntiAliasingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 TemporalAntiAliasingPs shader registered");
             Assert(pipeline.GetModule("TemporalAntiAliasingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V TemporalAntiAliasingPs shader registered");
 
+            // Ground-Truth Ambient Occlusion (GTAO) Pipeline & Jimenez Multi-Bounce Approximation
+            var gtao = pipeline.AmbientOcclusion;
+            Assert(gtao != null, "pipeline.AmbientOcclusion initialized");
+            Assert(gtao.Radius == 2.5f && gtao.SliceCount == 4, "GTAO configured with 2.5m radius and 4 horizon slices");
+
+            // Flat surface has zero horizon blockage (100% visible)
+            float[] flatDeltas = new float[] { 0f, 0f, 0f, 0f };
+            gtao.EvaluateGtao(0f, 1f, 0f, flatDeltas, 10f, out float aoFlatRaw, out float aoFlatMb);
+            Assert(aoFlatRaw == 1.0f && aoFlatMb == 1.0f, "Flat unoccluded surface evaluates to 1.0 (no ambient occlusion)");
+
+            // Deep crevice / building contact corner has high horizon blockage
+            float[] creviceDeltas = new float[] { 2.0f, 2.2f, 1.8f, 2.1f };
+            gtao.EvaluateGtao(0f, 1f, 0f, creviceDeltas, 10f, out float aoCreviceRaw, out float aoCreviceMb);
+            Assert(aoCreviceRaw < 0.30f, $"Deep corner creates dark contact occlusion: Raw={aoCreviceRaw:F3}");
+            Assert(aoCreviceMb > aoCreviceRaw, $"Jimenez multi-bounce approximation softens harsh black crevice shadows ({aoCreviceMb:F3} > {aoCreviceRaw:F3})");
+
+            // Distant background beyond MaxDistance is unoccluded
+            gtao.EvaluateGtao(0f, 1f, 0f, creviceDeltas, 350f, out float aoFarRaw, out float aoFarMb);
+            Assert(aoFarRaw == 1.0f && aoFarMb == 1.0f, "Distant terrain beyond GTAO max radius bypasses occlusion");
+
+            // Bilateral Depth-Preserving Edge Filter
+            float[] neighborAo = new float[] { 0.2f, 0.2f, 0.9f };
+            float[] neighborDepths = new float[] { 10.05f, 10.10f, 85.0f };
+            float filteredAo = gtao.BilateralFilter(0.2f, 10.0f, neighborAo, neighborDepths, depthThreshold: 0.5f);
+            Assert(filteredAo < 0.35f, $"Bilateral filter rejects distant background depth edge without bleeding: Filtered={filteredAo:F3}");
+
+            // GTAO Shaders Registered
+            Assert(pipeline.GetModule("GroundTruthAmbientOcclusionPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 GroundTruthAmbientOcclusionPs shader registered");
+            Assert(pipeline.GetModule("GroundTruthAmbientOcclusionPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V GroundTruthAmbientOcclusionPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
