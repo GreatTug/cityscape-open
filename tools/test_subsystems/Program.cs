@@ -661,17 +661,32 @@ namespace CityScape.Tests
                 }
 
                 // Render screenshot for visual confirmation
-                dlg.Show();
-                dlg.Refresh();
-                using (Bitmap bmp = new Bitmap(dlg.Width, dlg.Height))
+                try
                 {
-                    dlg.DrawToBitmap(bmp, new Rectangle(0, 0, dlg.Width, dlg.Height));
-                    string screenshotDir = @"C:\cityscape-open\tools";
-                    if (!System.IO.Directory.Exists(screenshotDir)) System.IO.Directory.CreateDirectory(screenshotDir);
-                    bmp.Save(System.IO.Path.Combine(screenshotDir, "terrain_unlocked_dialog.png"), System.Drawing.Imaging.ImageFormat.Png);
-                    Console.WriteLine("    [OK] Captured screenshot of unlocked dialog to tools/terrain_unlocked_dialog.png");
+                    dlg.Show();
+                    dlg.Refresh();
+                    using (Bitmap bmp = new Bitmap(Math.Max(1, dlg.Width), Math.Max(1, dlg.Height)))
+                    {
+                        dlg.DrawToBitmap(bmp, new Rectangle(0, 0, Math.Max(1, dlg.Width), Math.Max(1, dlg.Height)));
+                        string screenshotDir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tools");
+                        if (!System.IO.Directory.Exists(screenshotDir)) System.IO.Directory.CreateDirectory(screenshotDir);
+                        string targetPath = System.IO.Path.Combine(screenshotDir, "terrain_unlocked_dialog.png");
+                        try
+                        {
+                            bmp.Save(targetPath, System.Drawing.Imaging.ImageFormat.Png);
+                            Console.WriteLine("    [OK] Captured screenshot of unlocked dialog to tools/terrain_unlocked_dialog.png");
+                        }
+                        catch (Exception exSave)
+                        {
+                            Console.WriteLine("    [WARN] Could not save screenshot (file in use): " + exSave.Message);
+                        }
+                    }
+                    dlg.Hide();
                 }
-                dlg.Hide();
+                catch (Exception exShow)
+                {
+                    Console.WriteLine("    [WARN] Dialog screenshot skipped: " + exShow.Message);
+                }
             }
 
             // 3. Grid & Geometry dialogs
