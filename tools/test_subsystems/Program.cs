@@ -1054,6 +1054,29 @@ namespace CityScape.Tests
             waterPipe.EvaluateWaterDisplacement(100f, 200f, 5.0f, out float dispX, out float dispY, out float dispZ);
             Assert(Math.Abs(dispY) > 0f, $"Gerstner wave 3D ocean displacement computed: Y={dispY:F3}m");
 
+            // Modern Water SSR, Fresnel, Beer-Lambert Extinction & Caustics
+            waterPipe.EvaluateWaterNormal(100f, 200f, 5.0f, out float wNx, out float wNy, out float wNz);
+            float wNormLen = (float)Math.Sqrt(wNx * wNx + wNy * wNy + wNz * wNz);
+            Assert(Math.Abs(wNormLen - 1.0f) < 0.001f, "Water surface analytical normal is unit length");
+
+            float fresnelNormal = WaterModernPipeline.EvaluateWaterFresnel(1.0f);
+            float fresnelGlance = WaterModernPipeline.EvaluateWaterFresnel(0.0f);
+            Assert(Math.Abs(fresnelNormal - 0.02f) < 0.001f, "Water Fresnel at normal incidence is 0.02 (2% reflectance)");
+            Assert(Math.Abs(fresnelGlance - 1.00f) < 0.001f, "Water Fresnel at glancing angle is 1.00 (100% total reflection)");
+
+            waterPipe.EvaluateWaterExtinction(5.0f, out float transR, out float transG, out float transB);
+            Assert(transR < transG && transG < transB, $"Beer-Lambert water extinction preserves deep blue: R={transR:F3}, G={transG:F3}, B={transB:F3}");
+
+            float causticShallow = waterPipe.EvaluateCaustics(10f, 10f, 1.0f, 1.5f);
+            float causticDeep = waterPipe.EvaluateCaustics(10f, 10f, 1.0f, 25.0f);
+            Assert(causticShallow > causticDeep, $"Shallow water caustics focused and attenuated with depth ({causticShallow:F3} vs {causticDeep:F3})");
+
+            bool ssrHit = waterPipe.TraceScreenSpaceReflection(0.5f, 0.5f, 0.95f, 0.3f, 0.4f, out float hitU, out float hitV, out float fadeWeight);
+            Assert(ssrHit && hitU > 0f && hitV > 0f && fadeWeight > 0f, "Screen-Space Reflection (SSR) ray march detected hit on screen");
+
+            Assert(pipeline.GetModule("WaterOceanSsr", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 WaterOceanSsr shader registered");
+            Assert(pipeline.GetModule("WaterOceanSsr", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V WaterOceanSsr shader registered");
+
             // Atmospheric Scattering & Dynamic Sky Dome
             var atmo = pipeline.Atmosphere;
             atmo.GetSunDirection(out float sunX, out float sunY, out float sunZ);

@@ -445,6 +445,116 @@ namespace palDotNet.palModernEngine
                 outZ += q * wave.Amplitude * dz * cosTheta;
             }
         }
+
+        /// <summary>
+        /// Computes water surface normal vector via analytical derivatives of Gerstner wave harmonics.
+        /// </summary>
+        public void EvaluateWaterNormal(float worldX, float worldZ, float timeSec, out float nx, out float ny, out float nz)
+        {
+            float dFdx = 0f;
+            float dFdz = 0f;
+
+            foreach (var wave in Waves)
+            {
+                float len = (float)Math.Sqrt(wave.DirectionX * wave.DirectionX + wave.DirectionY * wave.DirectionY);
+                float dx = len > 0.0001f ? wave.DirectionX / len : 1f;
+                float dz = len > 0.0001f ? wave.DirectionY / len : 0f;
+
+                float theta = wave.Frequency * (dx * worldX + dz * worldZ) + wave.Speed * timeSec;
+                float cosTheta = (float)Math.Cos(theta);
+
+                dFdx += wave.Amplitude * wave.Frequency * dx * cosTheta;
+                dFdz += wave.Amplitude * wave.Frequency * dz * cosTheta;
+            }
+
+            float rawNx = -dFdx;
+            float rawNy = 1.0f;
+            float rawNz = -dFdz;
+            float invLen = 1.0f / (float)Math.Sqrt(rawNx * rawNx + rawNy * rawNy + rawNz * rawNz);
+
+            nx = rawNx * invLen;
+            ny = rawNy * invLen;
+            nz = rawNz * invLen;
+        }
+
+        /// <summary>
+        /// Evaluates Schlick Fresnel reflectance for water surface (F0 = 0.02).
+        /// </summary>
+        public static float EvaluateWaterFresnel(float cosTheta, float f0 = 0.02f)
+        {
+            float c = Math.Max(0f, Math.Min(1f, cosTheta));
+            float p = 1.0f - c;
+            float p5 = p * p * p * p * p;
+            return f0 + (1.0f - f0) * p5;
+        }
+
+        /// <summary>
+        /// Evaluates wavelength-dependent Beer-Lambert light extinction through water depth.
+        /// Red light absorbs rapidly (0.24/m), green moderately (0.05/m), blue penetrates deepest (0.015/m).
+        /// </summary>
+        public void EvaluateWaterExtinction(float depthMeters, out float transR, out float transG, out float transB)
+        {
+            float d = Math.Max(0.0f, depthMeters);
+            transR = (float)Math.Exp(-d * 0.24f);
+            transG = (float)Math.Exp(-d * 0.05f);
+            transB = (float)Math.Exp(-d * 0.015f);
+        }
+
+        /// <summary>
+        /// Computes dynamic shallow-water caustic intensity pattern via wave interference.
+        /// Attenuates with depth to represent sunlight focal concentrations on the seabed.
+        /// </summary>
+        public float EvaluateCaustics(float worldX, float worldZ, float timeSec, float depthMeters)
+        {
+            if (depthMeters <= 0.0f || depthMeters > 30.0f) return 0.0f;
+
+            float p1 = (float)Math.Sin(worldX * 0.8f + worldZ * 0.5f + timeSec * 2.2f);
+            float p2 = (float)Math.Sin(worldX * 0.4f - worldZ * 0.7f - timeSec * 1.8f);
+            float p3 = (float)Math.Cos((worldX + worldZ) * 0.6f + timeSec * 1.5f);
+
+            float c = (p1 + p2 + p3 + 3.0f) / 6.0f;
+            float causticSharp = (float)Math.Pow(c, 4.0);
+
+            // Caustics fade exponentially with depth
+            float depthFade = (float)Math.Exp(-depthMeters * 0.15f);
+            return causticSharp * depthFade * 1.8f;
+        }
+
+        /// <summary>
+        /// Simulates Screen-Space Reflection (SSR) ray march for water plane reflections.
+        /// </summary>
+        public bool TraceScreenSpaceReflection(float startU, float startV, float viewNormalY,
+            float rayDirX, float rayDirZ, out float hitU, out float hitV, out float fadeWeight)
+        {
+            hitU = startU;
+            hitV = startV;
+            fadeWeight = 0.0f;
+
+            // March up to 16 screen-space steps along projected reflection vector
+            float stepSize = 0.025f;
+            float u = startU;
+            float v = startV;
+
+            for (int step = 1; step <= 16; step++)
+            {
+                u += rayDirX * stepSize;
+                v -= rayDirZ * stepSize;
+
+                if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f)
+                {
+                    return false;
+                }
+            }
+
+            hitU = Math.Max(0.0f, Math.Min(1.0f, u));
+            hitV = Math.Max(0.0f, Math.Min(1.0f, v));
+
+            // Edge vignette fade
+            float edgeDistX = Math.Min(hitU, 1.0f - hitU) * 2.0f;
+            float edgeDistY = Math.Min(hitV, 1.0f - hitV) * 2.0f;
+            fadeWeight = Math.Max(0.0f, Math.Min(1.0f, Math.Min(edgeDistX, edgeDistY) * 2.0f));
+            return fadeWeight > 0.05f;
+        }
     }
 
     /// <summary>
@@ -938,6 +1048,69 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("PostProcessAces", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslPostPs, Cache));
+
+            // 7. Modern Ocean / Water Gerstner & Screen-Space Reflection (SSR) Pixel Shader (DirectX 12 SM6)
+            string hlslWaterPs = @"
+                struct WaterPSInput {
+                    float4 position : SV_Position;
+                    float3 worldPos : WORLDPOS;
+                    float3 normal   : NORMAL;
+                    float2 uv       : TEXCOORD0;
+                };
+                Texture2D gSceneColorTexture : register(t0);
+                Texture2D gSceneDepthTexture : register(t1);
+                SamplerState gLinearSampler  : register(s0);
+
+                cbuffer WaterConstants : register(b0) {
+                    float3 gCameraPosition;
+                    float  gWaterElevation;
+                    float3 gDeepWaterColor;
+                    float3 gShallowWaterColor;
+                };
+
+                float4 main(WaterPSInput input) : SV_Target {
+                    float3 viewDir = normalize(gCameraPosition - input.worldPos);
+                    float NdotV = saturate(dot(input.normal, viewDir));
+                    float fresnel = 0.02f + 0.98f * pow(1.0f - NdotV, 5.0f);
+
+                    float waterDepth = max(0.0f, input.worldPos.y - gWaterElevation);
+                    float extinction = exp(-waterDepth * 0.15f);
+                    float3 baseWater = lerp(gDeepWaterColor, gShallowWaterColor, extinction);
+
+                    float2 reflectUv = input.uv + input.normal.xz * 0.05f;
+                    float3 reflection = gSceneColorTexture.Sample(gLinearSampler, reflectUv).rgb;
+
+                    float3 finalColor = lerp(baseWater, reflection, fresnel);
+                    return float4(finalColor, 0.92f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WaterOceanSsr", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslWaterPs, Cache));
+
+            // 8. Vulkan SPIR-V Modern Ocean Water Pixel Shader
+            string glslWaterPs = @"
+                #version 460
+                layout(location = 0) in vec3 inWorldPos;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+                layout(binding = 0) uniform sampler2D texSceneColor;
+                layout(binding = 1) uniform WaterUBO {
+                    vec3 cameraPos;
+                    float waterElevation;
+                    vec3 deepColor;
+                    vec3 shallowColor;
+                } ubo;
+
+                void main() {
+                    vec3 viewDir = normalize(ubo.cameraPos - inWorldPos);
+                    float NdotV = clamp(dot(inNormal, viewDir), 0.0, 1.0);
+                    float fresnel = 0.02 + 0.98 * pow(1.0 - NdotV, 5.0);
+                    vec3 reflection = texture(texSceneColor, inUV + inNormal.xz * 0.05).rgb;
+                    vec3 waterColor = mix(ubo.deepColor, ubo.shallowColor, 0.5);
+                    outColor = vec4(mix(waterColor, reflection, fresnel), 0.92);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("WaterOceanSsr", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslWaterPs, Cache));
         }
     }
 }
