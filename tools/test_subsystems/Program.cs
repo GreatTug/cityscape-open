@@ -1159,6 +1159,28 @@ namespace CityScape.Tests
                 {
                     Assert(!string.IsNullOrEmpty(primaryGpu.Value.Description), "Probed primary hardware GPU has valid description");
                 }
+
+                // 7f. GIS Procedural 3D Building Extrusion & Viewport Rendering
+                var defaultTerrain = TerrainSurfaceData.CreateDefault();
+                var cityBuildings = GisProceduralCityGenerator.GenerateUrbanGrid(defaultTerrain, blocksX: 3, blocksZ: 3, blockSize: 100f, streetWidth: 15f);
+                Assert(cityBuildings != null && cityBuildings.Count > 0, $"GisProceduralCityGenerator produced {cityBuildings.Count} 3D building instances");
+                
+                var firstBld = cityBuildings[0];
+                Assert(firstBld.Footprint != null && firstBld.TotalHeight > 0f, "GIS building footprint and total height verified");
+                var bldMesh = firstBld.GenerateMesh();
+                Assert(bldMesh != null && bldMesh.Vertices.Count > 0 && bldMesh.Indices.Count > 0, $"GIS building mesh generated with {bldMesh.Vertices.Count} vertices and {bldMesh.Indices.Count} indices");
+                Assert(bldMesh.Material != null && bldMesh.Material.Roughness > 0f, "GIS building mesh has PBR material properties");
+
+                string bldGltfPath = Path.Combine(tempDir, "building_test.gltf");
+                Assert(gltfExporter.ExportScene(bldGltfPath, new List<ExportMeshData> { bldMesh }, "GisBuildingScene"), "Exported GIS building to glTF 2.0");
+                Assert(File.Exists(bldGltfPath), "GIS building glTF file exists on disk");
+
+                string bldUsdPath = Path.Combine(tempDir, "building_test.usda");
+                Assert(usdExporter.ExportScene(bldUsdPath, new List<ExportMeshData> { bldMesh }, "GisBuildingScene"), "Exported GIS building to USDA");
+                Assert(File.Exists(bldUsdPath), "GIS building USDA file exists on disk");
+
+                ControlRender.SetActiveBuildings(cityBuildings);
+                Assert(ControlRender.ActiveBuildings.Count == cityBuildings.Count, "ControlRender.ActiveBuildings correctly populated for 3D viewport rendering");
             }
             finally
             {

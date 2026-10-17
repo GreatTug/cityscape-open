@@ -32,6 +32,7 @@ assets/extracted/
 /BugReporter.exe
 /test_subsystems.exe
 /test_lifecycle.exe
+/test_terrain_rendering.exe
 /*.dll
 /*.pdb
 /*.bak

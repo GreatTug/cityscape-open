@@ -33,6 +33,20 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	private static List<ControlRender> ControlRenders = new List<ControlRender>();
 
 	public static TerrainSurfaceData ActiveTerrain { get; set; } = TerrainSurfaceData.CreateDefault();
+	public static List<GisBuildingInstance> ActiveBuildings { get; } = new List<GisBuildingInstance>();
+
+	public static void SetActiveBuildings(IEnumerable<GisBuildingInstance> buildings)
+	{
+		ActiveBuildings.Clear();
+		if (buildings != null)
+		{
+			ActiveBuildings.AddRange(buildings);
+		}
+		foreach (ControlRender cr in ControlRenders)
+		{
+			cr.Invalidate();
+		}
+	}
 
 	public static void SetActiveTerrain(TerrainSurfaceData terrain)
 	{
@@ -435,6 +449,69 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			}
 		}
 
+		// 3.5. 3D Procedural / GIS Extruded Buildings
+		if (ActiveBuildings != null && ActiveBuildings.Count > 0)
+		{
+			using (Pen buildingWirePen = new Pen(Color.FromArgb(70, 90, 110), 1f))
+			{
+				foreach (var bld in ActiveBuildings)
+				{
+					var poly = bld.Footprint.Polygon;
+					int polyN = poly.Count;
+					if (polyN < 3) continue;
+
+					float bY = bld.BaseElevation;
+					float tY = bld.BaseElevation + bld.TotalHeight;
+
+					PointF[] topPoints = new PointF[polyN];
+					for (int p = 0; p < polyN; p++)
+					{
+						topPoints[p] = Project(poly[p].X, tY, poly[p].Y);
+					}
+
+					for (int p = 0; p < polyN; p++)
+					{
+						int next = (p + 1) % polyN;
+						PointF p0_bot = Project(poly[p].X, bY, poly[p].Y);
+						PointF p1_bot = Project(poly[next].X, bY, poly[next].Y);
+						PointF p1_top = topPoints[next];
+						PointF p0_top = topPoints[p];
+
+						float dx = poly[next].X - poly[p].X;
+						float dz = poly[next].Y - poly[p].Y;
+						float normX = dz;
+						float normZ = -dx;
+						float nLen = (float)Math.Sqrt(normX * normX + normZ * normZ);
+						float shade = 0.75f;
+						if (nLen > 0.0001f)
+						{
+							normX /= nLen;
+							normZ /= nLen;
+							shade = Math.Max(0.4f, Math.Min(1.0f, (normX * 0.6f + normZ * 0.6f + 0.5f) * 0.85f));
+						}
+
+						Color wallCol = Color.FromArgb(
+							(int)(bld.FacadeColor.R * shade),
+							(int)(bld.FacadeColor.G * shade),
+							(int)(bld.FacadeColor.B * shade));
+
+						using (SolidBrush wallBrush = new SolidBrush(wallCol))
+						{
+							PointF[] wallQuad = new PointF[] { p0_bot, p1_bot, p1_top, p0_top };
+							g.FillPolygon(wallBrush, wallQuad);
+							g.DrawPolygon(buildingWirePen, wallQuad);
+						}
+					}
+
+					using (SolidBrush roofBrush = new SolidBrush(bld.RoofColor))
+					{
+						g.FillPolygon(roofBrush, topPoints);
+						g.DrawPolygon(buildingWirePen, topPoints);
+					}
+				}
+			}
+		}
+
 		// 4. Physical Tile Demarcations in glowing cyan
 		using (Pen tilePen = new Pen(Color.FromArgb(0, 235, 255), 2.2f))
 		using (Font tileFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
@@ -553,7 +630,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 				terrain.TileCountX, terrain.TileCountY, terrain.TileSizeX, terrain.TileSizeY, terrain.SamplingDistance, terrain.TotalSamplePoints), textFont, greenBrush, 26, 62);
 			g.DrawString(string.Format("3D Engine: {0} [{1}] | PBR CDLOD Tessellation Active | Camera: Yaw={2:F0}°, Pitch={3:F0}°",
 				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, mCameraYaw, mCameraPitch), textFont, goldBrush, 26, 81);
-			g.DrawString(string.Format("Camera Distance: {0:N0}m | Controls: LMB=Orbit | RMB/Shift=Pan | Wheel=Zoom", camDist), textFont, dimBrush, 26, 100);
+			g.DrawString(string.Format("Camera Distance: {0:N0}m | 3D Buildings: {1:N0} | Controls: LMB=Orbit | RMB/Shift=Pan | Wheel=Zoom", camDist, ActiveBuildings.Count), textFont, dimBrush, 26, 100);
 		}
 	}
 

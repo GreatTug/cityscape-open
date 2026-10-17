@@ -339,10 +339,35 @@ namespace CityScape
 
             menuFile.DropDownItems.Add(new ToolStripMenuItem("Import &Buildings (GIS / OSM)...", null, (s, e) =>
             {
-                LogOutput("[GIS] OpenStreetMap & GIS Building footprint import wizard initialized.", Color.Yellow);
+                var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
+                if (activeTerrain == null)
+                {
+                    LogOutput("[GIS Warning] Please create or open a terrain before generating buildings.", Color.Orange);
+                    return;
+                }
+                var buildings = palDotNet.palVisual.GisProceduralCityGenerator.GenerateUrbanGrid(activeTerrain, 6, 6, 120.0f, 18.0f);
+                palDotNet.palVisual.ControlRender.SetActiveBuildings(buildings);
+                mainForm.Invalidate(true);
+                LogOutput(string.Format("[GIS] Generated {0} procedural 3D building instances across 36 urban zoning blocks.", buildings.Count), Color.LimeGreen);
+                LogOutput("  -> Procedural extrusion: parametric floor heights, setbacks, and PBR facade materials updated in 3D viewport.", Color.LightSkyBlue);
             }));
 
             // Modern 3D Exporters
+            Func<List<palDotNet.palModernEngine.ExportMeshData>> getAllSceneMeshes = () =>
+            {
+                var list = new List<palDotNet.palModernEngine.ExportMeshData>();
+                var terr = palDotNet.palVisual.ControlRender.ActiveTerrain;
+                if (terr != null)
+                {
+                    list.Add(terr.GenerateExportMesh(96, 96));
+                }
+                foreach (var bld in palDotNet.palVisual.ControlRender.ActiveBuildings)
+                {
+                    list.Add(bld.GenerateMesh());
+                }
+                return list;
+            };
+
             ToolStripMenuItem menuExportModern = new ToolStripMenuItem("Export &Modern 3D Scene");
             menuExportModern.DropDownItems.Add(new ToolStripMenuItem("Export as &glTF 2.0 / GLB...", null, (s, e) =>
             {
@@ -352,13 +377,12 @@ namespace CityScape
                     sfd.Filter = "glTF 2.0 (*.gltf)|*.gltf|glTF Binary (*.glb)|*.glb";
                     if (sfd.ShowDialog(mainForm) == DialogResult.OK)
                     {
-                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
-                        var meshes = (activeTerrain != null) ? new List<palDotNet.palModernEngine.ExportMeshData> { activeTerrain.GenerateExportMesh(96, 96) } : null;
+                        var meshes = getAllSceneMeshes();
                         var exporter = new GltfModernExporter();
                         if (exporter.ExportScene(sfd.FileName, meshes, "CityScapeUrbanScene"))
                         {
-                            LogOutput(string.Format("[Exporter] Successfully exported modern glTF scene ({0:N0}m × {1:N0}m) to: {2}", 
-                                activeTerrain?.SizeX ?? 0, activeTerrain?.SizeY ?? 0, sfd.FileName), Color.LimeGreen);
+                            LogOutput(string.Format("[Exporter] Successfully exported modern glTF scene ({0} meshes: terrain + {1} buildings) to: {2}", 
+                                meshes.Count, palDotNet.palVisual.ControlRender.ActiveBuildings.Count, sfd.FileName), Color.LimeGreen);
                         }
                     }
                 }
@@ -371,13 +395,12 @@ namespace CityScape
                     sfd.Filter = "USD ASCII (*.usda)|*.usda|USD Binary (*.usd)|*.usd";
                     if (sfd.ShowDialog(mainForm) == DialogResult.OK)
                     {
-                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
-                        var meshes = (activeTerrain != null) ? new List<palDotNet.palModernEngine.ExportMeshData> { activeTerrain.GenerateExportMesh(96, 96) } : null;
+                        var meshes = getAllSceneMeshes();
                         var exporter = new UsdModernExporter();
                         if (exporter.ExportScene(sfd.FileName, meshes, "CityScapeUrbanScene"))
                         {
-                            LogOutput(string.Format("[Exporter] Successfully exported Pixar/Omniverse USD scene ({0:N0}m × {1:N0}m) to: {2}", 
-                                activeTerrain?.SizeX ?? 0, activeTerrain?.SizeY ?? 0, sfd.FileName), Color.LimeGreen);
+                            LogOutput(string.Format("[Exporter] Successfully exported Pixar/Omniverse USD scene ({0} meshes) to: {1}", 
+                                meshes.Count, sfd.FileName), Color.LimeGreen);
                         }
                     }
                 }
@@ -390,13 +413,12 @@ namespace CityScape
                     sfd.Filter = "Wavefront OBJ (*.obj)|*.obj";
                     if (sfd.ShowDialog(mainForm) == DialogResult.OK)
                     {
-                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
-                        var meshes = (activeTerrain != null) ? new List<palDotNet.palModernEngine.ExportMeshData> { activeTerrain.GenerateExportMesh(96, 96) } : null;
+                        var meshes = getAllSceneMeshes();
                         var exporter = new WavefrontPbrModernExporter();
                         if (exporter.ExportScene(sfd.FileName, meshes, "CityScapeUrbanScene"))
                         {
-                            LogOutput(string.Format("[Exporter] Successfully exported Wavefront OBJ + PBR scene ({0:N0}m × {1:N0}m) to: {2}", 
-                                activeTerrain?.SizeX ?? 0, activeTerrain?.SizeY ?? 0, sfd.FileName), Color.LimeGreen);
+                            LogOutput(string.Format("[Exporter] Successfully exported Wavefront OBJ + PBR scene ({0} meshes) to: {1}", 
+                                meshes.Count, sfd.FileName), Color.LimeGreen);
                         }
                     }
                 }

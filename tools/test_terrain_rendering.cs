@@ -227,6 +227,54 @@ namespace CityScape.Tests
                     Console.WriteLine("[FAIL] RAW DEM export failed!");
                     failures++;
                 }
+
+                // 6. Test Procedural 3D GIS & OSM Building Extrusion Engine
+                Console.WriteLine("\n---> Verifying Procedural 3D GIS / OSM Building Extrusions...");
+                var buildings = GisProceduralCityGenerator.GenerateUrbanGrid(terrain, 4, 4, 100f, 15f, 123);
+                if (buildings == null || buildings.Count == 0)
+                {
+                    Console.WriteLine("[FAIL] Procedural city generation produced 0 buildings!");
+                    failures++;
+                }
+                else
+                {
+                    Console.WriteLine(string.Format("  [PASS] Generated {0} procedural 3D buildings across 16 urban blocks", buildings.Count));
+                    ControlRender.SetActiveBuildings(buildings);
+
+                    // Verify building mesh generation and height attributes
+                    var sampleBld = buildings[0];
+                    var bldMesh = sampleBld.GenerateMesh();
+                    if (bldMesh.Vertices.Count >= 8 && bldMesh.Indices.Count >= 12)
+                    {
+                        Console.WriteLine(string.Format("  [PASS] Extruded building mesh verified: {0} ({1} floors, {2:F1}m height, {3} vertices, {4} triangles)",
+                            sampleBld.Footprint.Name, sampleBld.Footprint.FloorCount, sampleBld.TotalHeight, bldMesh.Vertices.Count, bldMesh.Indices.Count / 3));
+                    }
+                    else
+                    {
+                        Console.WriteLine("[FAIL] Extruded building mesh geometry is degenerate!");
+                        failures++;
+                    }
+
+                    // Test Full City 3D Scene Export (Terrain + 3D Buildings) to glTF
+                    string cityGltf = Path.Combine(exportDir, "procedural_city_complete.gltf");
+                    var cityMeshes = new System.Collections.Generic.List<palDotNet.palModernEngine.ExportMeshData>();
+                    cityMeshes.Add(exportMesh);
+                    foreach (var b in buildings)
+                    {
+                        cityMeshes.Add(b.GenerateMesh());
+                    }
+
+                    if (gltfExporter.ExportScene(cityGltf, cityMeshes, "CompleteCityScene") && File.Exists(cityGltf))
+                    {
+                        Console.WriteLine(string.Format("  [PASS] Complete 3D City scene exported: {0} ({1:N0} bytes, {2} meshes)",
+                            Path.GetFileName(cityGltf), new FileInfo(cityGltf).Length, cityMeshes.Count));
+                    }
+                    else
+                    {
+                        Console.WriteLine("[FAIL] Complete city scene export failed!");
+                        failures++;
+                    }
+                }
             }
             catch (Exception ex)
             {

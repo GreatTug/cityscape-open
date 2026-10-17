@@ -76,6 +76,14 @@ function Copy-PackageDirectory {
     }
 }
 
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+function Create-PackageZip {
+    param([string]$SourceDir, [string]$ZipPath)
+    if (Test-Path $ZipPath) { Remove-Item $ZipPath -Force }
+    [System.IO.Compression.ZipFile]::CreateFromDirectory($SourceDir, $ZipPath, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+}
+
 # -------------------------------------------------------------
 # PACKAGE 1: Modern x64 Portable
 # -------------------------------------------------------------
@@ -115,8 +123,7 @@ Copy-PackageDirectory (Join-Path $RootDir "Worlds") $Pkg1Dir
 Copy-PackageFile (Join-Path $RootDir "README.md") $Pkg1Dir
 
 $Pkg1Zip = Join-Path $DistDir "$Pkg1Name.zip"
-if (Test-Path $Pkg1Zip) { Remove-Item $Pkg1Zip -Force }
-Compress-Archive -Path "$Pkg1Dir\*" -DestinationPath $Pkg1Zip -CompressionLevel Optimal
+Create-PackageZip $Pkg1Dir $Pkg1Zip
 Write-Host "  -> Created $Pkg1Zip ($([math]::Round((Get-Item $Pkg1Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
 
 # -------------------------------------------------------------
@@ -155,8 +162,7 @@ Copy-PackageDirectory (Join-Path $RootDir "Worlds") $Pkg2Dir
 Copy-PackageFile (Join-Path $RootDir "README.md") $Pkg2Dir
 
 $Pkg2Zip = Join-Path $DistDir "$Pkg2Name.zip"
-if (Test-Path $Pkg2Zip) { Remove-Item $Pkg2Zip -Force }
-Compress-Archive -Path "$Pkg2Dir\*" -DestinationPath $Pkg2Zip -CompressionLevel Optimal
+Create-PackageZip $Pkg2Dir $Pkg2Zip
 Write-Host "  -> Created $Pkg2Zip ($([math]::Round((Get-Item $Pkg2Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
 
 # -------------------------------------------------------------
@@ -193,8 +199,7 @@ Copy-PackageDirectory (Join-Path $RootDir "Worlds") $Pkg3Dir
 Copy-PackageFile (Join-Path $RootDir "README.md") $Pkg3Dir
 
 $Pkg3Zip = Join-Path $DistDir "$Pkg3Name.zip"
-if (Test-Path $Pkg3Zip) { Remove-Item $Pkg3Zip -Force }
-Compress-Archive -Path "$Pkg3Dir\*" -DestinationPath $Pkg3Zip -CompressionLevel Optimal
+Create-PackageZip $Pkg3Dir $Pkg3Zip
 Write-Host "  -> Created $Pkg3Zip ($([math]::Round((Get-Item $Pkg3Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
 
 # -------------------------------------------------------------
@@ -219,8 +224,7 @@ Copy-PackageFile (Join-Path $RootDir "CONTRIBUTING.md") $Pkg4Dir
 Copy-PackageFile (Join-Path $RootDir "test.bat") $Pkg4Dir
 
 $Pkg4Zip = Join-Path $DistDir "$Pkg4Name.zip"
-if (Test-Path $Pkg4Zip) { Remove-Item $Pkg4Zip -Force }
-Compress-Archive -Path "$Pkg4Dir\*" -DestinationPath $Pkg4Zip -CompressionLevel Optimal
+Create-PackageZip $Pkg4Dir $Pkg4Zip
 Write-Host "  -> Created $Pkg4Zip ($([math]::Round((Get-Item $Pkg4Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
 
 function Get-Sha256Checksum {
