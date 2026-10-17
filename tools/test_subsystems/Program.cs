@@ -1417,6 +1417,59 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("VolumetricFogLightShaftsPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 VolumetricFogLightShaftsPs shader registered");
             Assert(pipeline.GetModule("VolumetricFogLightShaftsPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V VolumetricFogLightShaftsPs shader registered");
 
+            // GPU-Driven Meshlet / Cluster LOD Selection & Indirect Draw Pipeline
+            var clusterPipe = pipeline.MeshClustering;
+            Assert(clusterPipe != null, "pipeline.MeshClustering initialized");
+            Assert(clusterPipe.TotalClusters == 0, "Cluster pipeline initialized with 0 clusters");
+
+            // Populate test meshlet clusters (Front, Back-facing, Off-screen, High-error, and Coarse LOD)
+            var clFront = new MeshCluster(0f, 0f, 50f, radius: 10f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 0.05f, indexOffset: 0, indexCount: 128, vertexOffset: 0, vertexCount: 64, lodLevel: 0);
+            var clBack = new MeshCluster(0f, 0f, 50f, radius: 10f, coneX: 0f, coneY: 0f, coneZ: 1f, coneCutoff: 0.2f, lodError: 0.05f, indexOffset: 128, indexCount: 128, vertexOffset: 64, vertexCount: 64, lodLevel: 0);
+            var clBehind = new MeshCluster(0f, 0f, -100f, radius: 10f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 0.05f, indexOffset: 256, indexCount: 128, vertexOffset: 128, vertexCount: 64, lodLevel: 0);
+            var clHighError = new MeshCluster(0f, 0f, 500f, radius: 10f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 5.0f, indexOffset: 384, indexCount: 128, vertexOffset: 192, vertexCount: 64, lodLevel: 0);
+            var clCoarse = new MeshCluster(0f, 0f, 500f, radius: 10f, coneX: 0f, coneY: 0f, coneZ: -1f, coneCutoff: 0.2f, lodError: 0.1f, indexOffset: 512, indexCount: 64, vertexOffset: 256, vertexCount: 32, lodLevel: 2);
+
+            clusterPipe.AddClusters(new[] { clFront, clBack, clBehind, clHighError, clCoarse });
+            Assert(clusterPipe.TotalClusters == 5, $"Cluster pipeline loaded with {clusterPipe.TotalClusters} meshlet clusters");
+
+            // Frustum Culling on Cluster Bounding Sphere
+            float invSqrt2 = 0.70710678f;
+            float[] frustumPlanes = new float[] {
+                0f, 0f, 1f, -0.5f,             // Near
+                0f, 0f, -1f, 1000f,            // Far
+                invSqrt2, 0f, invSqrt2, 0f,    // Left
+                -invSqrt2, 0f, invSqrt2, 0f,   // Right
+                0f, -invSqrt2, invSqrt2, 0f,   // Top
+                0f, invSqrt2, invSqrt2, 0f     // Bottom
+            };
+            bool frontInFrustum = GpuClusterLodPipeline.TestFrustumSphere(clFront, frustumPlanes);
+            bool behindInFrustum = GpuClusterLodPipeline.TestFrustumSphere(clBehind, frustumPlanes);
+            Assert(frontInFrustum, "Cluster in front of camera passes frustum sphere test");
+            Assert(!behindInFrustum, "Cluster behind camera correctly culled by frustum sphere test");
+
+            // Normal Cone Backface Culling
+            bool frontConePassed = GpuClusterLodPipeline.TestConeCulling(clFront, 0f, 0f, 0f);
+            bool backConePassed = GpuClusterLodPipeline.TestConeCulling(clBack, 0f, 0f, 0f);
+            Assert(frontConePassed, "Front-facing cluster survives normal cone culling");
+            Assert(!backConePassed, "Back-facing cluster culled by normal cone test without vertex processing");
+
+            // Projected Screen-Space LOD Error Metric
+            bool highErrorPassed = GpuClusterLodPipeline.TestLodSelection(clHighError, 0f, 0f, 0f, maxScreenErrorPx: 2.0f, screenHeight: 1080f, fovYRadians: (float)Math.PI / 3f);
+            bool coarsePassed = GpuClusterLodPipeline.TestLodSelection(clCoarse, 0f, 0f, 0f, maxScreenErrorPx: 2.0f, screenHeight: 1080f, fovYRadians: (float)Math.PI / 3f);
+            Assert(!highErrorPassed, "Distant high-detail cluster rejected by screen-space error metric");
+            Assert(coarsePassed, "Distant simplified LOD cluster selected matching pixel budget");
+
+            // Indirect Draw Command Emission & Compaction
+            var indirectCmds = new List<DrawIndexedIndirectCommand>();
+            int surviving = clusterPipe.ExecuteClusterCull(0f, 0f, 0f, frustumPlanes, maxScreenErrorPx: 2.0f, screenHeight: 1080f, fovYRadians: (float)Math.PI / 3f, indirectCmds);
+            Assert(surviving == 2 && indirectCmds.Count == 2, $"GPU indirect draw compaction produced exactly 2 surviving draw commands ({surviving}/5 clusters)");
+            Assert(indirectCmds[0].IndexCountPerInstance == 128 && indirectCmds[1].IndexCountPerInstance == 64, "Compacted indirect draw commands contain valid meshlet index counts (128 & 64)");
+            Assert(indirectCmds[0].InstanceCount == 1 && indirectCmds[1].InstanceCount == 1, "Indirect draw commands specify 1 instance count");
+
+            // Cluster Shaders Registered
+            Assert(pipeline.GetModule("GpuClusterCullIndirectCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 GpuClusterCullIndirectCs compute shader registered");
+            Assert(pipeline.GetModule("GpuClusterCullIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V GpuClusterCullIndirectCs compute shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

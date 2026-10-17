@@ -1878,6 +1878,200 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Represents a bounded geometric meshlet cluster for GPU-driven occlusion, frustum, cone culling, and LOD selection.
+    /// </summary>
+    public struct MeshCluster
+    {
+        public float CenterX, CenterY, CenterZ;
+        public float Radius;
+        public float ConeAxisX, ConeAxisY, ConeAxisZ;
+        public float ConeCutoff; // cos(half_angle)
+        public float LodError;   // Geometric error metric in object space
+        public uint IndexOffset;
+        public uint IndexCount;
+        public uint VertexOffset;
+        public uint VertexCount;
+        public uint LodLevel;
+        public uint MeshId;
+
+        public MeshCluster(float cx, float cy, float cz, float radius,
+            float coneX = 0f, float coneY = 1f, float coneZ = 0f, float coneCutoff = 1.0f,
+            float lodError = 0.05f, uint indexOffset = 0, uint indexCount = 128,
+            uint vertexOffset = 0, uint vertexCount = 64, uint lodLevel = 0, uint meshId = 0)
+        {
+            CenterX = cx; CenterY = cy; CenterZ = cz;
+            Radius = radius;
+            ConeAxisX = coneX; ConeAxisY = coneY; ConeAxisZ = coneZ;
+            ConeCutoff = coneCutoff;
+            LodError = lodError;
+            IndexOffset = indexOffset;
+            IndexCount = indexCount;
+            VertexOffset = vertexOffset;
+            VertexCount = vertexCount;
+            LodLevel = lodLevel;
+            MeshId = meshId;
+        }
+    }
+
+    /// <summary>
+    /// Standard Direct3D 12 / Vulkan indirect indexed draw argument struct.
+    /// Matches D3D12_DRAW_INDEXED_ARGUMENTS and VkDrawIndexedIndirectCommand.
+    /// </summary>
+    public struct DrawIndexedIndirectCommand
+    {
+        public uint IndexCountPerInstance;
+        public uint InstanceCount;
+        public uint StartIndexLocation;
+        public int BaseVertexLocation;
+        public uint StartInstanceLocation;
+
+        public DrawIndexedIndirectCommand(uint indexCount, uint instanceCount, uint startIndex, int baseVertex, uint startInstance)
+        {
+            IndexCountPerInstance = indexCount;
+            InstanceCount = instanceCount;
+            StartIndexLocation = startIndex;
+            BaseVertexLocation = baseVertex;
+            StartInstanceLocation = startInstance;
+        }
+    }
+
+    /// <summary>
+    /// GPU-Driven Meshlet / Cluster LOD Selection and Compaction Pipeline.
+    /// Performs cluster frustum culling, normal cone backface culling, and projected screen-error LOD selection
+    /// directly on GPU compute, emitting compact DrawIndexedInstancedIndirect commands with zero CPU driver overhead.
+    /// </summary>
+    public class GpuClusterLodPipeline
+    {
+        private readonly List<MeshCluster> _clusters = new List<MeshCluster>();
+
+        public int TotalClusters => _clusters.Count;
+        public IReadOnlyList<MeshCluster> Clusters => _clusters;
+
+        public void Clear()
+        {
+            _clusters.Clear();
+        }
+
+        public void AddCluster(MeshCluster cluster)
+        {
+            _clusters.Add(cluster);
+        }
+
+        public void AddClusters(IEnumerable<MeshCluster> clusters)
+        {
+            if (clusters != null) _clusters.AddRange(clusters);
+        }
+
+        /// <summary>
+        /// Tests cluster bounding sphere against 6 frustum planes (A*x + B*y + C*z + D = 0, normalized).
+        /// Returns true if sphere is inside or intersecting frustum (visible), false if outside (culled).
+        /// </summary>
+        public static bool TestFrustumSphere(MeshCluster cluster, float[] frustumPlanes6x4)
+        {
+            if (frustumPlanes6x4 == null || frustumPlanes6x4.Length < 24) return true;
+
+            for (int i = 0; i < 6; i++)
+            {
+                int p = i * 4;
+                float dist = frustumPlanes6x4[p] * cluster.CenterX +
+                             frustumPlanes6x4[p + 1] * cluster.CenterY +
+                             frustumPlanes6x4[p + 2] * cluster.CenterZ +
+                             frustumPlanes6x4[p + 3];
+
+                if (dist < -cluster.Radius)
+                {
+                    return false; // Completely outside plane
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Normal cone backface culling for entire cluster.
+        /// If all triangles in the cluster point away from camera, the whole cluster is culled!
+        /// </summary>
+        public static bool TestConeCulling(MeshCluster cluster, float camX, float camY, float camZ)
+        {
+            if (cluster.ConeCutoff >= 1.0f) return true; // Cone disabled or omnidirectional
+
+            float toCamX = camX - cluster.CenterX;
+            float toCamY = camY - cluster.CenterY;
+            float toCamZ = camZ - cluster.CenterZ;
+            float distSq = toCamX * toCamX + toCamY * toCamY + toCamZ * toCamZ;
+
+            if (distSq < 1e-4f) return true;
+            float invDist = 1.0f / (float)Math.Sqrt(distSq);
+            toCamX *= invDist; toCamY *= invDist; toCamZ *= invDist;
+
+            // dot(toCamera, coneAxis)
+            float cosAngle = toCamX * cluster.ConeAxisX + toCamY * cluster.ConeAxisY + toCamZ * cluster.ConeAxisZ;
+
+            // If cone angle is wider than cutoff towards camera, at least one triangle can be front-facing
+            // Culling condition: dot(toCamera, coneAxis) <= -sin(coneHalfAngle)
+            return cosAngle > -cluster.ConeCutoff;
+        }
+
+        /// <summary>
+        /// Projects cluster geometric error to screen-space pixels based on distance and FOV.
+        /// Returns true if cluster satisfies the target screen error threshold (or is coarsest LOD).
+        /// </summary>
+        public static bool TestLodSelection(MeshCluster cluster, float camX, float camY, float camZ,
+            float maxScreenErrorPx, float screenHeight, float fovYRadians)
+        {
+            float dx = cluster.CenterX - camX;
+            float dy = cluster.CenterY - camY;
+            float dz = cluster.CenterZ - camZ;
+            float dist = Math.Max(0.1f, (float)Math.Sqrt(dx * dx + dy * dy + dz * dz) - cluster.Radius);
+
+            float cotHalfFov = 1.0f / (float)Math.Tan(Math.Max(0.1f, fovYRadians * 0.5f));
+            float projectedErrorPx = (cluster.LodError / dist) * (screenHeight * 0.5f * cotHalfFov);
+
+            return projectedErrorPx <= maxScreenErrorPx;
+        }
+
+        /// <summary>
+        /// Host-side CPU emulation of GPU cluster compaction compute shader.
+        /// Evaluates frustum, cone culling, and LOD selection, populating an indirect draw command buffer.
+        /// </summary>
+        public int ExecuteClusterCull(float camX, float camY, float camZ,
+            float[] frustumPlanes6x4, float maxScreenErrorPx, float screenHeight, float fovYRadians,
+            List<DrawIndexedIndirectCommand> outCommands)
+        {
+            if (outCommands == null) throw new ArgumentNullException(nameof(outCommands));
+            outCommands.Clear();
+
+            int count = _clusters.Count;
+            for (int i = 0; i < count; i++)
+            {
+                MeshCluster cl = _clusters[i];
+
+                // 1. Frustum Culling
+                if (!TestFrustumSphere(cl, frustumPlanes6x4))
+                    continue;
+
+                // 2. Normal Cone Backface Culling
+                if (!TestConeCulling(cl, camX, camY, camZ))
+                    continue;
+
+                // 3. LOD Error Selection
+                if (!TestLodSelection(cl, camX, camY, camZ, maxScreenErrorPx, screenHeight, fovYRadians))
+                    continue;
+
+                // Survived: Emit indirect draw argument
+                outCommands.Add(new DrawIndexedIndirectCommand(
+                    indexCount: cl.IndexCount,
+                    instanceCount: 1,
+                    startIndex: cl.IndexOffset,
+                    baseVertex: (int)cl.VertexOffset,
+                    startInstance: 0
+                ));
+            }
+
+            return outCommands.Count;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -1896,6 +2090,7 @@ namespace palDotNet.palModernEngine
         public ClusteredLightingPipeline ClusteredLighting { get; } = new ClusteredLightingPipeline();
         public HierarchicalZBufferPipeline OcclusionCulling { get; } = new HierarchicalZBufferPipeline();
         public VolumetricFogPipeline VolumetricFog { get; } = new VolumetricFogPipeline();
+        public GpuClusterLodPipeline MeshClustering { get; } = new GpuClusterLodPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -3036,6 +3231,162 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("VolumetricFogLightShaftsPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslVolumetricPs, Cache));
+
+            // 25. DirectX 12 HLSL SM6 GPU Meshlet Cluster Culling & Indirect Draw Compaction Compute Shader
+            string hlslClusterCullCs = @"
+                struct MeshCluster {
+                    float3 center;
+                    float  radius;
+                    float3 coneAxis;
+                    float  coneCutoff;
+                    float  lodError;
+                    uint   indexOffset;
+                    uint   indexCount;
+                    uint   vertexOffset;
+                    uint   vertexCount;
+                    uint   lodLevel;
+                    uint   meshId;
+                };
+
+                struct DrawIndexedIndirectCommand {
+                    uint indexCountPerInstance;
+                    uint instanceCount;
+                    uint startIndexLocation;
+                    int  baseVertexLocation;
+                    uint startInstanceLocation;
+                };
+
+                StructuredBuffer<MeshCluster> gClusters : register(t0);
+                AppendStructuredBuffer<DrawIndexedIndirectCommand> gIndirectArgs : register(u0);
+
+                cbuffer CullConstants : register(b0) {
+                    float4 gFrustumPlanes[6];
+                    float3 gCameraPosition;
+                    float  gMaxScreenErrorPx;
+                    float  gScreenHeight;
+                    float  gCotHalfFov;
+                    uint   gTotalClusterCount;
+                    float  gPadding;
+                };
+
+                [numthreads(64, 1, 1)]
+                void main(uint3 dispatchThreadId : SV_DispatchThreadID) {
+                    uint id = dispatchThreadId.x;
+                    if (id >= gTotalClusterCount) return;
+
+                    MeshCluster cl = gClusters[id];
+
+                    // 1. Frustum Culling
+                    for (int p = 0; p < 6; p++) {
+                        float dist = dot(gFrustumPlanes[p].xyz, cl.center) + gFrustumPlanes[p].w;
+                        if (dist < -cl.radius) return;
+                    }
+
+                    // 2. Normal Cone Backface Culling
+                    if (cl.coneCutoff < 1.0f) {
+                        float3 toCam = normalize(gCameraPosition - cl.center);
+                        if (dot(toCam, cl.coneAxis) <= -cl.coneCutoff) return;
+                    }
+
+                    // 3. Projected Screen LOD Error Selection
+                    float dist = max(0.1f, length(cl.center - gCameraPosition) - cl.radius);
+                    float projError = (cl.lodError / dist) * (gScreenHeight * 0.5f * gCotHalfFov);
+                    if (projError > gMaxScreenErrorPx) return;
+
+                    // Survived: Emit indirect draw argument
+                    DrawIndexedIndirectCommand cmd;
+                    cmd.indexCountPerInstance = cl.indexCount;
+                    cmd.instanceCount = 1u;
+                    cmd.startIndexLocation = cl.indexOffset;
+                    cmd.baseVertexLocation = (int)cl.vertexOffset;
+                    cmd.startInstanceLocation = 0u;
+
+                    gIndirectArgs.Append(cmd);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("GpuClusterCullIndirectCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil, hlslClusterCullCs, Cache));
+
+            // 26. Vulkan SPIR-V GPU Meshlet Cluster Culling & Indirect Draw Compaction Compute Shader
+            string glslClusterCullCs = @"
+                #version 460
+                layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+                struct MeshCluster {
+                    vec3 center;
+                    float radius;
+                    vec3 coneAxis;
+                    float coneCutoff;
+                    float lodError;
+                    uint indexOffset;
+                    uint indexCount;
+                    uint vertexOffset;
+                    uint vertexCount;
+                    uint lodLevel;
+                    uint meshId;
+                };
+
+                struct DrawIndexedIndirectCommand {
+                    uint indexCount;
+                    uint instanceCount;
+                    uint firstIndex;
+                    int  vertexOffset;
+                    uint firstInstance;
+                };
+
+                layout(binding = 0) readonly buffer ClusterBuffer {
+                    MeshCluster clusters[];
+                };
+
+                layout(binding = 1) writeonly buffer CommandBuffer {
+                    DrawIndexedIndirectCommand commands[];
+                };
+
+                layout(binding = 2) buffer CounterBuffer {
+                    uint commandCount;
+                };
+
+                layout(binding = 3) uniform CullUBO {
+                    vec4 frustumPlanes[6];
+                    vec3 cameraPos;
+                    float maxScreenErrorPx;
+                    float screenHeight;
+                    float cotHalfFov;
+                    uint totalClusters;
+                } ubo;
+
+                void main() {
+                    uint id = gl_GlobalInvocationID.x;
+                    if (id >= ubo.totalClusters) return;
+
+                    MeshCluster cl = clusters[id];
+
+                    // 1. Frustum Culling
+                    for (int p = 0; p < 6; p++) {
+                        float dist = dot(ubo.frustumPlanes[p].xyz, cl.center) + ubo.frustumPlanes[p].w;
+                        if (dist < -cl.radius) return;
+                    }
+
+                    // 2. Normal Cone Backface Culling
+                    if (cl.coneCutoff < 1.0) {
+                        vec3 toCam = normalize(ubo.cameraPos - cl.center);
+                        if (dot(toCam, cl.coneAxis) <= -cl.coneCutoff) return;
+                    }
+
+                    // 3. Projected Screen LOD Error Selection
+                    float dist = max(0.1, length(cl.center - ubo.cameraPos) - cl.radius);
+                    float projError = (cl.lodError / dist) * (ubo.screenHeight * 0.5 * ubo.cotHalfFov);
+                    if (projError > ubo.maxScreenErrorPx) return;
+
+                    // Atomic increment indirect draw counter and emit command
+                    uint slot = atomicAdd(commandCount, 1u);
+                    commands[slot].indexCount = cl.indexCount;
+                    commands[slot].instanceCount = 1u;
+                    commands[slot].firstIndex = cl.indexOffset;
+                    commands[slot].vertexOffset = int(cl.vertexOffset);
+                    commands[slot].firstInstance = 0u;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("GpuClusterCullIndirectCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslClusterCullCs, Cache));
         }
     }
 }
