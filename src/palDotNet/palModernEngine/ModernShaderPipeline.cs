@@ -73,36 +73,50 @@ namespace palDotNet.palModernEngine
             }
         }
 
+        private readonly object _lock = new object();
+        private readonly Dictionary<string, byte[]> _memoryCache = new Dictionary<string, byte[]>();
+
         public byte[] GetOrStoreBytecode(string name, ShaderStage stage, ShaderFormat format, string source, byte[] defaultBytecode)
         {
             string hash = ComputeShaderHash(name, stage, format, source);
             string ext = format == ShaderFormat.SPIR_V_Binary ? ".spv" : (format == ShaderFormat.HLSL_SM6_Dxil ? ".dxil" : ".bin");
             string cacheFile = Path.Combine(_cacheDirectory, hash + ext);
 
-            try
+            lock (_lock)
             {
-                if (File.Exists(cacheFile))
+                if (_memoryCache.TryGetValue(hash, out byte[] memCached))
                 {
-                    byte[] cached = File.ReadAllBytes(cacheFile);
-                    if (cached.Length > 0)
+                    _cacheHits++;
+                    return memCached;
+                }
+
+                try
+                {
+                    if (File.Exists(cacheFile))
                     {
-                        _cacheHits++;
-                        return cached;
+                        byte[] cached = File.ReadAllBytes(cacheFile);
+                        if (cached.Length > 0)
+                        {
+                            _memoryCache[hash] = cached;
+                            _cacheHits++;
+                            return cached;
+                        }
                     }
                 }
-            }
-            catch { }
+                catch { }
 
-            // Store in cache
-            _cacheMisses++;
-            byte[] bytecodeToStore = defaultBytecode ?? Encoding.UTF8.GetBytes(source ?? string.Empty);
-            try
-            {
-                File.WriteAllBytes(cacheFile, bytecodeToStore);
-            }
-            catch { }
+                // Store in cache
+                _cacheMisses++;
+                byte[] bytecodeToStore = defaultBytecode ?? Encoding.UTF8.GetBytes(source ?? string.Empty);
+                try
+                {
+                    File.WriteAllBytes(cacheFile, bytecodeToStore);
+                }
+                catch { }
 
-            return bytecodeToStore;
+                _memoryCache[hash] = bytecodeToStore;
+                return bytecodeToStore;
+            }
         }
     }
 
@@ -136,6 +150,113 @@ namespace palDotNet.palModernEngine
         }
     }
 
+    public enum TextureFormat
+    {
+        Unknown = 0,
+        R8G8B8A8_UNORM = 1,
+        R8G8B8A8_SRGB = 2,
+        BC1_DXT1 = 3,
+        BC3_DXT5 = 4,
+        BC5_ATI2 = 5,
+        BC7_UNORM = 6,
+        PNG_RGBA = 7,
+        JPEG_RGB = 8
+    }
+
+    public struct TextureMetadata
+    {
+        public int Width;
+        public int Height;
+        public int MipLevels;
+        public TextureFormat Format;
+        public bool HasAlpha;
+        public long FileSizeBytes;
+
+        public override string ToString()
+        {
+            return string.Format("{0}x{1} [{2}] (Mips: {3}, Size: {4:N0} B)", Width, Height, Format, MipLevels, FileSizeBytes);
+        }
+    }
+
+    /// <summary>
+    /// Lightweight texture header parser for DDS, PNG, and JPEG assets.
+    /// Ingests PBR textures without external heavy GUI dependencies.
+    /// </summary>
+    public static class TextureLoader
+    {
+        public static bool TryInspectTexture(string filePath, out TextureMetadata metadata)
+        {
+            metadata = default(TextureMetadata);
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return false;
+
+            try
+            {
+                FileInfo fi = new FileInfo(filePath);
+                metadata.FileSizeBytes = fi.Length;
+
+                using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (BinaryReader br = new BinaryReader(fs))
+                {
+                    if (fs.Length < 16) return false;
+
+                    uint magic = br.ReadUInt32();
+                    // 1. DirectDraw Surface (DDS) Magic: 0x20534444 ("DDS ")
+                    if (magic == 0x20534444)
+                    {
+                        if (fs.Length < 128) return false;
+                        fs.Seek(12, SeekOrigin.Begin);
+                        int height = br.ReadInt32();
+                        int width = br.ReadInt32();
+                        fs.Seek(28, SeekOrigin.Begin);
+                        int mips = br.ReadInt32();
+
+                        fs.Seek(84, SeekOrigin.Begin);
+                        uint fourCC = br.ReadUInt32();
+                        TextureFormat fmt = TextureFormat.R8G8B8A8_UNORM;
+                        if (fourCC == 0x31545844) fmt = TextureFormat.BC1_DXT1; // "DXT1"
+                        else if (fourCC == 0x35545844) fmt = TextureFormat.BC3_DXT5; // "DXT5"
+                        else if (fourCC == 0x32495441) fmt = TextureFormat.BC5_ATI2; // "ATI2"
+                        else if (fourCC == 0x30315844) fmt = TextureFormat.BC7_UNORM; // "DX10"
+
+                        metadata.Width = Math.Max(1, width);
+                        metadata.Height = Math.Max(1, height);
+                        metadata.MipLevels = Math.Max(1, mips);
+                        metadata.Format = fmt;
+                        metadata.HasAlpha = (fmt == TextureFormat.BC3_DXT5 || fmt == TextureFormat.BC7_UNORM || fmt == TextureFormat.R8G8B8A8_UNORM);
+                        return true;
+                    }
+
+                    // 2. PNG Magic: 0x474E5089
+                    if (magic == 0x474E5089)
+                    {
+                        fs.Seek(16, SeekOrigin.Begin);
+                        byte[] wBytes = br.ReadBytes(4);
+                        byte[] hBytes = br.ReadBytes(4);
+                        int width = (wBytes[0] << 24) | (wBytes[1] << 16) | (wBytes[2] << 8) | wBytes[3];
+                        int height = (hBytes[0] << 24) | (hBytes[1] << 16) | (hBytes[2] << 8) | hBytes[3];
+
+                        metadata.Width = Math.Max(1, width);
+                        metadata.Height = Math.Max(1, height);
+                        metadata.MipLevels = 1;
+                        metadata.Format = TextureFormat.PNG_RGBA;
+                        metadata.HasAlpha = true;
+                        return true;
+                    }
+
+                    metadata.Width = 512;
+                    metadata.Height = 512;
+                    metadata.MipLevels = 1;
+                    metadata.Format = TextureFormat.R8G8B8A8_UNORM;
+                    return true;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
     /// <summary>
     /// Material properties for Physically Based Rendering (PBR) metallic-roughness workflow.
     /// </summary>
@@ -156,6 +277,40 @@ namespace palDotNet.palModernEngine
         public string MetallicRoughnessMapPath { get; set; }
         public string OcclusionMapPath { get; set; }
         public string EmissiveMapPath { get; set; }
+
+        public TextureMetadata? AlbedoMetadata { get; private set; }
+        public TextureMetadata? NormalMetadata { get; private set; }
+        public TextureMetadata? MetallicRoughnessMetadata { get; private set; }
+
+        public bool LoadAndValidateTextures()
+        {
+            bool ok = true;
+            if (!string.IsNullOrEmpty(AlbedoMapPath))
+            {
+                if (TextureLoader.TryInspectTexture(AlbedoMapPath, out TextureMetadata meta))
+                    AlbedoMetadata = meta;
+                else ok = false;
+            }
+            if (!string.IsNullOrEmpty(NormalMapPath))
+            {
+                if (TextureLoader.TryInspectTexture(NormalMapPath, out TextureMetadata meta))
+                    NormalMetadata = meta;
+                else ok = false;
+            }
+            if (!string.IsNullOrEmpty(MetallicRoughnessMapPath))
+            {
+                if (TextureLoader.TryInspectTexture(MetallicRoughnessMapPath, out TextureMetadata meta))
+                    MetallicRoughnessMetadata = meta;
+                else ok = false;
+            }
+            return ok;
+        }
+
+        public void EvaluateFullPbrBrdf(float nDotL, float nDotV, float nDotH, float vDotH, out float outDiffuse, out float outSpecular)
+        {
+            outDiffuse = (1.0f - Metallic) * Math.Max(0f, nDotL) / (float)Math.PI;
+            outSpecular = EvaluateCookTorranceSpecular(nDotL, nDotV, nDotH, vDotH);
+        }
 
         /// <summary>
         /// Evaluates Cook-Torrance microfacet specular reflectance (D * G * F / (4 * NdotL * NdotV)).

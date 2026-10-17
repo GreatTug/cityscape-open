@@ -1007,10 +1007,23 @@ namespace CityScape.Tests
             var terrainPs = pipeline.GetModule("TerrainSplat", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary);
             Assert(terrainPs != null && terrainPs.SourceCode.Contains("mix(rock, grass, slope)"), "Vulkan SPIR-V Terrain pixel shader verified");
 
-            // Cook-Torrance Microfacet PBR evaluation
+            // Cook-Torrance Microfacet PBR evaluation & full BRDF
             var pbrMat = new PbrMaterialParameters { Roughness = 0.3f, Metallic = 0.8f };
             float specular = pbrMat.EvaluateCookTorranceSpecular(0.85f, 0.85f, 0.98f, 0.95f);
             Assert(specular > 0f, $"PBR Cook-Torrance specular BRDF computed: {specular:F4} > 0");
+            pbrMat.EvaluateFullPbrBrdf(0.85f, 0.85f, 0.98f, 0.95f, out float diffTerm, out float specTerm);
+            Assert(diffTerm >= 0f && specTerm > 0f, $"PBR Full BRDF (Diffuse: {diffTerm:F4}, Specular: {specTerm:F4}) verified");
+
+            // Texture Loading & Ingestion
+            string ddsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "assets", "extracted", "PixelActiveLogo.dds");
+            if (File.Exists(ddsPath))
+            {
+                Assert(TextureLoader.TryInspectTexture(ddsPath, out TextureMetadata texMeta), "TextureLoader successfully inspected DDS asset");
+                Assert(texMeta.Width > 0 && texMeta.Height > 0, $"DDS texture dimensions parsed: {texMeta.Width}x{texMeta.Height}");
+                pbrMat.AlbedoMapPath = ddsPath;
+                Assert(pbrMat.LoadAndValidateTextures(), "PbrMaterialParameters.LoadAndValidateTextures() succeeded");
+                Assert(pbrMat.AlbedoMetadata.HasValue && pbrMat.AlbedoMetadata.Value.Width > 0, "AlbedoMetadata populated");
+            }
 
             // Terrain Continuous LoD Tessellation Factors
             var terrainPipe = pipeline.TerrainPipeline;
