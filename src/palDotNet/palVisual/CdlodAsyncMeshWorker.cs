@@ -16,9 +16,11 @@ namespace palDotNet.palVisual
         public int LodLevel { get; set; }
         public int GridResolution { get; set; }
         public TerrainSurfaceData Terrain { get; set; }
+        public float MorphFactor { get; set; } = 0f;
+        public bool EnableSkirts { get; set; } = true;
         public Stopwatch EnqueueTimer { get; set; }
 
-        public string Key => $"{Node?.ChunkId}_LOD{LodLevel}_{GridResolution}";
+        public string Key => $"{Node?.ChunkId}_LOD{LodLevel}_{GridResolution}_{(EnableSkirts ? "Skirt" : "NoSkirt")}";
     }
 
     /// <summary>
@@ -69,13 +71,13 @@ namespace palDotNet.palVisual
         }
 
         /// <summary>
-        /// Enqueues a chunk for asynchronous background mesh generation.
+        /// Enqueues a chunk for asynchronous background mesh generation with optional LOD morphing and skirts.
         /// </summary>
-        public bool EnqueueRequest(CdlodChunkNode node, int lodLevel, TerrainSurfaceData terrain, int gridResolution = 8)
+        public bool EnqueueRequest(CdlodChunkNode node, int lodLevel, TerrainSurfaceData terrain, int gridResolution = 8, float morphFactor = 0f, bool enableSkirts = true)
         {
             if (node == null || terrain == null || !mIsRunning) return false;
 
-            string key = $"{node.ChunkId}_LOD{lodLevel}_{gridResolution}";
+            string key = $"{node.ChunkId}_LOD{lodLevel}_{gridResolution}_{(enableSkirts ? "Skirt" : "NoSkirt")}";
             if (mCompletedCache.ContainsKey(key) || mInFlight.ContainsKey(key))
             {
                 // Already cached or currently processing
@@ -88,6 +90,8 @@ namespace palDotNet.palVisual
                 LodLevel = lodLevel,
                 GridResolution = gridResolution,
                 Terrain = terrain,
+                MorphFactor = morphFactor,
+                EnableSkirts = enableSkirts,
                 EnqueueTimer = Stopwatch.StartNew()
             };
 
@@ -100,12 +104,12 @@ namespace palDotNet.palVisual
         /// <summary>
         /// Tries to retrieve a previously generated mesh from the background worker cache.
         /// </summary>
-        public bool TryGetMesh(CdlodChunkNode node, int lodLevel, int gridResolution, out ExportMeshData mesh)
+        public bool TryGetMesh(CdlodChunkNode node, int lodLevel, int gridResolution, out ExportMeshData mesh, bool enableSkirts = true)
         {
             mesh = null;
             if (node == null) return false;
 
-            string key = $"{node.ChunkId}_LOD{lodLevel}_{gridResolution}";
+            string key = $"{node.ChunkId}_LOD{lodLevel}_{gridResolution}_{(enableSkirts ? "Skirt" : "NoSkirt")}";
             if (mCompletedCache.TryGetValue(key, out var completed))
             {
                 mesh = completed.Mesh;
@@ -117,18 +121,18 @@ namespace palDotNet.palVisual
         /// <summary>
         /// Synchronously generates or retrieves a mesh if not yet computed in background.
         /// </summary>
-        public ExportMeshData GetOrGenerateImmediate(CdlodChunkNode node, int lodLevel, TerrainSurfaceData terrain, int gridResolution = 8)
+        public ExportMeshData GetOrGenerateImmediate(CdlodChunkNode node, int lodLevel, TerrainSurfaceData terrain, int gridResolution = 8, float morphFactor = 0f, bool enableSkirts = true)
         {
-            if (TryGetMesh(node, lodLevel, gridResolution, out var cached))
+            if (TryGetMesh(node, lodLevel, gridResolution, out var cached, enableSkirts))
             {
                 return cached;
             }
 
-            var chunk = new CdlodRenderChunk(node, lodLevel);
-            var mesh = chunk.GenerateMesh(terrain, gridResolution);
+            var chunk = new CdlodRenderChunk(node, lodLevel, morphFactor);
+            var mesh = chunk.GenerateMesh(terrain, gridResolution, enableSkirts, enableMorphing: true);
             if (mesh != null)
             {
-                string key = $"{node.ChunkId}_LOD{lodLevel}_{gridResolution}";
+                string key = $"{node.ChunkId}_LOD{lodLevel}_{gridResolution}_{(enableSkirts ? "Skirt" : "NoSkirt")}";
                 mCompletedCache.TryAdd(key, new CdlodCompletedMesh
                 {
                     ChunkKey = key,
@@ -176,8 +180,8 @@ namespace palDotNet.palVisual
                     try
                     {
                         var sw = Stopwatch.StartNew();
-                        var chunk = new CdlodRenderChunk(req.Node, req.LodLevel);
-                        var mesh = chunk.GenerateMesh(req.Terrain, req.GridResolution);
+                        var chunk = new CdlodRenderChunk(req.Node, req.LodLevel, req.MorphFactor);
+                        var mesh = chunk.GenerateMesh(req.Terrain, req.GridResolution, req.EnableSkirts, enableMorphing: true);
                         sw.Stop();
 
                         if (mesh != null)

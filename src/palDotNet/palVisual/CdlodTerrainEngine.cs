@@ -21,10 +21,14 @@ namespace palDotNet.palVisual
             MorphFactor = Math.Max(0f, Math.Min(1f, morphFactor));
         }
 
+        public bool HasSkirts { get; set; } = true;
+        public float LastSkirtDepth { get; private set; }
+
         /// <summary>
-        /// Generates a local 3D mesh grid for this chunk at the selected LOD resolution.
+        /// Generates a local 3D mesh grid for this chunk at the selected LOD resolution,
+        /// applying continuous vertex LOD morphing and crack-preventing boundary skirts.
         /// </summary>
-        public ExportMeshData GenerateMesh(TerrainSurfaceData terrain, int baseGridResolution = 8)
+        public ExportMeshData GenerateMesh(TerrainSurfaceData terrain, int baseGridResolution = 8, bool enableSkirts = true, bool enableMorphing = true)
         {
             if (terrain == null || Node == null) return null;
 
@@ -100,6 +104,120 @@ namespace palDotNet.palVisual
                     mesh.Indices.Add(i11);
                     mesh.Indices.Add(i01);
                 }
+            }
+
+            // 1. Continuous vertex LOD morphing to smoothly transition odd vertices towards parent coarse LOD
+            if (enableMorphing && MorphFactor > 0.001f)
+            {
+                for (int j = 0; j <= divZ; j++)
+                {
+                    bool oddJ = (j % 2 != 0);
+                    for (int i = 0; i <= divX; i++)
+                    {
+                        bool oddI = (i % 2 != 0);
+                        if (!oddI && !oddJ) continue;
+
+                        int idx = j * stride + i;
+                        var v = mesh.Vertices[idx];
+
+                        float coarseY;
+                        if (oddI && !oddJ)
+                        {
+                            int iLeft = Math.Max(0, i - 1);
+                            int iRight = Math.Min(divX, i + 1);
+                            coarseY = (mesh.Vertices[j * stride + iLeft].Y + mesh.Vertices[j * stride + iRight].Y) * 0.5f;
+                        }
+                        else if (!oddI && oddJ)
+                        {
+                            int jDown = Math.Max(0, j - 1);
+                            int jUp = Math.Min(divZ, j + 1);
+                            coarseY = (mesh.Vertices[jDown * stride + i].Y + mesh.Vertices[jUp * stride + i].Y) * 0.5f;
+                        }
+                        else // oddI && oddJ
+                        {
+                            int iLeft = Math.Max(0, i - 1);
+                            int iRight = Math.Min(divX, i + 1);
+                            int jDown = Math.Max(0, j - 1);
+                            int jUp = Math.Min(divZ, j + 1);
+                            coarseY = (mesh.Vertices[jDown * stride + iLeft].Y +
+                                       mesh.Vertices[jDown * stride + iRight].Y +
+                                       mesh.Vertices[jUp * stride + iLeft].Y +
+                                       mesh.Vertices[jUp * stride + iRight].Y) * 0.25f;
+                        }
+
+                        v.Y = v.Y + MorphFactor * (coarseY - v.Y);
+                        mesh.Vertices[idx] = v;
+                    }
+                }
+            }
+
+            // 2. Boundary crack-prevention skirts: downward curtain quads along chunk perimeter
+            if (enableSkirts)
+            {
+                float skirtDepth = Math.Max(15.0f, (chunkLenX + chunkLenZ) * 0.025f);
+                LastSkirtDepth = skirtDepth;
+
+                Action<int[]> addSkirtEdge = (borderIndices) =>
+                {
+                    if (borderIndices == null || borderIndices.Length < 2) return;
+                    int n = borderIndices.Length;
+                    uint[] skirtIndices = new uint[n];
+
+                    for (int k = 0; k < n; k++)
+                    {
+                        var topVert = mesh.Vertices[borderIndices[k]];
+                        uint sIdx = (uint)mesh.Vertices.Count;
+                        skirtIndices[k] = sIdx;
+                        mesh.Vertices.Add(new ExportVertex
+                        {
+                            X = topVert.X,
+                            Y = topVert.Y - skirtDepth,
+                            Z = topVert.Z,
+                            Nx = topVert.Nx,
+                            Ny = -1.0f,
+                            Nz = topVert.Nz,
+                            U = topVert.U,
+                            V = topVert.V
+                        });
+                    }
+
+                    for (int k = 0; k < n - 1; k++)
+                    {
+                        uint top0 = (uint)borderIndices[k];
+                        uint top1 = (uint)borderIndices[k + 1];
+                        uint bot0 = skirtIndices[k];
+                        uint bot1 = skirtIndices[k + 1];
+
+                        // Quad (top0, top1, bot1, bot0)
+                        mesh.Indices.Add(top0);
+                        mesh.Indices.Add(top1);
+                        mesh.Indices.Add(bot1);
+
+                        mesh.Indices.Add(top0);
+                        mesh.Indices.Add(bot1);
+                        mesh.Indices.Add(bot0);
+                    }
+                };
+
+                // South edge (j = 0, i = 0..divX)
+                int[] south = new int[divX + 1];
+                for (int i = 0; i <= divX; i++) south[i] = i;
+                addSkirtEdge(south);
+
+                // North edge (j = divZ, i = 0..divX)
+                int[] north = new int[divX + 1];
+                for (int i = 0; i <= divX; i++) north[i] = divZ * stride + i;
+                addSkirtEdge(north);
+
+                // West edge (i = 0, j = 0..divZ)
+                int[] west = new int[divZ + 1];
+                for (int j = 0; j <= divZ; j++) west[j] = j * stride;
+                addSkirtEdge(west);
+
+                // East edge (i = divX, j = 0..divZ)
+                int[] east = new int[divZ + 1];
+                for (int j = 0; j <= divZ; j++) east[j] = j * stride + divX;
+                addSkirtEdge(east);
             }
 
             return mesh;

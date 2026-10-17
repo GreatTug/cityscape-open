@@ -462,7 +462,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		// Pre-warm / enqueue background worker tasks for selected visible chunks
 		foreach (var c in cdlodChunks)
 		{
-			AsyncMeshWorker.EnqueueRequest(c.Node, c.LodLevel, terrain, 16);
+			AsyncMeshWorker.EnqueueRequest(c.Node, c.LodLevel, terrain, 16, c.MorphFactor, enableSkirts: true);
 		}
 
 		using (Pen meshPen = new Pen(Color.FromArgb(40, 180, 220, 255), 1f))

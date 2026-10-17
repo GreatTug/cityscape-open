@@ -1499,7 +1499,18 @@ namespace CityScape.Tests
                 var immediateMesh = worker.GetOrGenerateImmediate(firstChunk.Node, firstChunk.LodLevel, terrain, 8);
                 Assert(immediateMesh == cachedMesh, "GetOrGenerateImmediate returned cached instance on hit");
 
-                // 7. Clear Cache and Teardown
+                // 7. Verify CDLOD Crack-Prevention Boundary Skirts & Continuous LOD Morphing
+                var skirtChunk = new CdlodRenderChunk(firstChunk.Node, firstChunk.LodLevel, morphFactor: 0.5f);
+                var meshWithSkirts = skirtChunk.GenerateMesh(terrain, 8, enableSkirts: true, enableMorphing: true);
+                var meshNoSkirts = skirtChunk.GenerateMesh(terrain, 8, enableSkirts: false, enableMorphing: false);
+
+                Assert(meshWithSkirts.Vertices.Count > meshNoSkirts.Vertices.Count,
+                    $"Skirt geometry generated extra boundary vertices ({meshWithSkirts.Vertices.Count} vs {meshNoSkirts.Vertices.Count})");
+                Assert(meshWithSkirts.Indices.Count > meshNoSkirts.Indices.Count,
+                    $"Skirt geometry added seam-sealing triangles ({meshWithSkirts.Indices.Count} vs {meshNoSkirts.Indices.Count} indices)");
+                Assert(skirtChunk.LastSkirtDepth > 0f, $"Boundary skirt depth calculated: {skirtChunk.LastSkirtDepth:F1} m");
+
+                // 8. Clear Cache and Teardown
                 worker.ClearCache();
                 Assert(worker.CompletedCacheCount == 0, "ClearCache flushed completed cache");
                 Assert(worker.PendingQueueCount == 0, "ClearCache flushed pending queue");
