@@ -2462,6 +2462,207 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Anisotropic GGX Microfacet Specular Reflection Pipeline (Architectural Metals & Facades).
+    /// Implements tangent frame rotation, anisotropic Trowbridge-Reitz normal distribution (NDF),
+    /// Smith joint height-correlated shadowing-masking visibility function V(v, l),
+    /// and Fresnel-Schlick reflection for brushed metals, architectural glass curtains, and high-specular surfaces.
+    /// </summary>
+    public class AnisotropicSpecularPipeline
+    {
+        public float Roughness { get; set; } = 0.35f;
+        public float Anisotropy { get; set; } = 0.65f;
+        public float AnisotropyRotation { get; set; } = 0.0f; // Radians
+        public float Metallic { get; set; } = 0.90f;
+        public float SpecularF0 { get; set; } = 0.04f;
+
+        /// <summary>
+        /// Computes directional roughness alpha_x and alpha_y along tangent and bitangent axes.
+        /// alpha_x = roughness^2 * (1 + anisotropy), alpha_y = roughness^2 * (1 - anisotropy).
+        /// </summary>
+        public static void ComputeAnisotropicRoughness(float roughness, float anisotropy, out float alphaX, out float alphaY)
+        {
+            float r2 = Math.Max(0.001f, roughness * roughness);
+            float anClamped = Math.Max(-0.999f, Math.Min(0.999f, anisotropy));
+            alphaX = Math.Max(0.001f, r2 * (1.0f + anClamped));
+            alphaY = Math.Max(0.001f, r2 * (1.0f - anClamped));
+        }
+
+        /// <summary>
+        /// Rotates the orthonormal tangent and bitangent frame around the surface normal vector by angle theta (radians).
+        /// </summary>
+        public static void RotateTangentFrame(float nx, float ny, float nz,
+            float tx, float ty, float tz,
+            float bx, float by, float bz,
+            float rotationRadians,
+            out float rotTx, out float rotTy, out float rotTz,
+            out float rotBx, out float rotBy, out float rotBz)
+        {
+            float cosTheta = (float)Math.Cos(rotationRadians);
+            float sinTheta = (float)Math.Sin(rotationRadians);
+
+            rotTx = cosTheta * tx + sinTheta * bx;
+            rotTy = cosTheta * ty + sinTheta * by;
+            rotTz = cosTheta * tz + sinTheta * bz;
+
+            rotBx = -sinTheta * tx + cosTheta * bx;
+            rotBy = -sinTheta * ty + cosTheta * by;
+            rotBz = -sinTheta * tz + cosTheta * bz;
+        }
+
+        /// <summary>
+        /// Evaluates Anisotropic Trowbridge-Reitz / GGX Normal Distribution Function (NDF).
+        /// D(H) = 1 / (pi * alphaX * alphaY * ((H.T / alphaX)^2 + (H.B / alphaY)^2 + (H.N)^2)^2).
+        /// </summary>
+        public static float EvaluateAnisotropicD(float hDotT, float hDotB, float hDotN, float alphaX, float alphaY)
+        {
+            if (hDotN <= 0.0f) return 0.0f;
+
+            float termT = hDotT / Math.Max(0.001f, alphaX);
+            float termB = hDotB / Math.Max(0.001f, alphaY);
+            float termN = hDotN;
+
+            float d = termT * termT + termB * termB + termN * termN;
+            if (d < 1e-5f) d = 1e-5f;
+
+            float d2 = d * d;
+            float denom = (float)Math.PI * alphaX * alphaY * d2;
+            if (denom < 1e-5f) denom = 1e-5f;
+
+            return 1.0f / denom;
+        }
+
+        /// <summary>
+        /// Evaluates Smith Joint Anisotropic Visibility / Masking-Shadowing Function.
+        /// V(v, l) = G2(v, l) / (4 * (N.l) * (N.v))
+        /// Lambda_v = sqrt( (v.T * alphaX)^2 + (v.B * alphaY)^2 + (v.N)^2 )
+        /// Lambda_l = sqrt( (l.T * alphaX)^2 + (l.B * alphaY)^2 + (l.N)^2 )
+        /// V = 0.5 / ( (N.l) * Lambda_v + (N.v) * Lambda_l )
+        /// </summary>
+        public static float EvaluateAnisotropicV(float vDotT, float vDotB, float vDotN,
+            float lDotT, float lDotB, float lDotN, float alphaX, float alphaY)
+        {
+            if (vDotN <= 0.0f || lDotN <= 0.0f) return 0.0f;
+
+            float lambdaV = (float)Math.Sqrt((vDotT * alphaX) * (vDotT * alphaX) + (vDotB * alphaY) * (vDotB * alphaY) + vDotN * vDotN);
+            float lambdaL = (float)Math.Sqrt((lDotT * alphaX) * (lDotT * alphaX) + (lDotB * alphaY) * (lDotB * alphaY) + lDotN * lDotN);
+
+            float denom = lDotN * lambdaV + vDotN * lambdaL;
+            if (denom < 1e-5f) denom = 1e-5f;
+
+            return 0.5f / denom;
+        }
+
+        /// <summary>
+        /// Fresnel-Schlick approximation with base reflectance F0.
+        /// F = F0 + (1 - F0) * (1 - V.H)^5.
+        /// </summary>
+        public static float EvaluateFresnelSchlick(float vDotH, float f0)
+        {
+            float clampedVdotH = Math.Max(0.0f, Math.Min(1.0f, vDotH));
+            float f = 1.0f - clampedVdotH;
+            float f5 = f * f * f * f * f;
+            return f0 + (1.0f - f0) * f5;
+        }
+
+        /// <summary>
+        /// Evaluates complete analytical Anisotropic GGX BRDF for a given light and view ray.
+        /// Returns reflected RGB radiance.
+        /// </summary>
+        public void EvaluateAnisotropicBrdf(
+            float vx, float vy, float vz,
+            float lx, float ly, float lz,
+            float nx, float ny, float nz,
+            float tx, float ty, float tz,
+            float bx, float by, float bz,
+            float baseColorR, float baseColorG, float baseColorB,
+            out float outColorR, out float outColorG, out float outColorB)
+        {
+            // Normalize inputs
+            Normalize(ref vx, ref vy, ref vz);
+            Normalize(ref lx, ref ly, ref lz);
+            Normalize(ref nx, ref ny, ref nz);
+            Normalize(ref tx, ref ty, ref tz);
+            Normalize(ref bx, ref by, ref bz);
+
+            // Rotate tangent frame if needed
+            if (Math.Abs(AnisotropyRotation) > 1e-4f)
+            {
+                RotateTangentFrame(nx, ny, nz, tx, ty, tz, bx, by, bz, AnisotropyRotation,
+                    out tx, out ty, out tz, out bx, out by, out bz);
+            }
+
+            // Half-vector H = normalize(V + L)
+            float hx = vx + lx;
+            float hy = vy + ly;
+            float hz = vz + lz;
+            Normalize(ref hx, ref hy, ref hz);
+
+            float nDotV = Math.Max(0.0f, nx * vx + ny * vy + nz * vz);
+            float nDotL = Math.Max(0.0f, nx * lx + ny * ly + nz * lz);
+            float nDotH = Math.Max(0.0f, nx * hx + ny * hy + nz * hz);
+            float vDotH = Math.Max(0.0f, vx * hx + vy * hy + vz * hz);
+
+            if (nDotV <= 1e-5f || nDotL <= 1e-5f)
+            {
+                outColorR = 0f; outColorG = 0f; outColorB = 0f;
+                return;
+            }
+
+            float hDotT = hx * tx + hy * ty + hz * tz;
+            float hDotB = hx * bx + hy * by + hz * bz;
+            float vDotT = vx * tx + vy * ty + vz * tz;
+            float vDotB = vx * bx + vy * by + vz * bz;
+            float lDotT = lx * tx + ly * ty + lz * tz;
+            float lDotB = lx * bx + ly * by + lz * bz;
+
+            ComputeAnisotropicRoughness(Roughness, Anisotropy, out float alphaX, out float alphaY);
+
+            // Microfacet terms
+            float D = EvaluateAnisotropicD(hDotT, hDotB, nDotH, alphaX, alphaY);
+            float V = EvaluateAnisotropicV(vDotT, vDotB, nDotV, lDotT, lDotB, nDotL, alphaX, alphaY);
+
+            // Specular F0: dielectric (0.04) vs metallic (baseColor)
+            float f0R = (1.0f - Metallic) * SpecularF0 + Metallic * baseColorR;
+            float f0G = (1.0f - Metallic) * SpecularF0 + Metallic * baseColorG;
+            float f0B = (1.0f - Metallic) * SpecularF0 + Metallic * baseColorB;
+
+            float frR = EvaluateFresnelSchlick(vDotH, f0R);
+            float frG = EvaluateFresnelSchlick(vDotH, f0G);
+            float frB = EvaluateFresnelSchlick(vDotH, f0B);
+
+            // Specular BRDF: f_spec = D * V * F
+            float specR = D * V * frR;
+            float specG = D * V * frG;
+            float specB = D * V * frB;
+
+            // Diffuse Lambertian with energy conservation: kD = (1 - F) * (1 - metallic)
+            float kdR = (1.0f - frR) * (1.0f - Metallic);
+            float kdG = (1.0f - frG) * (1.0f - Metallic);
+            float kdB = (1.0f - frB) * (1.0f - Metallic);
+            float invPi = 1.0f / (float)Math.PI;
+
+            float diffR = kdR * baseColorR * invPi;
+            float diffG = kdG * baseColorG * invPi;
+            float diffB = kdB * baseColorB * invPi;
+
+            // Total reflected radiance = (f_diff + f_spec) * (N.L)
+            outColorR = (diffR + specR) * nDotL;
+            outColorG = (diffG + specG) * nDotL;
+            outColorB = (diffB + specB) * nDotL;
+        }
+
+        private static void Normalize(ref float x, ref float y, ref float z)
+        {
+            float len = (float)Math.Sqrt(x * x + y * y + z * z);
+            if (len > 1e-6f)
+            {
+                float inv = 1.0f / len;
+                x *= inv; y *= inv; z *= inv;
+            }
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -2483,6 +2684,7 @@ namespace palDotNet.palModernEngine
         public GpuClusterLodPipeline MeshClustering { get; } = new GpuClusterLodPipeline();
         public DepthAwareBilateralUpsamplePipeline BilateralUpsample { get; } = new DepthAwareBilateralUpsamplePipeline();
         public SparseVirtualTexturePipeline VirtualTexturing { get; } = new SparseVirtualTexturePipeline();
+        public AnisotropicSpecularPipeline AnisotropicSpecular { get; } = new AnisotropicSpecularPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -4004,6 +4206,223 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("VirtualTextureFeedbackPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslVirtualTexturePs, Cache));
+
+            // 31. DirectX 12 HLSL SM6 Anisotropic GGX Microfacet Reflection Pixel Shader
+            string hlslAnisotropicPs = @"
+                struct PSInput {
+                    float4 position  : SV_Position;
+                    float3 worldPos  : WORLDPOS;
+                    float3 normal    : NORMAL;
+                    float3 tangent   : TANGENT;
+                    float3 bitangent : BITANGENT;
+                    float2 uv        : TEXCOORD0;
+                };
+
+                Texture2D gAlbedoMap     : register(t0);
+                Texture2D gRoughnessMap  : register(t1);
+                Texture2D gAnisotropyMap : register(t2);
+                SamplerState gSampler    : register(s0);
+
+                cbuffer AnisotropicConstants : register(b0) {
+                    float3 gCameraPosition;
+                    float  gRoughness;
+                    float3 gLightDirection;
+                    float  gAnisotropy;
+                    float3 gLightColor;
+                    float  gAnisotropyRotation;
+                    float  gMetallic;
+                    float  gSpecularF0;
+                    float2 gPadding;
+                };
+
+                float3 RotateTangent(float3 N, float3 T, float3 B, float rot) {
+                    float cosTheta = cos(rot);
+                    float sinTheta = sin(rot);
+                    return cosTheta * T + sinTheta * B;
+                }
+
+                float3 RotateBitangent(float3 N, float3 T, float3 B, float rot) {
+                    float cosTheta = cos(rot);
+                    float sinTheta = sin(rot);
+                    return -sinTheta * T + cosTheta * B;
+                }
+
+                float EvaluateAnisotropicD(float hDotT, float hDotB, float hDotN, float ax, float ay) {
+                    if (hDotN <= 0.0f) return 0.0f;
+                    float tT = hDotT / max(1e-3f, ax);
+                    float tB = hDotB / max(1e-3f, ay);
+                    float d = tT * tT + tB * tB + hDotN * hDotN;
+                    float denom = 3.14159265f * ax * ay * d * d;
+                    return 1.0f / max(1e-5f, denom);
+                }
+
+                float EvaluateAnisotropicV(float vDotT, float vDotB, float vDotN, float lDotT, float lDotB, float lDotN, float ax, float ay) {
+                    if (vDotN <= 0.0f || lDotN <= 0.0f) return 0.0f;
+                    float lambdaV = sqrt(pow(vDotT * ax, 2.0f) + pow(vDotB * ay, 2.0f) + vDotN * vDotN);
+                    float lambdaL = sqrt(pow(lDotT * ax, 2.0f) + pow(lDotB * ay, 2.0f) + lDotN * lDotN);
+                    return 0.5f / max(1e-5f, lDotN * lambdaV + vDotN * lambdaL);
+                }
+
+                float3 EvaluateFresnelSchlick(float vDotH, float3 f0) {
+                    return f0 + (1.0f - f0) * pow(1.0f - saturate(vDotH), 5.0f);
+                }
+
+                float4 main(PSInput input) : SV_Target {
+                    float3 N = normalize(input.normal);
+                    float3 T = normalize(input.tangent);
+                    float3 B = normalize(input.bitangent);
+                    float3 V = normalize(gCameraPosition - input.worldPos);
+                    float3 L = normalize(-gLightDirection);
+
+                    if (abs(gAnisotropyRotation) > 1e-4f) {
+                        float3 rotT = RotateTangent(N, T, B, gAnisotropyRotation);
+                        float3 rotB = RotateBitangent(N, T, B, gAnisotropyRotation);
+                        T = rotT;
+                        B = rotB;
+                    }
+
+                    float3 H = normalize(V + L);
+                    float nDotV = saturate(dot(N, V));
+                    float nDotL = saturate(dot(N, L));
+                    float nDotH = saturate(dot(N, H));
+                    float vDotH = saturate(dot(V, H));
+
+                    float4 albedo = gAlbedoMap.Sample(gSampler, input.uv);
+                    float roughness = gRoughness * gRoughnessMap.Sample(gSampler, input.uv).r;
+                    float anisotropy = gAnisotropy * gAnisotropyMap.Sample(gSampler, input.uv).r;
+
+                    float r2 = max(1e-3f, roughness * roughness);
+                    float an = clamp(anisotropy, -0.999f, 0.999f);
+                    float ax = max(1e-3f, r2 * (1.0f + an));
+                    float ay = max(1e-3f, r2 * (1.0f - an));
+
+                    float hDotT = dot(H, T);
+                    float hDotB = dot(H, B);
+                    float vDotT = dot(V, T);
+                    float vDotB = dot(V, B);
+                    float lDotT = dot(L, T);
+                    float lDotB = dot(L, B);
+
+                    float D = EvaluateAnisotropicD(hDotT, hDotB, nDotH, ax, ay);
+                    float Vis = EvaluateAnisotropicV(vDotT, vDotB, nDotV, lDotT, lDotB, nDotL, ax, ay);
+
+                    float3 f0 = lerp(gSpecularF0.xxx, albedo.rgb, gMetallic);
+                    float3 F = EvaluateFresnelSchlick(vDotH, f0);
+
+                    float3 specular = D * Vis * F;
+                    float3 kD = (1.0f - F) * (1.0f - gMetallic);
+                    float3 diffuse = kD * albedo.rgb * (1.0f / 3.14159265f);
+
+                    float3 color = (diffuse + specular) * gLightColor * nDotL;
+                    return float4(color, albedo.a);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("AnisotropicFacadePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslAnisotropicPs, Cache));
+
+            // 32. Vulkan SPIR-V Anisotropic GGX Microfacet Reflection Fragment Shader
+            string glslAnisotropicPs = @"
+                #version 460
+                layout(location = 0) in vec3 inWorldPos;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec3 inTangent;
+                layout(location = 3) in vec3 inBitangent;
+                layout(location = 4) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texAlbedo;
+                layout(binding = 1) uniform sampler2D texRoughness;
+                layout(binding = 2) uniform sampler2D texAnisotropy;
+
+                layout(binding = 3) uniform AnisotropicUBO {
+                    vec3 cameraPos;
+                    float roughness;
+                    vec3 lightDir;
+                    float anisotropy;
+                    vec3 lightColor;
+                    float rotation;
+                    float metallic;
+                    float specularF0;
+                } ubo;
+
+                vec3 RotateTangent(vec3 T, vec3 B, float rot) {
+                    return cos(rot) * T + sin(rot) * B;
+                }
+
+                vec3 RotateBitangent(vec3 T, vec3 B, float rot) {
+                    return -sin(rot) * T + cos(rot) * B;
+                }
+
+                float EvaluateAnisotropicD(float hDotT, float hDotB, float hDotN, float ax, float ay) {
+                    if (hDotN <= 0.0) return 0.0;
+                    float tT = hDotT / max(0.001, ax);
+                    float tB = hDotB / max(0.001, ay);
+                    float d = tT * tT + tB * tB + hDotN * hDotN;
+                    float denom = 3.14159265 * ax * ay * d * d;
+                    return 1.0 / max(1e-5, denom);
+                }
+
+                float EvaluateAnisotropicV(float vDotT, float vDotB, float vDotN, float lDotT, float lDotB, float lDotN, float ax, float ay) {
+                    if (vDotN <= 0.0 || lDotN <= 0.0) return 0.0;
+                    float lambdaV = sqrt(pow(vDotT * ax, 2.0) + pow(vDotB * ay, 2.0) + vDotN * vDotN);
+                    float lambdaL = sqrt(pow(lDotT * ax, 2.0) + pow(lDotB * ay, 2.0) + lDotN * lDotN);
+                    return 0.5 / max(1e-5, lDotN * lambdaV + vDotN * lambdaL);
+                }
+
+                vec3 EvaluateFresnelSchlick(float vDotH, vec3 f0) {
+                    return f0 + (1.0 - f0) * pow(1.0 - clamp(vDotH, 0.0, 1.0), 5.0);
+                }
+
+                void main() {
+                    vec3 N = normalize(inNormal);
+                    vec3 T = normalize(inTangent);
+                    vec3 B = normalize(inBitangent);
+                    vec3 V = normalize(ubo.cameraPos - inWorldPos);
+                    vec3 L = normalize(-ubo.lightDir);
+
+                    if (abs(ubo.rotation) > 1e-4) {
+                        vec3 rotT = RotateTangent(T, B, ubo.rotation);
+                        vec3 rotB = RotateBitangent(T, B, ubo.rotation);
+                        T = rotT;
+                        B = rotB;
+                    }
+
+                    vec3 H = normalize(V + L);
+                    float nDotV = clamp(dot(N, V), 0.0, 1.0);
+                    float nDotL = clamp(dot(N, L), 0.0, 1.0);
+                    float nDotH = clamp(dot(N, H), 0.0, 1.0);
+                    float vDotH = clamp(dot(V, H), 0.0, 1.0);
+
+                    vec4 albedo = texture(texAlbedo, inUV);
+                    float roughness = ubo.roughness * texture(texRoughness, inUV).r;
+                    float anisotropy = ubo.anisotropy * texture(texAnisotropy, inUV).r;
+
+                    float r2 = max(0.001, roughness * roughness);
+                    float an = clamp(anisotropy, -0.999, 0.999);
+                    float ax = max(0.001, r2 * (1.0 + an));
+                    float ay = max(0.001, r2 * (1.0 - an));
+
+                    float hDotT = dot(H, T);
+                    float hDotB = dot(H, B);
+                    float vDotT = dot(V, T);
+                    float vDotB = dot(V, B);
+                    float lDotT = dot(L, T);
+                    float lDotB = dot(L, B);
+
+                    float D = EvaluateAnisotropicD(hDotT, hDotB, nDotH, ax, ay);
+                    float Vis = EvaluateAnisotropicV(vDotT, vDotB, nDotV, lDotT, lDotB, nDotL, ax, ay);
+
+                    vec3 f0 = mix(vec3(ubo.specularF0), albedo.rgb, ubo.metallic);
+                    vec3 F = EvaluateFresnelSchlick(vDotH, f0);
+
+                    vec3 specular = D * Vis * F;
+                    vec3 kD = (vec3(1.0) - F) * (1.0 - ubo.metallic);
+                    vec3 diffuse = kD * albedo.rgb * (1.0 / 3.14159265);
+
+                    vec3 color = (diffuse + specular) * ubo.lightColor * nDotL;
+                    outColor = vec4(color, albedo.a);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("AnisotropicFacadePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslAnisotropicPs, Cache));
         }
     }
 }

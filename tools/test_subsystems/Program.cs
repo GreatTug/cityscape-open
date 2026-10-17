@@ -1549,6 +1549,52 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("VirtualTextureFeedbackPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 VirtualTextureFeedbackPs shader registered");
             Assert(pipeline.GetModule("VirtualTextureFeedbackPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V VirtualTextureFeedbackPs shader registered");
 
+            // Anisotropic GGX Microfacet Specular Reflection Pipeline (Architectural Metals & Glass Facades)
+            var aniso = pipeline.AnisotropicSpecular;
+            Assert(aniso != null, "pipeline.AnisotropicSpecular initialized");
+            Assert(aniso.Roughness == 0.35f && aniso.Anisotropy == 0.65f, "Anisotropic specular defaults verified");
+
+            // Directional Roughness Scaling
+            AnisotropicSpecularPipeline.ComputeAnisotropicRoughness(0.5f, 0.6f, out float axPos, out float ayPos);
+            Assert(axPos > ayPos && axPos > 0.35f && ayPos < 0.15f, $"Positive anisotropy stretches roughness along tangent axis (ax={axPos:F3} > ay={ayPos:F3})");
+            AnisotropicSpecularPipeline.ComputeAnisotropicRoughness(0.5f, 0.0f, out float axIso, out float ayIso);
+            Assert(Math.Abs(axIso - ayIso) < 1e-5f, "Zero anisotropy produces isotropic roughness (alphaX == alphaY)");
+
+            // Tangent Frame Rotation Orthonormality (Rodrigues formula around normal)
+            AnisotropicSpecularPipeline.RotateTangentFrame(0f, 1f, 0f, 1f, 0f, 0f, 0f, 0f, 1f, (float)(Math.PI / 4.0),
+                out float rTx, out float rTy, out float rTz, out float rBx, out float rBy, out float rBz);
+            float lenT = (float)Math.Sqrt(rTx * rTx + rTy * rTy + rTz * rTz);
+            float lenB = (float)Math.Sqrt(rBx * rBx + rBy * rBy + rBz * rBz);
+            float dotTB = rTx * rBx + rTy * rBy + rTz * rBz;
+            Assert(Math.Abs(lenT - 1.0f) < 1e-4f && Math.Abs(lenB - 1.0f) < 1e-4f, "Rotated tangent and bitangent vectors maintain unit length");
+            Assert(Math.Abs(dotTB) < 1e-4f, "Rotated tangent and bitangent remain strictly orthonormal (dot=0)");
+
+            // Anisotropic Trowbridge-Reitz NDF (Elongated Specular Highlight along Tangent Grain)
+            float dPeak = AnisotropicSpecularPipeline.EvaluateAnisotropicD(0f, 0f, 1.0f, axPos, ayPos);
+            Assert(dPeak > 1.0f, $"Anisotropic NDF at normal incidence produces sharp specular peak: {dPeak:F2}");
+            float dT = AnisotropicSpecularPipeline.EvaluateAnisotropicD(0.2f, 0f, 0.98f, axPos, ayPos);
+            float dB = AnisotropicSpecularPipeline.EvaluateAnisotropicD(0f, 0.2f, 0.98f, axPos, ayPos);
+            Assert(dT > dB, $"Anisotropic NDF exhibits highlight elongation along tangent axis ({dT:F2} > {dB:F2})");
+
+            // Smith Joint Anisotropic Visibility & Helmholtz Reciprocity: V(V, L) == V(L, V)
+            float v1 = AnisotropicSpecularPipeline.EvaluateAnisotropicV(0.5f, 0.1f, 0.86f, -0.5f, -0.1f, 0.86f, axPos, ayPos);
+            float v2 = AnisotropicSpecularPipeline.EvaluateAnisotropicV(-0.5f, -0.1f, 0.86f, 0.5f, 0.1f, 0.86f, axPos, ayPos);
+            Assert(v1 > 0f && Math.Abs(v1 - v2) < 1e-5f, $"Smith joint anisotropic visibility satisfies Helmholtz reciprocity: V(V,L) == V(L,V) ({v1:F4})");
+
+            // Complete Analytical Anisotropic GGX BRDF (Brushed Architectural Brass/Gold Facade)
+            aniso.Roughness = 0.3f;
+            aniso.Anisotropy = 0.8f;
+            aniso.AnisotropyRotation = 0f;
+            aniso.Metallic = 0.95f;
+            aniso.EvaluateAnisotropicBrdf(0f, 1f, 1f, 0f, 1f, -1f, 0f, 1f, 0f, 1f, 0f, 0f, 0f, 0f, 1f,
+                0.95f, 0.85f, 0.65f, out float brdfR, out float brdfG, out float brdfB);
+            Assert(brdfR > 0f && brdfG > 0f && brdfB > 0f, $"Anisotropic brushed metal BRDF evaluated: Warm Architectural Specular ({brdfR:F3}, {brdfG:F3}, {brdfB:F3})");
+            Assert(brdfR > brdfB, "Metallic anisotropic reflection preserves base color reflectance tinting");
+
+            // Anisotropic Shaders Registered
+            Assert(pipeline.GetModule("AnisotropicFacadePs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 AnisotropicFacadePs shader registered");
+            Assert(pipeline.GetModule("AnisotropicFacadePs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V AnisotropicFacadePs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
