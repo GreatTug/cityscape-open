@@ -3468,6 +3468,184 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Screen-Space Subsurface Scattering (SSSS) & Foliage Translucency Pipeline.
+    /// Implements separable multi-lobe Gaussian diffusion profiles (d'Eon / Jimenez et al.)
+    /// with depth-aware cross-bilateral stopping and thin-slab foliage backlight transmission
+    /// for realistic urban vegetation, tree canopies, leaves, and organic surfaces.
+    /// </summary>
+    public class SubsurfaceScatteringPipeline
+    {
+        public float ScatteringRadius { get; set; } = 0.035f; // Scattering distance scale in world meters
+        public float DepthRejectionThreshold { get; set; } = 0.05f; // Relative depth stopping margin
+
+        // Spectral Diffusion Profile (Sum of 3 Gaussian lobes for chlorophyll plant tissue / skin)
+        public struct GaussianLobe
+        {
+            public float WeightR;
+            public float WeightG;
+            public float WeightB;
+            public float Variance; // sigma^2 in mm^2 or normalized units
+        }
+
+        public GaussianLobe[] Lobes { get; set; }
+
+        // Foliage Translucency / Backlight Transmission Parameters
+        public float TransmissionDistortion { get; set; } = 0.20f;
+        public float TransmissionPower { get; set; } = 8.0f;
+        public float TransmissionScale { get; set; } = 1.25f;
+        public float TransmissionTintR { get; set; } = 0.35f;
+        public float TransmissionTintG { get; set; } = 0.78f;
+        public float TransmissionTintB { get; set; } = 0.15f;
+
+        public SubsurfaceScatteringPipeline()
+        {
+            // 3-Lobe Foliage diffusion profile:
+            // Lobe 0: Sharp core reflection (narrow sigma)
+            // Lobe 1: Chlorophyll cellular diffusion (dominant green peak, medium sigma)
+            // Lobe 2: Deep mesophyll scattering (broad soft scatter, wide sigma)
+            Lobes = new GaussianLobe[]
+            {
+                new GaussianLobe { WeightR = 0.25f, WeightG = 0.30f, WeightB = 0.20f, Variance = 0.0064f },
+                new GaussianLobe { WeightR = 0.35f, WeightG = 0.50f, WeightB = 0.15f, Variance = 0.0484f },
+                new GaussianLobe { WeightR = 0.40f, WeightG = 0.20f, WeightB = 0.05f, Variance = 0.1870f }
+            };
+        }
+
+        /// <summary>
+        /// Evaluates radial diffusion profile R(r) at radial distance r (in meters).
+        /// Returns RGB diffuse radiance scattering kernel value.
+        /// </summary>
+        public void EvaluateDiffusionProfile(float distanceMeters, out float profileR, out float profileG, out float profileB)
+        {
+            profileR = 0f;
+            profileG = 0f;
+            profileB = 0f;
+
+            float r2 = distanceMeters * distanceMeters;
+            float scale = Math.Max(0.001f, ScatteringRadius);
+
+            for (int i = 0; i < Lobes.Length; i++)
+            {
+                float var = Lobes[i].Variance * (scale * scale);
+                if (var < 1e-6f) var = 1e-6f;
+
+                float g = (float)Math.Exp(-r2 / (2.0f * var)) / (2.0f * (float)Math.PI * var);
+                profileR += Lobes[i].WeightR * g;
+                profileG += Lobes[i].WeightG * g;
+                profileB += Lobes[i].WeightB * g;
+            }
+        }
+
+        /// <summary>
+        /// Evaluates thin-slab foliage backlight transmission (translucency).
+        /// When looking towards the sun through a leaf, transmitted light illuminates chlorophyll pigments.
+        /// </summary>
+        public void EvaluateThinFoliageTransmission(
+            float normalX, float normalY, float normalZ,
+            float viewDirX, float viewDirY, float viewDirZ,
+            float lightDirX, float lightDirY, float lightDirZ,
+            float leafThicknessNorm, float shadowFactor,
+            out float transR, out float transG, out float transB)
+        {
+            // Distorted light vector pointing through back of leaf
+            float bx = -(lightDirX + normalX * TransmissionDistortion);
+            float by = -(lightDirY + normalY * TransmissionDistortion);
+            float bz = -(lightDirZ + normalZ * TransmissionDistortion);
+
+            float bLen = (float)Math.Sqrt(bx * bx + by * by + bz * bz);
+            if (bLen > 1e-4f)
+            {
+                bx /= bLen;
+                by /= bLen;
+                bz /= bLen;
+            }
+
+            // Dot product between view direction and distorted backlight
+            float vDotB = viewDirX * bx + viewDirY * by + viewDirZ * bz;
+            float alignment = Math.Max(0.0f, vDotB);
+
+            // Forward scatter intensity with exponential concentration
+            float transIntensity = (float)Math.Pow(alignment, TransmissionPower) * TransmissionScale;
+
+            // Attenuation by leaf thickness (Lambert-Beer absorption)
+            float absorption = (float)Math.Exp(-leafThicknessNorm * 2.0f);
+            float finalTrans = transIntensity * absorption * Math.Max(0.0f, 1.0f - shadowFactor * 0.85f);
+
+            transR = finalTrans * TransmissionTintR;
+            transG = finalTrans * TransmissionTintG;
+            transB = finalTrans * TransmissionTintB;
+        }
+
+        /// <summary>
+        /// Evaluates depth-aware bilateral edge-stopping weight between center pixel and sample pixel.
+        /// Completely prevents subsurface bleed across depth boundaries.
+        /// </summary>
+        public float EvaluateDepthStoppingWeight(float centerLinearDepth, float sampleLinearDepth)
+        {
+            float depthDiff = Math.Abs(centerLinearDepth - sampleLinearDepth);
+            float maxAllowable = centerLinearDepth * DepthRejectionThreshold;
+            if (maxAllowable < 0.005f) maxAllowable = 0.005f;
+
+            return (float)Math.Exp(-depthDiff / maxAllowable);
+        }
+
+        /// <summary>
+        /// Performs 1D separable screen-space subsurface scattering convolution across neighbor samples.
+        /// </summary>
+        public void ConvolveScreenSpace1D(
+            float centerColorR, float centerColorG, float centerColorB, float centerDepth,
+            float[] sampleColorsR, float[] sampleColorsG, float[] sampleColorsB,
+            float[] sampleDepths, float[] sampleOffsetsMeters,
+            out float outColorR, out float outColorG, out float outColorB)
+        {
+            if (sampleColorsR == null || sampleColorsR.Length == 0)
+            {
+                outColorR = centerColorR;
+                outColorG = centerColorG;
+                outColorB = centerColorB;
+                return;
+            }
+
+            EvaluateDiffusionProfile(0.0f, out float centerProfR, out float centerProfG, out float centerProfB);
+            float accumR = centerColorR * centerProfR;
+            float accumG = centerColorG * centerProfG;
+            float accumB = centerColorB * centerProfB;
+
+            float weightSumR = centerProfR;
+            float weightSumG = centerProfG;
+            float weightSumB = centerProfB;
+
+            int count = sampleColorsR.Length;
+            for (int i = 0; i < count; i++)
+            {
+                float offset = sampleOffsetsMeters[i];
+                float sDepth = sampleDepths[i];
+
+                float depthWeight = EvaluateDepthStoppingWeight(centerDepth, sDepth);
+                if (depthWeight < 0.001f) continue;
+
+                EvaluateDiffusionProfile(offset, out float profR, out float profG, out float profB);
+
+                float wR = profR * depthWeight;
+                float wG = profG * depthWeight;
+                float wB = profB * depthWeight;
+
+                accumR += sampleColorsR[i] * wR;
+                accumG += sampleColorsG[i] * wG;
+                accumB += sampleColorsB[i] * wB;
+
+                weightSumR += wR;
+                weightSumG += wG;
+                weightSumB += wB;
+            }
+
+            outColorR = weightSumR > 1e-5f ? accumR / weightSumR : centerColorR;
+            outColorG = weightSumG > 1e-5f ? accumG / weightSumG : centerColorG;
+            outColorB = weightSumB > 1e-5f ? accumB / weightSumB : centerColorB;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -3494,6 +3672,7 @@ namespace palDotNet.palModernEngine
         public SsrDenoiserPipeline SsrDenoiser { get; } = new SsrDenoiserPipeline();
         public WetRoadRipplesPipeline WetRoads { get; } = new WetRoadRipplesPipeline();
         public VolumetricCloudPipeline VolumetricClouds { get; } = new VolumetricCloudPipeline();
+        public SubsurfaceScatteringPipeline SubsurfaceScattering { get; } = new SubsurfaceScatteringPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -5849,6 +6028,161 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("VolumetricCloudRaymarchingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslCloudPs, Cache));
+
+            // 41. DirectX 12 HLSL SM6 Screen-Space Subsurface Scattering (SSSS) Pixel Shader
+            string hlslSsssPs = @"
+                struct SsssPSInput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+
+                Texture2D gSceneColorTexture  : register(t0);
+                Texture2D gLinearDepthTexture : register(t1);
+                Texture2D gSsssMaskTexture    : register(t2);
+                SamplerState gLinearClamp     : register(s0);
+
+                cbuffer SsssConstants : register(b0) {
+                    float2 gStepDirection;     // (1/W, 0) for horizontal pass, (0, 1/H) for vertical pass
+                    float  gScatteringRadius;  // world-space scattering radius
+                    float  gDepthThreshold;    // relative depth stopping margin
+                    float4 gLobeWeightsR;
+                    float4 gLobeWeightsG;
+                    float4 gLobeWeightsB;
+                    float4 gLobeVariances;
+                };
+
+                float3 EvaluateDiffusion(float d) {
+                    float r2 = d * d;
+                    float3 result = 0;
+                    [unroll]
+                    for (int i = 0; i < 3; i++) {
+                        float var = max(1e-5f, gLobeVariances[i] * (gScatteringRadius * gScatteringRadius));
+                        float g = exp(-r2 / (2.0f * var)) / (6.283185f * var);
+                        result += float3(gLobeWeightsR[i], gLobeWeightsG[i], gLobeWeightsB[i]) * g;
+                    }
+                    return result;
+                }
+
+                float4 main(SsssPSInput input) : SV_Target {
+                    float mask = gSsssMaskTexture.Sample(gLinearClamp, input.uv).r;
+                    float3 centerColor = gSceneColorTexture.Sample(gLinearClamp, input.uv).rgb;
+                    if (mask <= 0.01f) return float4(centerColor, 1.0f);
+
+                    float centerDepth = gLinearDepthTexture.Sample(gLinearClamp, input.uv).r;
+                    float3 accumColor = centerColor * EvaluateDiffusion(0.0f);
+                    float3 weightSum = EvaluateDiffusion(0.0f);
+
+                    const float offsets[4] = { 1.0f, 2.0f, 3.5f, 5.0f };
+                    float pixelRadius = (gScatteringRadius / max(0.1f, centerDepth)) * 300.0f;
+
+                    [unroll]
+                    for (int s = 0; s < 4; s++) {
+                        float stepDist = offsets[s];
+                        float2 uvOffset = gStepDirection * (stepDist * pixelRadius);
+
+                        // Tap +
+                        float2 uvPlus = input.uv + uvOffset;
+                        float depthPlus = gLinearDepthTexture.Sample(gLinearClamp, uvPlus).r;
+                        float dDiffPlus = abs(centerDepth - depthPlus);
+                        float wDepthPlus = exp(-dDiffPlus / max(0.01f, centerDepth * gDepthThreshold));
+                        float3 profPlus = EvaluateDiffusion(stepDist * 0.007f);
+                        float3 tapColorPlus = gSceneColorTexture.Sample(gLinearClamp, uvPlus).rgb;
+                        accumColor += tapColorPlus * profPlus * wDepthPlus;
+                        weightSum += profPlus * wDepthPlus;
+
+                        // Tap -
+                        float2 uvMinus = input.uv - uvOffset;
+                        float depthMinus = gLinearDepthTexture.Sample(gLinearClamp, uvMinus).r;
+                        float dDiffMinus = abs(centerDepth - depthMinus);
+                        float wDepthMinus = exp(-dDiffMinus / max(0.01f, centerDepth * gDepthThreshold));
+                        float3 profMinus = EvaluateDiffusion(stepDist * 0.007f);
+                        float3 tapColorMinus = gSceneColorTexture.Sample(gLinearClamp, uvMinus).rgb;
+                        accumColor += tapColorMinus * profMinus * wDepthMinus;
+                        weightSum += profMinus * wDepthMinus;
+                    }
+
+                    float3 finalColor = accumColor / max(float3(1e-4f, 1e-4f, 1e-4f), weightSum);
+                    return float4(lerp(centerColor, finalColor, mask), 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("SubsurfaceScatteringPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslSsssPs, Cache));
+
+            // 42. Vulkan 1.3 SPIR-V Screen-Space Subsurface Scattering (SSSS) Fragment Shader
+            string glslSsssPs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texSceneColor;
+                layout(binding = 1) uniform sampler2D texLinearDepth;
+                layout(binding = 2) uniform sampler2D texSsssMask;
+
+                layout(binding = 3) uniform SsssUBO {
+                    vec2 stepDirection;
+                    float scatteringRadius;
+                    float depthThreshold;
+                    vec4 lobeWeightsR;
+                    vec4 lobeWeightsG;
+                    vec4 lobeWeightsB;
+                    vec4 lobeVariances;
+                } ubo;
+
+                vec3 EvaluateDiffusion(float d) {
+                    float r2 = d * d;
+                    vec3 result = vec3(0.0);
+                    for (int i = 0; i < 3; i++) {
+                        float var = max(1e-5, ubo.lobeVariances[i] * (ubo.scatteringRadius * ubo.scatteringRadius));
+                        float g = exp(-r2 / (2.0 * var)) / (6.283185 * var);
+                        result += vec3(ubo.lobeWeightsR[i], ubo.lobeWeightsG[i], ubo.lobeWeightsB[i]) * g;
+                    }
+                    return result;
+                }
+
+                void main() {
+                    float mask = texture(texSsssMask, inUV).r;
+                    vec3 centerColor = texture(texSceneColor, inUV).rgb;
+                    if (mask <= 0.01) {
+                        outColor = vec4(centerColor, 1.0);
+                        return;
+                    }
+
+                    float centerDepth = texture(texLinearDepth, inUV).r;
+                    vec3 accumColor = centerColor * EvaluateDiffusion(0.0);
+                    vec3 weightSum = EvaluateDiffusion(0.0);
+
+                    const float offsets[4] = float[](1.0, 2.0, 3.5, 5.0);
+                    float pixelRadius = (ubo.scatteringRadius / max(0.1, centerDepth)) * 300.0;
+
+                    for (int s = 0; s < 4; s++) {
+                        float stepDist = offsets[s];
+                        vec2 uvOffset = ubo.stepDirection * (stepDist * pixelRadius);
+
+                        // Tap +
+                        vec2 uvPlus = inUV + uvOffset;
+                        float depthPlus = texture(texLinearDepth, uvPlus).r;
+                        float dDiffPlus = abs(centerDepth - depthPlus);
+                        float wDepthPlus = exp(-dDiffPlus / max(0.01, centerDepth * ubo.depthThreshold));
+                        vec3 profPlus = EvaluateDiffusion(stepDist * 0.007);
+                        vec3 tapColorPlus = texture(texSceneColor, uvPlus).rgb;
+                        accumColor += tapColorPlus * profPlus * wDepthPlus;
+                        weightSum += profPlus * wDepthPlus;
+
+                        // Tap -
+                        vec2 uvMinus = inUV - uvOffset;
+                        float depthMinus = texture(texLinearDepth, uvMinus).r;
+                        float dDiffMinus = abs(centerDepth - depthMinus);
+                        float wDepthMinus = exp(-dDiffMinus / max(0.01, centerDepth * ubo.depthThreshold));
+                        vec3 profMinus = EvaluateDiffusion(stepDist * 0.007);
+                        vec3 tapColorMinus = texture(texSceneColor, uvMinus).rgb;
+                        accumColor += tapColorMinus * profMinus * wDepthMinus;
+                        weightSum += profMinus * wDepthMinus;
+                    }
+
+                    vec3 finalColor = accumColor / max(vec3(1e-4), weightSum);
+                    outColor = vec4(mix(centerColor, finalColor, mask), 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("SubsurfaceScatteringPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslSsssPs, Cache));
         }
     }
 }

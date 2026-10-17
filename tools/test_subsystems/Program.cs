@@ -1801,6 +1801,61 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("VolumetricCloudRaymarchingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 VolumetricCloudRaymarchingPs shader registered");
             Assert(pipeline.GetModule("VolumetricCloudRaymarchingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V VolumetricCloudRaymarchingPs shader registered");
 
+            // Screen-Space Subsurface Scattering (SSSS) & Foliage Translucency Pipeline
+            var ssss = pipeline.SubsurfaceScattering;
+            Assert(ssss != null, "pipeline.SubsurfaceScattering initialized");
+            Assert(ssss.ScatteringRadius == 0.035f && ssss.DepthRejectionThreshold == 0.05f, "SSSS pipeline initialized with foliage defaults (35mm radius, 5% depth threshold)");
+            Assert(ssss.Lobes != null && ssss.Lobes.Length == 3, "SSSS multi-lobe profile contains 3 Gaussian lobes");
+
+            // Radial Diffusion Profile R(r)
+            ssss.EvaluateDiffusionProfile(0.0f, out float profCenterR, out float profCenterG, out float profCenterB);
+            Assert(profCenterG > 0.0f && profCenterG > profCenterB, $"Chlorophyll diffusion profile peaks in green at center: R={profCenterR:F1}, G={profCenterG:F1}, B={profCenterB:F1}");
+
+            ssss.EvaluateDiffusionProfile(0.02f, out float profEdgeR, out float profEdgeG, out float profEdgeB);
+            Assert(profEdgeG < profCenterG && profEdgeG > 0.0f, $"Diffusion profile decays smoothly with radial distance: G(0.02m)={profEdgeG:F2} < G(0m)={profCenterG:F2}");
+
+            // Thin-Slab Foliage Backlight Transmission (Chlorophyll Translucency)
+            ssss.EvaluateThinFoliageTransmission(
+                normalX: 0f, normalY: 0f, normalZ: -1f,
+                viewDirX: 0f, viewDirY: 0f, viewDirZ: -1f,
+                lightDirX: 0f, lightDirY: 0f, lightDirZ: 1f, // Direct backlight through leaf
+                leafThicknessNorm: 0.10f, shadowFactor: 0.0f,
+                out float leafTransR, out float leafTransG, out float leafTransB);
+            Assert(leafTransG > leafTransR && leafTransG > leafTransB, $"Sunlit foliage backlight transmission illuminates chlorophyll green: ({leafTransR:F3}, {leafTransG:F3}, {leafTransB:F3})");
+
+            // Shadowed foliage transmission attenuation
+            ssss.EvaluateThinFoliageTransmission(
+                normalX: 0f, normalY: 0f, normalZ: -1f,
+                viewDirX: 0f, viewDirY: 0f, viewDirZ: -1f,
+                lightDirX: 0f, lightDirY: 0f, lightDirZ: 1f,
+                leafThicknessNorm: 0.10f, shadowFactor: 1.0f,
+                out float shadTransR, out float shadTransG, out float shadTransB);
+            Assert(shadTransG < leafTransG * 0.25f, $"Leaf shadow attenuates backlight transmission ({shadTransG:F3} vs {leafTransG:F3})");
+
+            // Depth-Aware Edge Stopping
+            float wDepthFlat = ssss.EvaluateDepthStoppingWeight(5.0f, 5.01f);
+            Assert(wDepthFlat > 0.95f, $"Subsurface diffusion smoothly traverses continuous surface: {wDepthFlat:F4}");
+
+            float wDepthDisc = ssss.EvaluateDepthStoppingWeight(5.0f, 15.0f);
+            Assert(wDepthDisc < 1e-4f, $"Severe depth discontinuity completely rejects subsurface bleeding: {wDepthDisc:F6}");
+
+            // 1D Separable Bilateral SSSS Filter
+            float[] sColR = { 0.10f, 0.10f, 0.90f }; // 2 foliage samples, 1 background sky bleed
+            float[] sColG = { 0.40f, 0.40f, 0.90f };
+            float[] sColB = { 0.05f, 0.05f, 0.90f };
+            float[] sDepths = { 5.01f, 5.02f, 100.0f }; // 3rd sample is distant background
+            float[] sOffsets = { 0.005f, 0.010f, 0.015f };
+
+            ssss.ConvolveScreenSpace1D(0.12f, 0.42f, 0.06f, centerDepth: 5.0f,
+                sColR, sColG, sColB, sDepths, sOffsets,
+                out float filtR, out float filtG, out float filtB);
+            Assert(filtB < 0.20f, $"Depth-stopping weights prevented distant bright blue sky from bleeding into leaf: B={filtB:F3}");
+            Assert(filtG > 0.35f, $"Chlorophyll subsurface radiance preserved across leaf canopy: G={filtG:F3}");
+
+            // SSSS Shaders Registered
+            Assert(pipeline.GetModule("SubsurfaceScatteringPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 SubsurfaceScatteringPs shader registered");
+            Assert(pipeline.GetModule("SubsurfaceScatteringPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V SubsurfaceScatteringPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
