@@ -30,11 +30,14 @@ namespace palDotNet.palVisual
 
             float chunkLenX = Node.MaxX - Node.MinX;
             float chunkLenZ = Node.MaxZ - Node.MinZ;
-            float aspectXZ = chunkLenX / Math.Max(1.0f, chunkLenZ);
 
-            int baseDiv = Math.Max(2, baseGridResolution >> Math.Min(4, LodLevel));
-            int divX = Math.Min(48, Math.Max(2, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, aspectXZ)))));
-            int divZ = Math.Min(48, Math.Max(2, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, 1.0 / Math.Max(0.01, aspectXZ))))));
+            // Bind mesh grid resolution directly to terrain.SamplingDistance
+            float sampleDist = terrain.SamplingDistance > 0.01f ? terrain.SamplingDistance : 2.0f;
+            int naturalDivX = Math.Max(1, (int)Math.Round(chunkLenX / sampleDist));
+            int naturalDivZ = Math.Max(1, (int)Math.Round(chunkLenZ / sampleDist));
+
+            int divX = Math.Min(48, Math.Max(2, naturalDivX >> Math.Min(4, LodLevel)));
+            int divZ = Math.Min(48, Math.Max(2, naturalDivZ >> Math.Min(4, LodLevel)));
 
             var mesh = new ExportMeshData { Name = $"TerrainChunk_LOD{LodLevel}_{Node.ChunkId}" };
 

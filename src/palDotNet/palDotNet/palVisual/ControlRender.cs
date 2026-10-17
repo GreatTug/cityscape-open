@@ -64,7 +64,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		}
 	}
 
-	public static void SetActiveTerrain(TerrainSurfaceData terrain)
+	public static void SetActiveTerrain(TerrainSurfaceData terrain, bool resetCamera = false)
 	{
 		if (terrain == null) return;
 		ActiveTerrain = terrain;
@@ -72,7 +72,10 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		AsyncMeshWorker.ClearCache();
 		foreach (ControlRender cr in ControlRenders)
 		{
-			cr.ResetCamera();
+			if (resetCamera || cr.mCameraDistance <= 0f)
+			{
+				cr.ResetCamera();
+			}
 			cr.Invalidate();
 		}
 	}
@@ -94,6 +97,17 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		mCameraDistance = 0f;
 		mCameraPanX = 0f;
 		mCameraPanY = 0f;
+	}
+
+	public void FitCameraToExtents()
+	{
+		float sx = ActiveTerrain?.SizeX ?? 2000f;
+		float sy = ActiveTerrain?.SizeY ?? 2000f;
+		float diag = (float)Math.Sqrt(sx * sx + sy * sy);
+		mCameraDistance = Math.Max(100f, diag * 1.30f);
+		mCameraPanX = 0f;
+		mCameraPanY = 0f;
+		Invalidate();
 	}
 
 	private MouseButtons CurrentMouseButtons;
@@ -373,22 +387,29 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			return new PointF(cx + x1 * scale, cy - y2 * scale);
 		}
 
-		// 1. Ground Plane Foundation (infinite reference grid)
-		using (Pen groundPen = new Pen(Color.FromArgb(40, 50, 62), 1f))
+		// 1. Ground Plane Foundation with Fixed Real-World Metric Spacing
+		using (Pen groundPen = new Pen(Color.FromArgb(32, 42, 54), 1f))
+		using (Pen majorPen = new Pen(Color.FromArgb(48, 62, 78), 1.5f))
 		{
-			float gridExtent = Math.Max(sx, sy) * 1.6f;
-			float step = gridExtent / 16.0f;
-			for (float gx = -gridExtent; gx <= gridExtent; gx += step)
+			float maxDim = Math.Max(sx, sy);
+			float metricStep = 1000f; // 1 km standard metric spacing
+			if (maxDim > 30000f) metricStep = 5000f; // 5 km for 30km+
+			else if (maxDim < 2000f) metricStep = 250f; // 250m for small terrains
+
+			float gridExtent = Math.Max(maxDim * 1.5f, 5000f);
+			for (float gx = -gridExtent; gx <= gridExtent; gx += metricStep)
 			{
+				bool isMajor = Math.Abs(gx % (metricStep * 5f)) < 1f;
 				PointF pStart = Project(gx, -15f, -gridExtent);
 				PointF pEnd = Project(gx, -15f, gridExtent);
-				g.DrawLine(groundPen, pStart, pEnd);
+				g.DrawLine(isMajor ? majorPen : groundPen, pStart, pEnd);
 			}
-			for (float gz = -gridExtent; gz <= gridExtent; gz += step)
+			for (float gz = -gridExtent; gz <= gridExtent; gz += metricStep)
 			{
+				bool isMajor = Math.Abs(gz % (metricStep * 5f)) < 1f;
 				PointF pStart = Project(-gridExtent, -15f, gz);
 				PointF pEnd = Project(gridExtent, -15f, gz);
-				g.DrawLine(groundPen, pStart, pEnd);
+				g.DrawLine(isMajor ? majorPen : groundPen, pStart, pEnd);
 			}
 		}
 
@@ -450,11 +471,14 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			{
 				float chunkLenX = chunk.Node.MaxX - chunk.Node.MinX;
 				float chunkLenZ = chunk.Node.MaxZ - chunk.Node.MinZ;
-				float aspectXZ = chunkLenX / Math.Max(1.0f, chunkLenZ);
 
-				int baseDiv = Math.Max(4, 16 >> Math.Min(3, chunk.LodLevel));
-				int divX = Math.Min(48, Math.Max(4, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, aspectXZ)))));
-				int divZ = Math.Min(48, Math.Max(2, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, 1.0 / Math.Max(0.01, aspectXZ))))));
+				// Bind polygon density directly to terrain.SamplingDistance
+				float sampleDist = terrain.SamplingDistance > 0.01f ? terrain.SamplingDistance : 2.0f;
+				int naturalDivX = Math.Max(1, (int)Math.Round(chunkLenX / sampleDist));
+				int naturalDivZ = Math.Max(1, (int)Math.Round(chunkLenZ / sampleDist));
+
+				int divX = Math.Min(48, Math.Max(2, naturalDivX >> Math.Min(4, chunk.LodLevel)));
+				int divZ = Math.Min(48, Math.Max(2, naturalDivZ >> Math.Min(4, chunk.LodLevel)));
 
 				float stepX = chunkLenX / divX;
 				float stepZ = chunkLenZ / divZ;
@@ -707,7 +731,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			string bldStat = ActiveBuildings.Count > 0
 				? string.Format("3D Buildings: {0:N0} vis / {1:N0} tot (Culled Nodes: {2}/{3})", renderedBuildings, ActiveBuildings.Count, nodesCulled, nodesTested)
 				: "3D Buildings: 0";
-			g.DrawString(string.Format("Camera Distance: {0:N0}m | {1} | Controls: LMB=Orbit | RMB/Shift=Pan", camDist, bldStat), textFont, dimBrush, 26, 100);
+			g.DrawString(string.Format("Camera Distance: {0:N0}m | {1} | Controls: LMB=Orbit | RMB/Shift=Pan | Scroll=Zoom | F/Home=Fit", camDist, bldStat), textFont, dimBrush, 26, 100);
 		}
 	}
 
@@ -877,6 +901,12 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		base.OnMouseWheel(e);
 	}
 
+	protected override void OnMouseDoubleClick(MouseEventArgs e)
+	{
+		FitCameraToExtents();
+		base.OnMouseDoubleClick(e);
+	}
+
 	private void ControlRender_Resize(object sender, EventArgs e)
 	{
 		if ((WidgetMgr.Instance == null || !WidgetMgr.Instance.FormDisposing) && (LastHandle != base.Handle || LastXRes != base.Width || LastYRes != base.Height))
@@ -887,8 +917,16 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnKeyDown(KeyEventArgs e)
 	{
+		if (e.KeyCode == Keys.F || e.KeyCode == Keys.Home || e.KeyCode == Keys.R)
+		{
+			FitCameraToExtents();
+			e.Handled = true;
+		}
 		Focus();
-		WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyPressed);
+		if (WidgetMgr.Instance != null)
+		{
+			WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyPressed);
+		}
 		base.OnKeyDown(e);
 	}
 
