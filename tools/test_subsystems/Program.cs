@@ -1097,6 +1097,26 @@ namespace CityScape.Tests
             Assert(csm.EvaluatePcfShadow(0.5f, 0.49f) == 1.0f, "CSM unshadowed PCF test returns 1.0f");
             Assert(csm.EvaluatePcfShadow(0.5f, 0.60f) < 1.0f, "CSM shadowed PCF test returns ambient occlusion");
 
+            // Percentage-Closer Soft Shadows (PCSS) & Contact Hardening
+            float sharpPenumbra = csm.EstimatePenumbraWidth(1.05f, 1.00f);
+            float softPenumbra = csm.EstimatePenumbraWidth(5.00f, 1.00f);
+            Assert(sharpPenumbra < softPenumbra, $"PCSS contact hardening verified: near penumbra ({sharpPenumbra:F4}) < far penumbra ({softPenumbra:F4})");
+
+            float pcssLit = csm.EvaluatePcssShadow(1.0f, new float[] { 1.5f, 1.6f, 1.7f }, 0.01f);
+            float pcssPartial = csm.EvaluatePcssShadow(1.0f, new float[] { 0.5f, 1.5f, 1.5f, 0.5f }, 0.01f);
+            float pcssShadowed = csm.EvaluatePcssShadow(1.0f, new float[] { 0.5f, 0.4f, 0.3f }, 0.01f);
+            Assert(pcssLit == 1.0f, "PCSS unblocked sample is 100% lit");
+            Assert(pcssPartial > pcssShadowed && pcssPartial < pcssLit, $"PCSS partial penumbra softens shadow ({pcssPartial:F3})");
+            Assert(Math.Abs(pcssShadowed - csm.AmbientShadowFactor) < 0.01f, "PCSS fully blocked sample clamped to ambient shadow floor");
+
+            float blendStart = csm.ComputeCascadeBlendWeight(csm.CascadeSplitDistances[0] * 0.5f, 0);
+            float blendMid = csm.ComputeCascadeBlendWeight(csm.CascadeSplitDistances[0] * 0.92f, 0);
+            float blendEnd = csm.ComputeCascadeBlendWeight(csm.CascadeSplitDistances[0], 0);
+            Assert(blendStart == 0.0f && blendMid > 0.0f && blendEnd == 1.0f, "Cascade blend weight transitions smoothly across split boundary");
+
+            Assert(pipeline.GetModule("CascadedShadowPcss", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 CascadedShadowPcss shader registered");
+            Assert(pipeline.GetModule("CascadedShadowPcss", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V CascadedShadowPcss shader registered");
+
             // HDR ACES Filmic Tone Mapping, Exposure & Bloom Pipeline
             var postPipe = pipeline.PostProcessing;
             Assert(postPipe != null, "pipeline.PostProcessing initialized");

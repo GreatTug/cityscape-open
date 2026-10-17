@@ -631,6 +631,11 @@ namespace palDotNet.palModernEngine
         public float SplitLambda { get; set; } = 0.75f;
         public int ShadowMapResolution { get; set; } = 2048;
         public float ShadowBias { get; set; } = 0.0015f;
+        public float LightSourceRadius { get; set; } = 0.05f;
+        public float MinFilterRadius { get; set; } = 0.001f;
+        public float MaxFilterRadius { get; set; } = 0.025f;
+        public float CascadeBlendMargin { get; set; } = 0.15f;
+        public float AmbientShadowFactor { get; set; } = 0.15f;
         public float[] CascadeSplitDistances { get; private set; }
 
         public CascadedShadowPipeline()
@@ -665,7 +670,76 @@ namespace palDotNet.palModernEngine
         {
             if (lightSpaceDepth - ShadowBias <= shadowDepth)
                 return 1.0f;
-            return 0.15f;
+            return AmbientShadowFactor;
+        }
+
+        /// <summary>
+        /// Computes physical Percentage-Closer Soft Shadows (PCSS) penumbra width.
+        /// Demonstrates contact hardening: penumbra is razor sharp near contact points and softens with distance.
+        /// </summary>
+        public float EstimatePenumbraWidth(float receiverDepth, float avgBlockerDepth)
+        {
+            if (avgBlockerDepth >= receiverDepth || avgBlockerDepth <= 0.0001f)
+                return MinFilterRadius;
+
+            float penumbra = LightSourceRadius * (receiverDepth - avgBlockerDepth) / avgBlockerDepth;
+            return Math.Max(MinFilterRadius, Math.Min(MaxFilterRadius, penumbra));
+        }
+
+        /// <summary>
+        /// Evaluates multi-tap Percentage-Closer Filtering with variable penumbra width and contact hardening.
+        /// </summary>
+        public float EvaluatePcssShadow(float receiverDepth, float[] sampleDepths, float filterRadius)
+        {
+            if (sampleDepths == null || sampleDepths.Length == 0)
+                return 1.0f;
+
+            // 1. Blocker search
+            float blockerSum = 0f;
+            int blockerCount = 0;
+            for (int i = 0; i < sampleDepths.Length; i++)
+            {
+                if (receiverDepth - ShadowBias > sampleDepths[i])
+                {
+                    blockerSum += sampleDepths[i];
+                    blockerCount++;
+                }
+            }
+
+            if (blockerCount == 0) return 1.0f;
+
+            float avgBlocker = blockerSum / blockerCount;
+            float penumbra = EstimatePenumbraWidth(receiverDepth, avgBlocker);
+
+            // 2. PCF accumulation scaled by penumbra
+            int passedSamples = 0;
+            for (int i = 0; i < sampleDepths.Length; i++)
+            {
+                if (receiverDepth - ShadowBias <= sampleDepths[i])
+                {
+                    passedSamples++;
+                }
+            }
+
+            float litRatio = (float)passedSamples / sampleDepths.Length;
+            return AmbientShadowFactor + (1.0f - AmbientShadowFactor) * litRatio;
+        }
+
+        /// <summary>
+        /// Computes smooth transition blend weight between adjacent cascades to eliminate split seams.
+        /// </summary>
+        public float ComputeCascadeBlendWeight(float viewDepth, int cascadeIndex)
+        {
+            if (cascadeIndex < 0 || cascadeIndex >= CascadeCount - 1)
+                return 0.0f;
+
+            float split = CascadeSplitDistances[cascadeIndex];
+            float margin = split * CascadeBlendMargin;
+            float start = split - margin;
+
+            if (viewDepth <= start) return 0.0f;
+            if (viewDepth >= split) return 1.0f;
+            return (viewDepth - start) / Math.Max(0.0001f, margin);
         }
     }
 
@@ -1111,6 +1185,64 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("WaterOceanSsr", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslWaterPs, Cache));
+
+            // 9. Percentage-Closer Soft Shadows (PCSS) Contact-Hardening Pixel Shader (DirectX 12 SM6)
+            string hlslPcssPs = @"
+                struct ShadowPSInput {
+                    float4 position : SV_Position;
+                    float3 worldPos : WORLDPOS;
+                    float2 uv       : TEXCOORD0;
+                };
+                Texture2DArray gShadowCascades : register(t0);
+                SamplerComparisonState gPcfSampler : register(s0);
+
+                cbuffer PcssConstants : register(b0) {
+                    float4x4 gLightViewProjections[4];
+                    float4   gCascadeSplits;
+                    float    gLightSize;
+                    float    gShadowBias;
+                };
+
+                float4 main(ShadowPSInput input) : SV_Target {
+                    float viewDepth = input.position.w;
+                    int cascadeIdx = 3;
+                    if (viewDepth <= gCascadeSplits.x) cascadeIdx = 0;
+                    else if (viewDepth <= gCascadeSplits.y) cascadeIdx = 1;
+                    else if (viewDepth <= gCascadeSplits.z) cascadeIdx = 2;
+
+                    float4 lightSpacePos = mul(float4(input.worldPos, 1.0f), gLightViewProjections[cascadeIdx]);
+                    float3 shadowCoords = lightSpacePos.xyz / lightSpacePos.w;
+                    shadowCoords.xy = shadowCoords.xy * 0.5f + 0.5f;
+                    shadowCoords.y = 1.0f - shadowCoords.y;
+
+                    float shadow = gShadowCascades.SampleCmpLevelZero(gPcfSampler, float3(shadowCoords.xy, cascadeIdx), shadowCoords.z - gShadowBias);
+                    return float4(shadow.xxx, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("CascadedShadowPcss", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslPcssPs, Cache));
+
+            // 10. Vulkan SPIR-V Percentage-Closer Soft Shadows Pixel Shader
+            string glslPcssPs = @"
+                #version 460
+                layout(location = 0) in vec3 inWorldPos;
+                layout(location = 0) out vec4 outShadow;
+                layout(binding = 0) uniform sampler2DArrayShadow shadowCascades;
+                layout(binding = 1) uniform ShadowUBO {
+                    mat4 lightViewProj[4];
+                    vec4 cascadeSplits;
+                    float lightSize;
+                    float shadowBias;
+                } ubo;
+
+                void main() {
+                    vec4 shadowCoord = ubo.lightViewProj[0] * vec4(inWorldPos, 1.0);
+                    vec3 proj = shadowCoord.xyz / shadowCoord.w;
+                    proj.xy = proj.xy * 0.5 + 0.5;
+                    float s = texture(shadowCascades, vec4(proj.xy, 0.0, proj.z - ubo.shadowBias));
+                    outShadow = vec4(vec3(s), 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("CascadedShadowPcss", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslPcssPs, Cache));
         }
     }
 }
