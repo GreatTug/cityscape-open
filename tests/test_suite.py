@@ -162,12 +162,12 @@ def test_all():
     print("  [PASS] Full lifecycle (Layout, WidgetView, PropertyGrid) passed with 0 exceptions")
 
     # 7. Test Deep Subsystems Verification
-    print("\n[TEST 7] Running Deep Subsystem Verification Suite (all 9 modules including Geospatial DEM & GeoTIFF Ingestion)...")
+    print("\n[TEST 7] Running Deep Subsystem Verification Suite (all 10 modules including Multithreaded CDLOD Worker)...")
     subsystems_exe = os.path.join(dist_dir, "test_subsystems.exe")
     res = subprocess.run([subsystems_exe], capture_output=True, text=True)
     assert res.returncode == 0, f"Subsystem tests failed with exit code {res.returncode}:\n{res.stdout}\n{res.stderr}"
     assert "DEEP VERIFICATION ASSERTIONS PASSED (100%)" in res.stdout, f"Subsystem suite failed:\n{res.stdout}"
-    print("  [PASS] All deep verification assertions passed across all 9 core modules")
+    print("  [PASS] All deep verification assertions passed across all 10 core modules")
 
     # 8. Test Live CityScape UI Window & Layout Rendering
     print("\n[TEST 8] Verifying Live CityScape GUI Window, Layout & Viewport...")

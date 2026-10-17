@@ -36,6 +36,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	public static List<GisBuildingInstance> ActiveBuildings { get; } = new List<GisBuildingInstance>();
 	public static SpatialQuadtree<GisBuildingInstance> BuildingSpatialIndex { get; private set; }
 	public static CdlodTerrainQuadtree TerrainCdlodTree { get; private set; }
+	public static CdlodAsyncMeshWorker AsyncMeshWorker { get; } = new CdlodAsyncMeshWorker();
 
 	public static void SetActiveBuildings(IEnumerable<GisBuildingInstance> buildings)
 	{
@@ -68,6 +69,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		if (terrain == null) return;
 		ActiveTerrain = terrain;
 		TerrainCdlodTree = new CdlodTerrainQuadtree(terrain, 4);
+		AsyncMeshWorker.ClearCache();
 		foreach (ControlRender cr in ControlRenders)
 		{
 			cr.ResetCamera();
@@ -436,6 +438,12 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		int terrainChunksCulled = 0;
 		var cdlodChunks = TerrainCdlodTree.SelectVisibleChunks(frustum, camX, camY, camZ, out terrainChunksTested, out terrainChunksCulled);
 
+		// Pre-warm / enqueue background worker tasks for selected visible chunks
+		foreach (var c in cdlodChunks)
+		{
+			AsyncMeshWorker.EnqueueRequest(c.Node, c.LodLevel, terrain, 16);
+		}
+
 		using (Pen meshPen = new Pen(Color.FromArgb(40, 180, 220, 255), 1f))
 		{
 			foreach (var chunk in cdlodChunks)
@@ -693,8 +701,9 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 				terrain.SizeX, terrain.SizeY, terrain.AreaSquareKilometers, terrain.AspectRatio), textFont, cyanBrush, 26, 43);
 			g.DrawString(string.Format("Tile Grid: {0} × {1} (Tile Size: {2:N0}m × {3:N0}m) | Sampling: {4:F2}m ({5:N0} samples)",
 				terrain.TileCountX, terrain.TileCountY, terrain.TileSizeX, terrain.TileSizeY, terrain.SamplingDistance, terrain.TotalSamplePoints), textFont, greenBrush, 26, 62);
-			g.DrawString(string.Format("3D Engine: {0} [{1}] | CDLOD Quadtree: {2} chunks ({3} culled) | Camera: Yaw={4:F0}°, Pitch={5:F0}°",
-				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, cdlodChunks.Count, terrainChunksCulled, mCameraYaw, mCameraPitch), textFont, goldBrush, 26, 81);
+			g.DrawString(string.Format("3D Engine: {0} [{1}] | CDLOD: {2} chunks ({3} culled) | Async Cache: {4} meshes ({5} pending)",
+				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, cdlodChunks.Count, terrainChunksCulled,
+				AsyncMeshWorker.CompletedCacheCount, AsyncMeshWorker.PendingQueueCount), textFont, goldBrush, 26, 81);
 			string bldStat = ActiveBuildings.Count > 0
 				? string.Format("3D Buildings: {0:N0} vis / {1:N0} tot (Culled Nodes: {2}/{3})", renderedBuildings, ActiveBuildings.Count, nodesCulled, nodesTested)
 				: "3D Buildings: 0";

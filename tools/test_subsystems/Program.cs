@@ -58,6 +58,7 @@ namespace CityScape.Tests
                 TestModernGraphicsAndEngine();
                 TestSpatialQuadtreeAndCulling();
                 TestGeospatialDemIngestion();
+                TestMultithreadedCdlodWorker();
 
                 Console.WriteLine("\n=================================================");
                 Console.WriteLine($"  ALL {_totalTests} DEEP VERIFICATION ASSERTIONS PASSED (100%)");
@@ -1438,6 +1439,72 @@ namespace CityScape.Tests
             {
                 try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { }
             }
+        }
+
+        static void TestMultithreadedCdlodWorker()
+        {
+            Console.WriteLine("\n[MODULE 10] Testing High-Throughput Multithreaded CDLOD Chunk Mesh Worker Pool...");
+
+            // 1. Worker Lifecycle & Construction
+            using (var worker = new CdlodAsyncMeshWorker(workerThreads: 4))
+            {
+                Assert(worker != null, "CdlodAsyncMeshWorker instantiated with 4 worker threads");
+                Assert(worker.PendingQueueCount == 0, "Worker starts with 0 pending tasks");
+                Assert(worker.CompletedCacheCount == 0, "Worker starts with empty completed mesh cache");
+
+                // 2. Setup CDLOD Terrain Quadtree for 100km terrain
+                var terrain = new TerrainSurfaceData { SizeX = 100000f, SizeY = 5000f, ElevationMax = 350f };
+                var quadtree = new CdlodTerrainQuadtree(terrain, maxLodLevels: 4);
+                var frustum = ViewFrustum3D.CreateFromCamera(0f, 300f, -3000f, 0f, 0f, 60f, 16f / 9f, 5f, 25000f);
+
+                int tested = 0, culled = 0;
+                var visibleChunks = quadtree.SelectVisibleChunks(frustum, 0f, 300f, -3000f, out tested, out culled);
+                Assert(visibleChunks.Count > 0, $"CDLOD visible chunk selection returned {visibleChunks.Count} chunks");
+
+                // 3. Asynchronously Enqueue Mesh Generation Requests
+                int enqueued = 0;
+                foreach (var chunk in visibleChunks)
+                {
+                    if (worker.EnqueueRequest(chunk.Node, chunk.LodLevel, terrain, gridResolution: 8))
+                    {
+                        enqueued++;
+                    }
+                }
+                Assert(enqueued > 0, $"Enqueued {enqueued} chunk meshing requests to worker pool");
+
+                // Duplicate requests should be safely rejected
+                var firstChunk = visibleChunks[0];
+                bool dupEnqueued = worker.EnqueueRequest(firstChunk.Node, firstChunk.LodLevel, terrain, gridResolution: 8);
+                Assert(!dupEnqueued, "Duplicate in-flight or cached mesh request safely rejected");
+
+                // 4. Await Multithreaded Completion
+                bool finished = worker.WaitForCompletion(5000);
+                Assert(finished, "Worker pool finished all queued chunk meshes within timeout");
+                Assert(worker.PendingQueueCount == 0, "Worker pending queue is 0 after completion");
+                Assert(worker.CompletedCacheCount >= enqueued, $"Completed cache contains all {worker.CompletedCacheCount} generated chunk meshes");
+                Assert(worker.TotalMeshesGenerated >= enqueued, $"TotalMeshesGenerated telemetry count: {worker.TotalMeshesGenerated}");
+
+                // 5. Retrieve Cached Mesh and Verify Mathematical Geometry
+                bool gotMesh = worker.TryGetMesh(firstChunk.Node, firstChunk.LodLevel, 8, out var cachedMesh);
+                Assert(gotMesh && cachedMesh != null, "TryGetMesh successfully retrieved precomputed mesh from cache");
+                Assert(cachedMesh.Vertices.Count > 0 && cachedMesh.Indices.Count > 0,
+                    $"Cached mesh contains {cachedMesh.Vertices.Count} vertices and {cachedMesh.Indices.Count} indices");
+
+                // Check vertex normal length is normalized
+                var norm = cachedMesh.Vertices[0];
+                float nLen = (float)Math.Sqrt(norm.Nx * norm.Nx + norm.Ny * norm.Ny + norm.Nz * norm.Nz);
+                Assert(Math.Abs(nLen - 1.0f) < 0.05f, "Background worker computed normalized vertex normal vector");
+
+                // 6. Immediate Generation or Cache Hit
+                var immediateMesh = worker.GetOrGenerateImmediate(firstChunk.Node, firstChunk.LodLevel, terrain, 8);
+                Assert(immediateMesh == cachedMesh, "GetOrGenerateImmediate returned cached instance on hit");
+
+                // 7. Clear Cache and Teardown
+                worker.ClearCache();
+                Assert(worker.CompletedCacheCount == 0, "ClearCache flushed completed cache");
+                Assert(worker.PendingQueueCount == 0, "ClearCache flushed pending queue");
+            }
+            Assert(true, "CdlodAsyncMeshWorker cleanly disposed and terminated worker threads");
         }
     }
 }

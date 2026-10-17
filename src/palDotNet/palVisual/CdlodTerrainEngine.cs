@@ -28,26 +28,33 @@ namespace palDotNet.palVisual
         {
             if (terrain == null || Node == null) return null;
 
-            int div = Math.Max(2, baseGridResolution >> Math.Min(4, LodLevel));
+            float chunkLenX = Node.MaxX - Node.MinX;
+            float chunkLenZ = Node.MaxZ - Node.MinZ;
+            float aspectXZ = chunkLenX / Math.Max(1.0f, chunkLenZ);
+
+            int baseDiv = Math.Max(2, baseGridResolution >> Math.Min(4, LodLevel));
+            int divX = Math.Min(48, Math.Max(2, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, aspectXZ)))));
+            int divZ = Math.Min(48, Math.Max(2, (int)Math.Round(baseDiv * Math.Sqrt(Math.Max(1.0, 1.0 / Math.Max(0.01, aspectXZ))))));
+
             var mesh = new ExportMeshData { Name = $"TerrainChunk_LOD{LodLevel}_{Node.ChunkId}" };
 
-            float stepX = (Node.MaxX - Node.MinX) / div;
-            float stepZ = (Node.MaxZ - Node.MinZ) / div;
+            float stepX = chunkLenX / divX;
+            float stepZ = chunkLenZ / divZ;
 
-            for (int j = 0; j <= div; j++)
+            for (int j = 0; j <= divZ; j++)
             {
                 float z = Node.MinZ + j * stepZ;
-                float v = (float)j / div;
+                float v = (float)j / divZ;
 
-                for (int i = 0; i <= div; i++)
+                for (int i = 0; i <= divX; i++)
                 {
                     float x = Node.MinX + i * stepX;
-                    float u = (float)i / div;
+                    float u = (float)i / divX;
 
                     float elev = terrain.EvaluateElevation(x, z);
 
                     // Compute terrain normal via central difference
-                    float delta = Math.Max(1.0f, stepX * 0.5f);
+                    float delta = Math.Max(1.0f, Math.Min(stepX, stepZ) * 0.5f);
                     float hL = terrain.EvaluateElevation(x - delta, z);
                     float hR = terrain.EvaluateElevation(x + delta, z);
                     float hD = terrain.EvaluateElevation(x, z - delta);
@@ -72,10 +79,10 @@ namespace palDotNet.palVisual
                 }
             }
 
-            int stride = div + 1;
-            for (int j = 0; j < div; j++)
+            int stride = divX + 1;
+            for (int j = 0; j < divZ; j++)
             {
-                for (int i = 0; i < div; i++)
+                for (int i = 0; i < divX; i++)
                 {
                     uint i00 = (uint)(j * stride + i);
                     uint i10 = (uint)(j * stride + (i + 1));
