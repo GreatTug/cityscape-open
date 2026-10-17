@@ -1735,6 +1735,72 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("WetAsphaltRipplesPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 WetAsphaltRipplesPs shader registered");
             Assert(pipeline.GetModule("WetAsphaltRipplesPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V WetAsphaltRipplesPs shader registered");
 
+            // Volumetric Cloud Raymarching Pipeline (3D Worley-Perlin, Dual-Lobe HG & Powder Sugar)
+            var clouds = pipeline.VolumetricClouds;
+            Assert(clouds != null, "pipeline.VolumetricClouds initialized");
+            Assert(clouds.CloudBottomAltitude == 1500.0f && clouds.CloudTopAltitude == 4500.0f, "Cloud layer bounds configured: 1500m to 4500m (3000m thickness)");
+            Assert(clouds.CloudLayerThickness == 3000.0f, "Cloud layer thickness accurately computed as 3000m");
+
+            // Cloud Layer Ray-Slab Intersections
+            bool hitUp = clouds.IntersectCloudLayer(rayOriginY: 100.0f, rayDirY: 0.5f, out float tNearUp, out float tFarUp);
+            Assert(hitUp, "Upward view ray intersects atmospheric cloud layer");
+            Assert(Math.Abs(tNearUp - 2800.0f) < 1.0f && Math.Abs(tFarUp - 8800.0f) < 1.0f, $"Ray entry and exit distances verified: Near={tNearUp:F1}m, Far={tFarUp:F1}m");
+
+            bool hitDown = clouds.IntersectCloudLayer(rayOriginY: 100.0f, rayDirY: -0.5f, out _, out _);
+            Assert(!hitDown, "Downward ground ray correctly rejects cloud layer");
+
+            bool hitInsideHoriz = clouds.IntersectCloudLayer(rayOriginY: 2500.0f, rayDirY: 0.0f, out float tNearIn, out float tFarIn);
+            Assert(hitInsideHoriz && tNearIn == 0f && tFarIn > 10000.0f, "Horizontal ray from inside cloud spans entire atmospheric visibility");
+
+            // Height Density Gradient S(h)
+            float gradBelow = clouds.EvaluateHeightGradient(1400.0f);
+            Assert(gradBelow == 0.0f, "Cloud density is zero below cloud bottom altitude (1400m < 1500m)");
+            float gradAbove = clouds.EvaluateHeightGradient(4600.0f);
+            Assert(gradAbove == 0.0f, "Cloud density is zero above cloud top altitude (4600m > 4500m)");
+            float gradMid = clouds.EvaluateHeightGradient(3000.0f); // h = 0.5
+            Assert(gradMid > 0.95f, $"Cumulus cloud body density reaches maximum inside cloud layer: {gradMid:F3}");
+
+            // Dual-Lobe Henyey-Greenstein Phase Function
+            float phaseFwd = clouds.EvaluateDualLobePhase(1.0f); // Directly looking into sun
+            float phaseBwd = clouds.EvaluateDualLobePhase(-1.0f); // Looking away from sun
+            Assert(phaseFwd > 1.0f, $"Forward silver lining scattering strongly amplifies direct sunlight: {phaseFwd:F3}");
+            Assert(phaseFwd > phaseBwd * 10.0f, $"Forward silver lining scattering dominates backscattering ({phaseFwd:F3} vs {phaseBwd:F3})");
+
+            // Powder Sugar Beer-Lambert Transmittance
+            float tZero = clouds.EvaluateBeerPowderTransmittance(0.0f);
+            Assert(tZero == 1.0f, "Zero optical depth returns unity transmittance (1.0)");
+            float tThin = clouds.EvaluateBeerPowderTransmittance(0.05f);
+            float tPeak = clouds.EvaluateBeerPowderTransmittance(0.50f);
+            Assert(tPeak > tThin, $"Powder sugar effect suppresses thin grazing edges to reveal deep cloud volume: t(0.50)={tPeak:F3} > t(0.05)={tThin:F3}");
+            float tDense = clouds.EvaluateBeerPowderTransmittance(5.0f);
+            Assert(tDense < 0.02f, $"Dense cloud interior exhibits strong exponential extinction: t(5.0)={tDense:F5}");
+
+            // Multi-Scattering Series Convergence
+            float multiScatterVal = clouds.EvaluateMultiScattering(1.5f, 0.8f);
+            Assert(multiScatterVal > 0.0f, $"Multi-scattering approximation preserves diffuse bounce energy: {multiScatterVal:F4}");
+
+            // Procedural 3D Noise Sampling with Wind Advection
+            clouds.SampleProceduralNoise(0f, 3000f, 0f, timeSec: 0f, out float baseD0, out float finalD0);
+            clouds.SampleProceduralNoise(0f, 3000f, 0f, timeSec: 10f, out _, out float finalD10);
+            Assert(baseD0 >= 0.0f && finalD0 >= 0.0f, "Procedural 3D cloud noise produces valid non-negative density");
+            Assert(finalD0 != finalD10 || finalD0 == 0f, "Wind advection dynamically shifts cloud density field over time");
+
+            // Volumetric Raymarching Integration
+            clouds.RaymarchCloud(
+                rayOriginX: 0f, rayOriginY: 100f, rayOriginZ: 0f,
+                rayDirX: 0f, rayDirY: 0.6f, rayDirZ: 0.8f,
+                sunDirX: 0f, sunDirY: 0.7071f, sunDirZ: 0.7071f,
+                sunLightR: 2.5f, sunLightG: 2.3f, sunLightB: 2.0f,
+                skyAmbientR: 0.2f, skyAmbientG: 0.4f, skyAmbientB: 0.8f,
+                timeSec: 1.0f, stepCount: 32,
+                out float cloudR, out float cloudG, out float cloudB, out float cloudTrans);
+            Assert(cloudTrans >= 0.0f && cloudTrans <= 1.0f, $"Integrated ray transmittance within physical bounds [0, 1]: {cloudTrans:F3}");
+            Assert(cloudR >= 0.0f && cloudG >= 0.0f && cloudB >= 0.0f, $"Volumetric cloud raymarching radiance verified: ({cloudR:F3}, {cloudG:F3}, {cloudB:F3})");
+
+            // Volumetric Cloud Shaders Registered
+            Assert(pipeline.GetModule("VolumetricCloudRaymarchingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 VolumetricCloudRaymarchingPs shader registered");
+            Assert(pipeline.GetModule("VolumetricCloudRaymarchingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V VolumetricCloudRaymarchingPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");

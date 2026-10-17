@@ -3136,6 +3136,338 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Volumetric Cloud Raymarching Pipeline based on 3D Worley-Perlin procedural noise,
+    /// Dual-Lobe Henyey-Greenstein phase function, multiple scattering approximations,
+    /// and Beer-Lambert powder-sugar extinction for high-fidelity atmospheric skies.
+    /// </summary>
+    public class VolumetricCloudPipeline
+    {
+        public float CloudBottomAltitude { get; set; } = 1500.0f; // meters
+        public float CloudTopAltitude { get; set; } = 4500.0f;    // meters
+        public float CloudLayerThickness => Math.Max(1.0f, CloudTopAltitude - CloudBottomAltitude);
+
+        public float Coverage { get; set; } = 0.45f;              // [0, 1] cloud amount
+        public float DensityMultiplier { get; set; } = 0.08f;
+        public float BaseSoftness { get; set; } = 0.15f;          // Normalized height bottom transition
+        public float TopSoftness { get; set; } = 0.20f;           // Normalized height top transition
+
+        public float BaseNoiseScale { get; set; } = 0.00035f;     // Low frequency shape
+        public float DetailNoiseScale { get; set; } = 0.0028f;    // High frequency erosion
+        public float DetailErosionFactor { get; set; } = 0.35f;
+
+        public float WindSpeedX { get; set; } = 15.0f;            // m/s
+        public float WindSpeedY { get; set; } = 0.0f;
+        public float WindSpeedZ { get; set; } = 5.0f;
+
+        public float ScatteringCoefficient { get; set; } = 0.040f; // sigma_s (m^-1)
+        public float ExtinctionCoefficient { get; set; } = 0.042f; // sigma_t (m^-1)
+        public float PowderSugarStrength { get; set; } = 1.0f;
+
+        public float SunForwardG { get; set; } = 0.75f;           // Forward silver lining lobe
+        public float SunBackwardG { get; set; } = -0.20f;         // Backscattering retro lobe
+        public float PhaseAlpha { get; set; } = 0.70f;            // Forward/backward blend weight
+
+        public int MultiScatteringOctaves { get; set; } = 3;
+        public float MultiScatteringDecay { get; set; } = 0.50f;
+
+        /// <summary>
+        /// Calculates intersection of camera ray with cloud layer bounding altitudes.
+        /// Returns true if ray passes through the cloud layer in front of the camera.
+        /// </summary>
+        public bool IntersectCloudLayer(float rayOriginY, float rayDirY, out float tNear, out float tFar, float maxDistance = 50000.0f)
+        {
+            tNear = 0f;
+            tFar = 0f;
+
+            if (Math.Abs(rayDirY) < 1e-6f)
+            {
+                // Ray is perfectly horizontal
+                if (rayOriginY >= CloudBottomAltitude && rayOriginY <= CloudTopAltitude)
+                {
+                    tNear = 0f;
+                    tFar = maxDistance;
+                    return true;
+                }
+                return false;
+            }
+
+            float t1 = (CloudBottomAltitude - rayOriginY) / rayDirY;
+            float t2 = (CloudTopAltitude - rayOriginY) / rayDirY;
+
+            float tMin = Math.Min(t1, t2);
+            float tMax = Math.Max(t1, t2);
+
+            if (tMax <= 0.0f)
+            {
+                // Cloud layer is behind camera ray
+                return false;
+            }
+
+            tNear = Math.Max(0.0f, tMin);
+            tFar = Math.Min(maxDistance, tMax);
+
+            return tFar > tNear;
+        }
+
+        /// <summary>
+        /// Evaluates vertical cumulus cloud density gradient S(h) in [0, 1] based on altitude.
+        /// Flat base, rounded billow tops, and zero density outside cloud boundary.
+        /// </summary>
+        public float EvaluateHeightGradient(float altitude)
+        {
+            if (altitude < CloudBottomAltitude || altitude > CloudTopAltitude)
+                return 0.0f;
+
+            float h = (altitude - CloudBottomAltitude) / CloudLayerThickness;
+            h = Math.Max(0.0f, Math.Min(1.0f, h));
+
+            float baseGrad = Math.Max(0.0f, Math.Min(1.0f, h / Math.Max(0.01f, BaseSoftness)));
+            float topGrad = Math.Max(0.0f, Math.Min(1.0f, (1.0f - h) / Math.Max(0.01f, TopSoftness)));
+
+            // Smooth cubic Hermite interpolation
+            float smoothBase = baseGrad * baseGrad * (3.0f - 2.0f * baseGrad);
+            float smoothTop = topGrad * topGrad * (3.0f - 2.0f * topGrad);
+
+            return smoothBase * smoothTop;
+        }
+
+        /// <summary>
+        /// Evaluates single Henyey-Greenstein phase function lobe.
+        /// </summary>
+        public static float EvaluateHenyeyGreenstein(float cosTheta, float g)
+        {
+            float g2 = g * g;
+            float denom = 1.0f + g2 - 2.0f * g * cosTheta;
+            if (denom < 1e-5f) denom = 1e-5f;
+            return (1.0f - g2) / (4.0f * (float)Math.PI * (float)Math.Pow(denom, 1.5));
+        }
+
+        /// <summary>
+        /// Evaluates dual-lobe Henyey-Greenstein phase function for forward silver lining and backward retroreflection.
+        /// </summary>
+        public float EvaluateDualLobePhase(float cosTheta)
+        {
+            float fwd = EvaluateHenyeyGreenstein(cosTheta, SunForwardG);
+            float bwd = EvaluateHenyeyGreenstein(cosTheta, SunBackwardG);
+            return PhaseAlpha * fwd + (1.0f - PhaseAlpha) * bwd;
+        }
+
+        /// <summary>
+        /// Evaluates Beer-Lambert optical transmittance combined with powder sugar edge effect.
+        /// </summary>
+        public float EvaluateBeerPowderTransmittance(float opticalDepth)
+        {
+            if (opticalDepth <= 0.0f) return 1.0f;
+            float beer = (float)Math.Exp(-opticalDepth);
+            float powder = 1.0f - (float)Math.Exp(-2.0f * opticalDepth * PowderSugarStrength);
+            return Math.Max(0.0f, Math.Min(1.0f, 2.0f * beer * powder));
+        }
+
+        /// <summary>
+        /// Evaluates multi-scattering energy preservation sum over multiple bounce octaves.
+        /// </summary>
+        public float EvaluateMultiScattering(float opticalDepth, float cosTheta)
+        {
+            float sum = 0.0f;
+            float a = 1.0f;
+            float b = 1.0f;
+            float c = 1.0f;
+
+            for (int k = 0; k < MultiScatteringOctaves; k++)
+            {
+                float lobe = EvaluateHenyeyGreenstein(cosTheta, SunForwardG * b);
+                float trans = (float)Math.Exp(-opticalDepth * c);
+                sum += a * lobe * trans;
+
+                a *= MultiScatteringDecay;
+                b *= 0.5f;
+                c *= 0.5f;
+            }
+
+            return sum;
+        }
+
+        /// <summary>
+        /// Remaps value v from [inMin, inMax] to [outMin, outMax] clamped.
+        /// </summary>
+        public static float Remap(float v, float inMin, float inMax, float outMin, float outMax)
+        {
+            if (Math.Abs(inMax - inMin) < 1e-6f) return outMin;
+            float t = (v - inMin) / (inMax - inMin);
+            t = Math.Max(0.0f, Math.Min(1.0f, t));
+            return outMin + t * (outMax - outMin);
+        }
+
+        /// <summary>
+        /// Generates analytical 3D Worley-Perlin procedural noise sample with wind displacement.
+        /// </summary>
+        public void SampleProceduralNoise(float worldX, float worldY, float worldZ, float timeSec,
+            out float baseDensity, out float finalDensity)
+        {
+            baseDensity = 0f;
+            finalDensity = 0f;
+
+            float grad = EvaluateHeightGradient(worldY);
+            if (grad <= 0.0f) return;
+
+            // Wind advection
+            float ax = worldX + WindSpeedX * timeSec;
+            float ay = worldY + WindSpeedY * timeSec;
+            float az = worldZ + WindSpeedZ * timeSec;
+
+            // 1. Low-frequency Perlin-Worley base shape
+            float bx = ax * BaseNoiseScale;
+            float by = ay * BaseNoiseScale;
+            float bz = az * BaseNoiseScale;
+
+            // Multi-harmonic analytical sinusoidal lattice (fBm base proxy)
+            float p1 = (float)(Math.Sin(bx * 2.0 + Math.Cos(bz * 1.5)) * Math.Cos(by * 2.5 + Math.Sin(bx * 0.8)));
+            float p2 = (float)(Math.Sin(bx * 4.1 - Math.Sin(by * 3.7)) * Math.Cos(bz * 4.3 + Math.Cos(by * 1.9))) * 0.5f;
+            float p3 = (float)(Math.Sin(bx * 8.3 + bz * 7.9) * Math.Cos(by * 8.1)) * 0.25f;
+            float perlinBase = 0.5f + 0.5f * ((p1 + p2 + p3) / 1.75f);
+
+            // Inverted Voronoi cellular distance (Worley base proxy)
+            float cellDistX = Math.Abs((float)Math.IEEERemainder(bx * 3.0, 1.0));
+            float cellDistZ = Math.Abs((float)Math.IEEERemainder(bz * 3.0, 1.0));
+            float worleyBase = 1.0f - (float)Math.Sqrt(cellDistX * cellDistX + cellDistZ * cellDistZ);
+            worleyBase = Math.Max(0f, Math.Min(1f, worleyBase));
+
+            float perlinWorley = perlinBase * 0.65f + worleyBase * 0.35f;
+
+            // Remap with coverage threshold
+            float coverageThreshold = 1.0f - Coverage;
+            baseDensity = Remap(perlinWorley, coverageThreshold, 1.0f, 0.0f, 1.0f) * grad;
+
+            if (baseDensity <= 0.001f)
+            {
+                finalDensity = 0.0f;
+                return;
+            }
+
+            // 2. High-frequency detail erosion noise
+            float dx = ax * DetailNoiseScale;
+            float dy = ay * DetailNoiseScale;
+            float dz = az * DetailNoiseScale;
+
+            float d1 = Math.Abs((float)Math.IEEERemainder(dx * 2.0 + Math.Sin(dz), 1.0));
+            float d2 = Math.Abs((float)Math.IEEERemainder(dz * 2.0 + Math.Cos(dy), 1.0));
+            float detailWorley = 1.0f - (float)Math.Sqrt(d1 * d1 + d2 * d2);
+            detailWorley = Math.Max(0f, Math.Min(1f, detailWorley));
+
+            // Erode base density by detail noise
+            float eroded = Remap(baseDensity, detailWorley * DetailErosionFactor, 1.0f, 0.0f, 1.0f);
+            finalDensity = eroded * DensityMultiplier;
+        }
+
+        /// <summary>
+        /// Raymarches through the volumetric cloud layer from ray origin along ray direction.
+        /// Computes direct sunlight in-scattering with powder sugar transmittance, multi-scattering,
+        /// ambient skylight illumination, and integrated ray transmittance.
+        /// </summary>
+        public void RaymarchCloud(
+            float rayOriginX, float rayOriginY, float rayOriginZ,
+            float rayDirX, float rayDirY, float rayDirZ,
+            float sunDirX, float sunDirY, float sunDirZ,
+            float sunLightR, float sunLightG, float sunLightB,
+            float skyAmbientR, float skyAmbientG, float skyAmbientB,
+            float timeSec, int stepCount,
+            out float outColorR, out float outColorG, out float outColorB,
+            out float outTransmittance)
+        {
+            outColorR = 0f;
+            outColorG = 0f;
+            outColorB = 0f;
+            outTransmittance = 1.0f;
+
+            if (!IntersectCloudLayer(rayOriginY, rayDirY, out float tNear, out float tFar))
+                return;
+
+            float rayDist = tFar - tNear;
+            if (rayDist <= 0.0f) return;
+
+            stepCount = Math.Max(4, Math.Min(128, stepCount));
+            float dt = rayDist / stepCount;
+
+            // Cosine of scattering angle between view ray and sun direction
+            float cosTheta = rayDirX * sunDirX + rayDirY * sunDirY + rayDirZ * sunDirZ;
+            float phaseVal = EvaluateDualLobePhase(cosTheta);
+
+            float accumulatedR = 0f;
+            float accumulatedG = 0f;
+            float accumulatedB = 0f;
+            float currentTrans = 1.0f;
+
+            for (int i = 0; i < stepCount; i++)
+            {
+                float t = tNear + (i + 0.5f) * dt;
+                float px = rayOriginX + t * rayDirX;
+                float py = rayOriginY + t * rayDirY;
+                float pz = rayOriginZ + t * rayDirZ;
+
+                SampleProceduralNoise(px, py, pz, timeSec, out _, out float density);
+                if (density > 1e-4f)
+                {
+                    // Secondary shadow raymarch towards sun (4 steps)
+                    float sunRayLen = 1200.0f;
+                    int sunSteps = 4;
+                    float ds = sunRayLen / sunSteps;
+                    float sunOpticalDepth = 0f;
+
+                    for (int s = 1; s <= sunSteps; s++)
+                    {
+                        float spx = px + s * ds * sunDirX;
+                        float spy = py + s * ds * sunDirY;
+                        float spz = pz + s * ds * sunDirZ;
+                        SampleProceduralNoise(spx, spy, spz, timeSec, out _, out float sunDensity);
+                        sunOpticalDepth += sunDensity * ExtinctionCoefficient * ds;
+                    }
+
+                    // Direct sunlight reaching sample point with powder sugar effect
+                    float sunTrans = EvaluateBeerPowderTransmittance(sunOpticalDepth);
+                    float multiScatter = EvaluateMultiScattering(sunOpticalDepth, cosTheta);
+                    float sunFactor = Math.Max(sunTrans * phaseVal, multiScatter * 0.35f);
+
+                    // Ambient skylight based on height in cloud layer
+                    float normH = Math.Max(0.0f, Math.Min(1.0f, (py - CloudBottomAltitude) / CloudLayerThickness));
+                    float ambFactor = 0.4f + 0.6f * normH;
+
+                    float directR = sunLightR * sunFactor;
+                    float directG = sunLightG * sunFactor;
+                    float directB = sunLightB * sunFactor;
+
+                    float ambR = skyAmbientR * ambFactor;
+                    float ambG = skyAmbientG * ambFactor;
+                    float ambB = skyAmbientB * ambFactor;
+
+                    float stepOpticalDepth = density * ExtinctionCoefficient * dt;
+                    float stepTrans = (float)Math.Exp(-stepOpticalDepth);
+
+                    // In-scatter slice
+                    float inScatterR = (directR + ambR) * ScatteringCoefficient * density * dt;
+                    float inScatterG = (directG + ambG) * ScatteringCoefficient * density * dt;
+                    float inScatterB = (directB + ambB) * ScatteringCoefficient * density * dt;
+
+                    accumulatedR += currentTrans * inScatterR;
+                    accumulatedG += currentTrans * inScatterG;
+                    accumulatedB += currentTrans * inScatterB;
+
+                    currentTrans *= stepTrans;
+                    if (currentTrans < 0.01f)
+                    {
+                        currentTrans = 0.0f;
+                        break;
+                    }
+                }
+            }
+
+            outColorR = accumulatedR;
+            outColorG = accumulatedG;
+            outColorB = accumulatedB;
+            outTransmittance = currentTrans;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -3161,6 +3493,7 @@ namespace palDotNet.palModernEngine
         public CameraExposurePipeline CameraExposure { get; } = new CameraExposurePipeline();
         public SsrDenoiserPipeline SsrDenoiser { get; } = new SsrDenoiserPipeline();
         public WetRoadRipplesPipeline WetRoads { get; } = new WetRoadRipplesPipeline();
+        public VolumetricCloudPipeline VolumetricClouds { get; } = new VolumetricCloudPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -5289,6 +5622,233 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("WetAsphaltRipplesPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslWetRoadPs, Cache));
+
+            // 39. DirectX 12 HLSL SM6 Volumetric Cloud Worley-Perlin Raymarching Pixel Shader
+            string hlslCloudPs = @"
+                struct CloudPSInput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+
+                Texture2D gWeatherTexture        : register(t0);
+                Texture3D gBaseNoiseTexture      : register(t1);
+                Texture3D gDetailNoiseTexture    : register(t2);
+                Texture2D gSceneDepthTexture     : register(t3);
+                SamplerState gLinearRepeatSampler : register(s0);
+                SamplerState gLinearClampSampler  : register(s1);
+
+                cbuffer CloudConstants : register(b0) {
+                    float4x4 gInvViewProjection;
+                    float3   gCameraPosition;
+                    float    gTimeSeconds;
+                    float3   gSunDirection;
+                    float    gCloudBottom;
+                    float3   gSunRadiance;
+                    float    gCloudTop;
+                    float3   gAmbientSkyColor;
+                    float    gCoverage;
+                    float3   gWindVector;
+                    float    gDensityMultiplier;
+                };
+
+                float Remap(float v, float inMin, float inMax, float outMin, float outMax) {
+                    return outMin + saturate((v - inMin) / max(1e-5f, inMax - inMin)) * (outMax - outMin);
+                }
+
+                float HenyeyGreenstein(float cosTheta, float g) {
+                    float g2 = g * g;
+                    return (1.0f - g2) / (12.56637f * pow(max(1e-4f, 1.0f + g2 - 2.0f * g * cosTheta), 1.5f));
+                }
+
+                float DualLobePhase(float cosTheta) {
+                    return 0.70f * HenyeyGreenstein(cosTheta, 0.75f) + 0.30f * HenyeyGreenstein(cosTheta, -0.20f);
+                }
+
+                float BeerPowder(float tau) {
+                    return 2.0f * exp(-tau) * (1.0f - exp(-2.0f * tau));
+                }
+
+                float SampleCloudDensity(float3 p, float heightGrad) {
+                    float3 pAdvected = p + gWindVector * gTimeSeconds;
+                    float4 baseNoise = gBaseNoiseTexture.SampleLevel(gLinearRepeatSampler, pAdvected * 0.00035f, 0);
+                    float baseFbm = baseNoise.r * 0.65f + baseNoise.g * 0.35f;
+                    float base = Remap(baseFbm, 1.0f - gCoverage, 1.0f, 0.0f, 1.0f) * heightGrad;
+                    if (base <= 0.001f) return 0.0f;
+                    float detailNoise = gDetailNoiseTexture.SampleLevel(gLinearRepeatSampler, pAdvected * 0.0028f, 0).r;
+                    float eroded = Remap(base, detailNoise * 0.35f, 1.0f, 0.0f, 1.0f);
+                    return eroded * gDensityMultiplier;
+                }
+
+                float4 main(CloudPSInput input) : SV_Target {
+                    float4 clipPos = float4(input.uv * 2.0f - 1.0f, 1.0f, 1.0f);
+                    clipPos.y = -clipPos.y;
+                    float4 worldPosTarget = mul(clipPos, gInvViewProjection);
+                    worldPosTarget /= worldPosTarget.w;
+                    float3 rayDir = normalize(worldPosTarget.xyz - gCameraPosition);
+
+                    if (abs(rayDir.y) < 1e-5f) return float4(0, 0, 0, 0);
+
+                    float t1 = (gCloudBottom - gCameraPosition.y) / rayDir.y;
+                    float t2 = (gCloudTop - gCameraPosition.y) / rayDir.y;
+                    float tNear = max(0.0f, min(t1, t2));
+                    float tFar = min(50000.0f, max(t1, t2));
+                    if (tFar <= tNear) return float4(0, 0, 0, 0);
+
+                    float cosTheta = dot(rayDir, gSunDirection);
+                    float phase = DualLobePhase(cosTheta);
+
+                    int stepCount = 32;
+                    float dt = (tFar - tNear) / float(stepCount);
+                    float3 accumColor = float3(0, 0, 0);
+                    float transmittance = 1.0f;
+
+                    for (int i = 0; i < stepCount; i++) {
+                        float t = tNear + (float(i) + 0.5f) * dt;
+                        float3 p = gCameraPosition + t * rayDir;
+                        float h = saturate((p.y - gCloudBottom) / max(1.0f, gCloudTop - gCloudBottom));
+                        float hGrad = saturate(h / 0.15f) * saturate((1.0f - h) / 0.20f);
+
+                        float density = SampleCloudDensity(p, hGrad);
+                        if (density > 1e-4f) {
+                            float sunTau = 0.0f;
+                            float sunStep = 300.0f;
+                            [unroll]
+                            for (int s = 1; s <= 4; s++) {
+                                float3 sp = p + float(s) * sunStep * gSunDirection;
+                                float sh = saturate((sp.y - gCloudBottom) / max(1.0f, gCloudTop - gCloudBottom));
+                                sunTau += SampleCloudDensity(sp, saturate(sh / 0.15f) * saturate((1.0f - sh) / 0.20f)) * 0.042f * sunStep;
+                            }
+
+                            float sunTrans = BeerPowder(sunTau);
+                            float3 sunLight = gSunRadiance * (sunTrans * phase);
+                            float3 ambLight = gAmbientSkyColor * (0.4f + 0.6f * h);
+                            float stepTau = density * 0.042f * dt;
+                            float stepTrans = exp(-stepTau);
+
+                            accumColor += transmittance * (sunLight + ambLight) * 0.040f * density * dt;
+                            transmittance *= stepTrans;
+                            if (transmittance < 0.01f) break;
+                        }
+                    }
+
+                    return float4(accumColor, 1.0f - transmittance);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("VolumetricCloudRaymarchingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslCloudPs, Cache));
+
+            // 40. Vulkan 1.3 SPIR-V Volumetric Cloud Worley-Perlin Raymarching Fragment Shader
+            string glslCloudPs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texWeather;
+                layout(binding = 1) uniform sampler3D texBaseNoise;
+                layout(binding = 2) uniform sampler3D texDetailNoise;
+                layout(binding = 3) uniform sampler2D texDepth;
+
+                layout(binding = 4) uniform CloudUBO {
+                    mat4 invViewProj;
+                    vec3 cameraPos;
+                    float timeSec;
+                    vec3 sunDir;
+                    float cloudBottom;
+                    vec3 sunRadiance;
+                    float cloudTop;
+                    vec3 ambientSky;
+                    float coverage;
+                    vec3 windVector;
+                    float densityMultiplier;
+                } ubo;
+
+                float Remap(float v, float inMin, float inMax, float outMin, float outMax) {
+                    return outMin + clamp((v - inMin) / max(1e-5, inMax - inMin), 0.0, 1.0) * (outMax - outMin);
+                }
+
+                float HenyeyGreenstein(float cosTheta, float g) {
+                    float g2 = g * g;
+                    return (1.0 - g2) / (12.56637 * pow(max(1e-4, 1.0 + g2 - 2.0 * g * cosTheta), 1.5));
+                }
+
+                float DualLobePhase(float cosTheta) {
+                    return 0.70 * HenyeyGreenstein(cosTheta, 0.75) + 0.30 * HenyeyGreenstein(cosTheta, -0.20);
+                }
+
+                float BeerPowder(float tau) {
+                    return 2.0 * exp(-tau) * (1.0 - exp(-2.0 * tau));
+                }
+
+                float SampleCloudDensity(vec3 p, float heightGrad) {
+                    vec3 pAdvected = p + ubo.windVector * ubo.timeSec;
+                    vec4 baseNoise = textureLod(texBaseNoise, pAdvected * 0.00035, 0.0);
+                    float baseFbm = baseNoise.r * 0.65 + baseNoise.g * 0.35;
+                    float base = Remap(baseFbm, 1.0 - ubo.coverage, 1.0, 0.0, 1.0) * heightGrad;
+                    if (base <= 0.001) return 0.0;
+                    float detailNoise = textureLod(texDetailNoise, pAdvected * 0.0028, 0.0).r;
+                    float eroded = Remap(base, detailNoise * 0.35, 1.0, 0.0, 1.0);
+                    return eroded * ubo.densityMultiplier;
+                }
+
+                void main() {
+                    vec4 clipPos = vec4(inUV * 2.0 - 1.0, 1.0, 1.0);
+                    vec4 worldTarget = ubo.invViewProj * clipPos;
+                    worldTarget /= worldTarget.w;
+                    vec3 rayDir = normalize(worldTarget.xyz - ubo.cameraPos);
+
+                    if (abs(rayDir.y) < 1e-5) {
+                        outColor = vec4(0.0);
+                        return;
+                    }
+
+                    float t1 = (ubo.cloudBottom - ubo.cameraPos.y) / rayDir.y;
+                    float t2 = (ubo.cloudTop - ubo.cameraPos.y) / rayDir.y;
+                    float tNear = max(0.0, min(t1, t2));
+                    float tFar = min(50000.0, max(t1, t2));
+                    if (tFar <= tNear) {
+                        outColor = vec4(0.0);
+                        return;
+                    }
+
+                    float cosTheta = dot(rayDir, ubo.sunDir);
+                    float phase = DualLobePhase(cosTheta);
+
+                    int stepCount = 32;
+                    float dt = (tFar - tNear) / float(stepCount);
+                    vec3 accumColor = vec3(0.0);
+                    float transmittance = 1.0;
+
+                    for (int i = 0; i < stepCount; i++) {
+                        float t = tNear + (float(i) + 0.5) * dt;
+                        vec3 p = ubo.cameraPos + t * rayDir;
+                        float h = clamp((p.y - ubo.cloudBottom) / max(1.0, ubo.cloudTop - ubo.cloudBottom), 0.0, 1.0);
+                        float hGrad = clamp(h / 0.15, 0.0, 1.0) * clamp((1.0 - h) / 0.20, 0.0, 1.0);
+
+                        float density = SampleCloudDensity(p, hGrad);
+                        if (density > 1e-4) {
+                            float sunTau = 0.0;
+                            float sunStep = 300.0;
+                            for (int s = 1; s <= 4; s++) {
+                                vec3 sp = p + float(s) * sunStep * ubo.sunDir;
+                                float sh = clamp((sp.y - ubo.cloudBottom) / max(1.0, ubo.cloudTop - ubo.cloudBottom), 0.0, 1.0);
+                                sunTau += SampleCloudDensity(sp, clamp(sh / 0.15, 0.0, 1.0) * clamp((1.0 - sh) / 0.20, 0.0, 1.0)) * 0.042 * sunStep;
+                            }
+
+                            float sunTrans = BeerPowder(sunTau);
+                            vec3 sunLight = ubo.sunRadiance * (sunTrans * phase);
+                            vec3 ambLight = ubo.ambientSky * (0.4 + 0.6 * h);
+                            float stepTau = density * 0.042 * dt;
+                            float stepTrans = exp(-stepTau);
+
+                            accumColor += transmittance * (sunLight + ambLight) * 0.040 * density * dt;
+                            transmittance *= stepTrans;
+                            if (transmittance < 0.01) break;
+                        }
+                    }
+
+                    outColor = vec4(accumColor, 1.0 - transmittance);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("VolumetricCloudRaymarchingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslCloudPs, Cache));
         }
     }
 }
