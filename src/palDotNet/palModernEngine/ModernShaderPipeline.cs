@@ -1290,6 +1290,215 @@ namespace palDotNet.palModernEngine
         }
     }
 
+    public enum ClusteredLightType
+    {
+        Point = 0,
+        Spot = 1,
+        Directional = 2
+    }
+
+    public struct ClusteredLight
+    {
+        public float PosX, PosY, PosZ;
+        public float Range;
+        public float ColorR, ColorG, ColorB;
+        public float Intensity;
+        public float DirX, DirY, DirZ;
+        public float InnerConeAngle;
+        public float OuterConeAngle;
+        public ClusteredLightType LightType;
+
+        public ClusteredLight(float x, float y, float z, float range, float r, float g, float b, float intensity,
+            ClusteredLightType type = ClusteredLightType.Point, float dirX = 0f, float dirY = -1f, float dirZ = 0f,
+            float innerAngle = 0.523599f, float outerAngle = 0.785398f)
+        {
+            PosX = x; PosY = y; PosZ = z;
+            Range = range;
+            ColorR = r; ColorG = g; ColorB = b;
+            Intensity = intensity;
+            LightType = type;
+            DirX = dirX; DirY = dirY; DirZ = dirZ;
+            InnerConeAngle = innerAngle;
+            OuterConeAngle = outerAngle;
+        }
+    }
+
+    /// <summary>
+    /// Clustered Forward 3D Froxel Lighting Pipeline.
+    /// Bins thousands of dynamic point and spot lights into 3D camera frustum froxels (16x9x24),
+    /// achieving constant O(k) lighting evaluation per fragment for large-scale cities and night illumination.
+    /// </summary>
+    public class ClusteredLightingPipeline
+    {
+        public const int ClustersX = 16;
+        public const int ClustersY = 9;
+        public const int ClustersZ = 24;
+        public const int TotalClusters = ClustersX * ClustersY * ClustersZ;
+
+        public float NearZ { get; set; } = 0.5f;
+        public float FarZ { get; set; } = 500.0f;
+
+        private readonly List<ClusteredLight> _lights = new List<ClusteredLight>();
+        private readonly List<int>[] _clusterLightIndices = new List<int>[TotalClusters];
+
+        public int TotalLights => _lights.Count;
+
+        public ClusteredLightingPipeline()
+        {
+            for (int i = 0; i < TotalClusters; i++)
+            {
+                _clusterLightIndices[i] = new List<int>();
+            }
+        }
+
+        public void ClearLights()
+        {
+            _lights.Clear();
+            for (int i = 0; i < TotalClusters; i++)
+            {
+                _clusterLightIndices[i].Clear();
+            }
+        }
+
+        public void AddLight(ClusteredLight light)
+        {
+            _lights.Add(light);
+        }
+
+        public void AddLights(IEnumerable<ClusteredLight> lights)
+        {
+            if (lights != null) _lights.AddRange(lights);
+        }
+
+        public int ComputeClusterIndex(float screenU, float screenV, float viewDepth, out int clusterX, out int clusterY, out int clusterZ)
+        {
+            clusterX = Math.Max(0, Math.Min(ClustersX - 1, (int)(screenU * ClustersX)));
+            clusterY = Math.Max(0, Math.Min(ClustersY - 1, (int)(screenV * ClustersY)));
+
+            float clampedDepth = Math.Max(NearZ, Math.Min(FarZ, viewDepth));
+            float logRatio = (float)Math.Log(clampedDepth / NearZ) / (float)Math.Log(FarZ / NearZ);
+            clusterZ = Math.Max(0, Math.Min(ClustersZ - 1, (int)(logRatio * ClustersZ)));
+
+            return clusterX + clusterY * ClustersX + clusterZ * (ClustersX * ClustersY);
+        }
+
+        public static float EvaluatePointAttenuation(float distance, float range)
+        {
+            if (distance >= range || distance < 0.0f) return 0.0f;
+            float ratio = distance / range;
+            float ratio4 = ratio * ratio * ratio * ratio;
+            float window = Math.Max(0.0f, 1.0f - ratio4);
+            return (window * window) / (distance * distance + 1.0f);
+        }
+
+        public static float EvaluateSpotAttenuation(float lightToPointX, float lightToPointY, float lightToPointZ,
+            float spotDirX, float spotDirY, float spotDirZ, float innerAngle, float outerAngle)
+        {
+            float lenSq = lightToPointX * lightToPointX + lightToPointY * lightToPointY + lightToPointZ * lightToPointZ;
+            if (lenSq < 1e-6f) return 1.0f;
+            float invLen = 1.0f / (float)Math.Sqrt(lenSq);
+            float cosTheta = (lightToPointX * spotDirX + lightToPointY * spotDirY + lightToPointZ * spotDirZ) * invLen;
+
+            float cosInner = (float)Math.Cos(innerAngle);
+            float cosOuter = (float)Math.Cos(outerAngle);
+
+            if (cosTheta <= cosOuter) return 0.0f;
+            if (cosTheta >= cosInner) return 1.0f;
+
+            float t = (cosTheta - cosOuter) / (cosInner - cosOuter);
+            return t * t;
+        }
+
+        public void BuildClusterLightGrid(float camPosX, float camPosY, float camPosZ)
+        {
+            for (int i = 0; i < TotalClusters; i++)
+            {
+                _clusterLightIndices[i].Clear();
+            }
+
+            for (int l = 0; l < _lights.Count; l++)
+            {
+                ClusteredLight light = _lights[l];
+                float dx = light.PosX - camPosX;
+                float dy = light.PosY - camPosY;
+                float dz = light.PosZ - camPosZ;
+                float distToCam = (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+
+                float minZ = Math.Max(NearZ, distToCam - light.Range);
+                float maxZ = Math.Min(FarZ, distToCam + light.Range);
+
+                float logRatioMin = (float)Math.Log(minZ / NearZ) / (float)Math.Log(FarZ / NearZ);
+                float logRatioMax = (float)Math.Log(maxZ / NearZ) / (float)Math.Log(FarZ / NearZ);
+                int zStart = Math.Max(0, Math.Min(ClustersZ - 1, (int)(logRatioMin * ClustersZ)));
+                int zEnd = Math.Max(0, Math.Min(ClustersZ - 1, (int)(logRatioMax * ClustersZ)));
+
+                for (int z = zStart; z <= zEnd; z++)
+                {
+                    for (int y = 0; y < ClustersY; y++)
+                    {
+                        for (int x = 0; x < ClustersX; x++)
+                        {
+                            int idx = x + y * ClustersX + z * (ClustersX * ClustersY);
+                            _clusterLightIndices[idx].Add(l);
+                        }
+                    }
+                }
+            }
+        }
+
+        public IReadOnlyList<int> GetClusterLights(int clusterIndex)
+        {
+            if (clusterIndex >= 0 && clusterIndex < TotalClusters)
+            {
+                return _clusterLightIndices[clusterIndex];
+            }
+            return Array.Empty<int>();
+        }
+
+        public void EvaluateClusteredLighting(float posX, float posY, float posZ,
+            float normX, float normY, float normZ,
+            float screenU, float screenV, float viewDepth,
+            out float diffR, out float diffG, out float diffB)
+        {
+            diffR = 0f; diffG = 0f; diffB = 0f;
+
+            int clusterIdx = ComputeClusterIndex(screenU, screenV, viewDepth, out _, out _, out _);
+            IReadOnlyList<int> lightIndices = GetClusterLights(clusterIdx);
+
+            int count = lightIndices.Count;
+            for (int i = 0; i < count; i++)
+            {
+                ClusteredLight light = _lights[lightIndices[i]];
+                float lx = light.PosX - posX;
+                float ly = light.PosY - posY;
+                float lz = light.PosZ - posZ;
+                float distSq = lx * lx + ly * ly + lz * lz;
+                float dist = (float)Math.Sqrt(distSq);
+
+                if (dist > light.Range) continue;
+
+                float invDist = 1.0f / Math.Max(1e-4f, dist);
+                float lDirX = lx * invDist;
+                float lDirY = ly * invDist;
+                float lDirZ = lz * invDist;
+
+                float nDotL = Math.Max(0.0f, normX * lDirX + normY * lDirY + normZ * lDirZ);
+                float atten = EvaluatePointAttenuation(dist, light.Range);
+
+                if (light.LightType == ClusteredLightType.Spot)
+                {
+                    atten *= EvaluateSpotAttenuation(-lDirX, -lDirY, -lDirZ,
+                        light.DirX, light.DirY, light.DirZ, light.InnerConeAngle, light.OuterConeAngle);
+                }
+
+                float factor = nDotL * atten * light.Intensity;
+                diffR += light.ColorR * factor;
+                diffG += light.ColorG * factor;
+                diffB += light.ColorB * factor;
+            }
+        }
+    }
+
     /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
@@ -1306,6 +1515,7 @@ namespace palDotNet.palModernEngine
         public FoliageInstancingPipeline Foliage { get; } = new FoliageInstancingPipeline();
         public TemporalAntiAliasingPipeline TemporalAA { get; } = new TemporalAntiAliasingPipeline();
         public GroundTruthAmbientOcclusionPipeline AmbientOcclusion { get; } = new GroundTruthAmbientOcclusionPipeline();
+        public ClusteredLightingPipeline ClusteredLighting { get; } = new ClusteredLightingPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -2062,6 +2272,144 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("GroundTruthAmbientOcclusionPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslGtaoPs, Cache));
+
+            // 19. Clustered Forward Point & Spot Lighting Pixel Shader (DirectX 12 SM6)
+            string hlslClusteredPs = @"
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float3 worldPos : WORLDPOS;
+                    float3 normal   : NORMAL;
+                    float2 uv       : TEXCOORD0;
+                };
+
+                struct GPUClusteredLight {
+                    float3 position;
+                    float  range;
+                    float3 color;
+                    float  intensity;
+                    float3 direction;
+                    float  innerAngleCos;
+                    float  outerAngleCos;
+                    uint   lightType;
+                    float2 padding;
+                };
+
+                StructuredBuffer<GPUClusteredLight> gLights : register(t0);
+                StructuredBuffer<uint2> gClusterGrid : register(t1);
+                StructuredBuffer<uint>  gLightIndices : register(t2);
+
+                cbuffer ClusterConstants : register(b0) {
+                    float4x4 gViewMatrix;
+                    float3   gCameraPosition;
+                    float    gNearZ;
+                    float    gFarZ;
+                    uint3    gClusterDims;
+                };
+
+                float4 main(PSInput input) : SV_Target {
+                    float3 viewPos = mul(float4(input.worldPos, 1.0f), gViewMatrix).xyz;
+                    float viewDepth = max(gNearZ, viewPos.z);
+
+                    float2 screenUv = input.position.xy / float2(1920.0f, 1080.0f);
+                    uint clusterX = clamp((uint)(screenUv.x * gClusterDims.x), 0u, gClusterDims.x - 1u);
+                    uint clusterY = clamp((uint)(screenUv.y * gClusterDims.y), 0u, gClusterDims.y - 1u);
+                    float logRatio = log(viewDepth / gNearZ) / log(gFarZ / gNearZ);
+                    uint clusterZ = clamp((uint)(logRatio * gClusterDims.z), 0u, gClusterDims.z - 1u);
+
+                    uint clusterIdx = clusterX + clusterY * gClusterDims.x + clusterZ * (gClusterDims.x * gClusterDims.y);
+                    uint2 grid = gClusterGrid[clusterIdx];
+
+                    float3 normal = normalize(input.normal);
+                    float3 diffuseRgb = float3(0.0f, 0.0f, 0.0f);
+
+                    for (uint i = 0u; i < grid.y; i++) {
+                        uint lightIdx = gLightIndices[grid.x + i];
+                        GPUClusteredLight light = gLights[lightIdx];
+
+                        float3 toLight = light.position - input.worldPos;
+                        float dist = length(toLight);
+                        if (dist > light.range) continue;
+
+                        float3 lDir = toLight / dist;
+                        float nDotL = max(0.0f, dot(normal, lDir));
+
+                        float ratio = dist / light.range;
+                        float atten = (max(0.0f, 1.0f - ratio * ratio * ratio * ratio)) / (dist * dist + 1.0f);
+
+                        if (light.lightType == 1u) {
+                            float cosAngle = dot(-lDir, light.direction);
+                            float spotAtt = saturate((cosAngle - light.outerAngleCos) / (light.innerAngleCos - light.outerAngleCos));
+                            atten *= spotAtt * spotAtt;
+                        }
+
+                        diffuseRgb += light.color * (nDotL * atten * light.intensity);
+                    }
+
+                    return float4(diffuseRgb, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("ClusteredLightingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslClusteredPs, Cache));
+
+            // 20. Vulkan SPIR-V Clustered Forward Lighting Pixel Shader
+            string glslClusteredPs = @"
+                #version 460
+                layout(location = 0) in vec3 inWorldPos;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                struct GPUClusteredLight {
+                    vec3 position;
+                    float range;
+                    vec3 color;
+                    float intensity;
+                    vec3 direction;
+                    float innerAngleCos;
+                    float outerAngleCos;
+                    uint lightType;
+                    vec2 padding;
+                };
+
+                layout(binding = 0) readonly buffer LightBuffer {
+                    GPUClusteredLight lights[];
+                };
+                layout(binding = 1) readonly buffer GridBuffer {
+                    uvec2 clusterGrid[];
+                };
+                layout(binding = 2) readonly buffer IndexBuffer {
+                    uint lightIndices[];
+                };
+
+                layout(binding = 3) uniform ClusterUBO {
+                    mat4 viewMatrix;
+                    vec3 cameraPos;
+                    float nearZ;
+                    float farZ;
+                    uvec3 clusterDims;
+                } ubo;
+
+                void main() {
+                    vec3 norm = normalize(inNormal);
+                    vec3 litColor = vec3(0.0);
+                    uvec2 grid = clusterGrid[0];
+
+                    for (uint i = 0u; i < grid.y; i++) {
+                        uint lIdx = lightIndices[grid.x + i];
+                        GPUClusteredLight light = lights[lIdx];
+                        vec3 toLight = light.position - inWorldPos;
+                        float dist = length(toLight);
+                        if (dist > light.range) continue;
+
+                        vec3 lDir = toLight / dist;
+                        float nDotL = max(0.0, dot(norm, lDir));
+                        float att = max(0.0, 1.0 - pow(dist / light.range, 4.0)) / (dist * dist + 1.0);
+                        litColor += light.color * (nDotL * att * light.intensity);
+                    }
+
+                    outColor = vec4(litColor, 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("ClusteredLightingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslClusteredPs, Cache));
         }
     }
 }

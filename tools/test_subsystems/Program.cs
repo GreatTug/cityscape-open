@@ -1263,6 +1263,58 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("GroundTruthAmbientOcclusionPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 GroundTruthAmbientOcclusionPs shader registered");
             Assert(pipeline.GetModule("GroundTruthAmbientOcclusionPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V GroundTruthAmbientOcclusionPs shader registered");
 
+            // Clustered Forward 3D Froxel Lighting Pipeline (Urban Streetlights & Spotlights)
+            var clustered = pipeline.ClusteredLighting;
+            Assert(clustered != null, "pipeline.ClusteredLighting initialized");
+            Assert(ClusteredLightingPipeline.TotalClusters == 3456, "3D Froxel Grid configured to 16x9x24 (3456 clusters)");
+
+            // Logarithmic Depth Cluster Indexing
+            int cNearIdx = clustered.ComputeClusterIndex(0.5f, 0.5f, 5.0f, out int cNx, out int cNy, out int cNz);
+            int cFarIdx = clustered.ComputeClusterIndex(0.5f, 0.5f, 400.0f, out int cFx, out int cFy, out int cFz);
+            Assert(cNearIdx >= 0 && cNearIdx < ClusteredLightingPipeline.TotalClusters, "Near cluster index within 3D grid bounds");
+            Assert(cFarIdx >= 0 && cFarIdx < ClusteredLightingPipeline.TotalClusters, "Far cluster index within 3D grid bounds");
+            Assert(cNz < cFz, $"Logarithmic depth clustering maps near depth to lower Z-slice than far depth ({cNz} < {cFz})");
+
+            // Point and Spot Light Physical Attenuation Law
+            float attNear = ClusteredLightingPipeline.EvaluatePointAttenuation(0.0f, 20.0f);
+            float attMid = ClusteredLightingPipeline.EvaluatePointAttenuation(10.0f, 20.0f);
+            float attCutoff = ClusteredLightingPipeline.EvaluatePointAttenuation(20.0f, 20.0f);
+            Assert(attNear == 1.0f, "Point light attenuation at d=0 is 1.0");
+            Assert(attMid > 0.0f && attMid < attNear, "Point light inverse-square attenuation decreases smoothly with distance");
+            Assert(attCutoff == 0.0f, "Point light attenuation smoothly clamped to 0 at cutoff range");
+
+            float spotCenter = ClusteredLightingPipeline.EvaluateSpotAttenuation(0f, -10f, 0f, 0f, -1f, 0f, 0.5f, 0.8f);
+            float spotOutside = ClusteredLightingPipeline.EvaluateSpotAttenuation(10f, 0f, 0f, 0f, -1f, 0f, 0.5f, 0.8f);
+            Assert(spotCenter == 1.0f, "Spot light on-axis cone evaluates to 1.0");
+            Assert(spotOutside == 0.0f, "Spot light outside outer angle evaluates to 0.0");
+
+            // Populate 500 Urban Streetlights & Spotlights
+            clustered.ClearLights();
+            var urbanLights = new List<ClusteredLight>(500);
+            for (int li = 0; li < 500; li++)
+            {
+                float lx = (li % 20) * 25.0f - 250.0f;
+                float lz = (li / 20) * 25.0f - 250.0f;
+                urbanLights.Add(new ClusteredLight(lx, 8.0f, lz, 18.0f, 1.0f, 0.85f, 0.6f, 120.0f,
+                    type: (li % 3 == 0) ? ClusteredLightType.Spot : ClusteredLightType.Point));
+            }
+            clustered.AddLights(urbanLights);
+            Assert(clustered.TotalLights == 500, $"Clustered lighting pipeline populated with {clustered.TotalLights} urban lights");
+
+            // Bin lights into 3D Froxels from camera at (0, 15, -50)
+            clustered.BuildClusterLightGrid(0f, 15f, -50f);
+            IReadOnlyList<int> froxelLights = clustered.GetClusterLights(cNearIdx);
+            Assert(froxelLights.Count < 500, $"Froxel cluster prunes light evaluation: {froxelLights.Count} lights in local cell vs 500 total");
+
+            // Evaluate Clustered Diffuse Radiance under Streetlight (0, 8, 0) from camera at (0, 15, -50)
+            clustered.EvaluateClusteredLighting(0f, 0f, 0f, 0f, 1f, 0f, 0.5f, 0.5f, 50.0f,
+                out float clR, out float clG, out float clB);
+            Assert(clR > 0.0f && clG > 0.0f && clR > clB, $"Clustered forward street illumination verified: Warm Amber ({clR:F2}, {clG:F2}, {clB:F2})");
+
+            // Clustered Shaders Registered
+            Assert(pipeline.GetModule("ClusteredLightingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 ClusteredLightingPs shader registered");
+            Assert(pipeline.GetModule("ClusteredLightingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V ClusteredLightingPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
