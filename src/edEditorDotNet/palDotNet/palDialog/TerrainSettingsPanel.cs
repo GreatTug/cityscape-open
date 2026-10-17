@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using palDotNet.palVisual;
 
 namespace palDotNet.palDialog;
 
@@ -1047,12 +1048,6 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 
 	public unsafe bool WriteValuesToNativeStorage()
 	{
-		void* p0 = FindNativeDialogPointer();
-		if (p0 == null)
-		{
-			return false;
-		}
-
 		try
 		{
 			float sizeX = (float)TerrainSizeXInput.Value;
@@ -1060,35 +1055,53 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 			float tileSizeX = (float)TileSizeXInput.Value;
 			float tileSizeY = (float)TileSizeYInput.Value;
 			float sampleDist = (float)SamplingDistanceInput.Value;
+			int tileCountX = (int)TileCountXInput.Value;
+			int tileCountY = (int)TileCountYInput.Value;
 
 			if (tileSizeX <= 0f) tileSizeX = sizeX;
 			if (tileSizeY <= 0f) tileSizeY = sizeY;
 			if (sampleDist <= 0f) sampleDist = 2.0f;
+			if (tileCountX <= 0) tileCountX = 1;
+			if (tileCountY <= 0) tileCountY = 1;
 
-			// Write dimensions and sampling distance into edTerrainSettingsDialogManaged (224 bytes)
-			((float*)p0)[40] = sizeX;
-			((float*)p0)[41] = sizeY;
-			((float*)p0)[42] = tileSizeX;
-			((float*)p0)[43] = tileSizeY;
-			((float*)p0)[44] = sampleDist;
-			((float*)p0)[45] = 0.01f;
-			((float*)p0)[46] = 100000.0f;
-
-			// Max terrain sizes
-			((int*)p0)[54] = (int)Math.Max(sizeX, GetTerrainMaxSizeX());
-			((int*)p0)[55] = (int)Math.Max(sizeY, GetTerrainMaxSizeY());
-
-			// Flags
-			((bool*)p0)[156] = false;
-			((bool*)p0)[157] = true;
-			((bool*)p0)[158] = false;
-			((bool*)p0)[159] = true;
-			((bool*)p0)[188] = IsGeolocatedTerrain();
-
+			// Synchronize with modern 3D Viewport engine
+			var terrain = new TerrainSurfaceData(sizeX, sizeY, tileSizeX, tileSizeY, tileCountX, tileCountY, sampleDist);
 			if (IsGeolocatedTerrain())
 			{
-				((double*)p0)[24] = (double)TerrainOriginLongitudeInput.Value;
-				((double*)p0)[25] = (double)TerrainOriginLatitudeInput.Value;
+				terrain.IsGeolocated = true;
+				terrain.OriginLongitude = (double)TerrainOriginLongitudeInput.Value;
+				terrain.OriginLatitude = (double)TerrainOriginLatitudeInput.Value;
+			}
+			ControlRender.SetActiveTerrain(terrain);
+
+			void* p0 = FindNativeDialogPointer();
+			if (p0 != null)
+			{
+				// Write dimensions and sampling distance into edTerrainSettingsDialogManaged (224 bytes)
+				((float*)p0)[40] = sizeX;
+				((float*)p0)[41] = sizeY;
+				((float*)p0)[42] = tileSizeX;
+				((float*)p0)[43] = tileSizeY;
+				((float*)p0)[44] = sampleDist;
+				((float*)p0)[45] = 0.01f;
+				((float*)p0)[46] = 100000.0f;
+
+				// Max terrain sizes
+				((int*)p0)[54] = (int)Math.Max(sizeX, GetTerrainMaxSizeX());
+				((int*)p0)[55] = (int)Math.Max(sizeY, GetTerrainMaxSizeY());
+
+				// Flags
+				((bool*)p0)[156] = false;
+				((bool*)p0)[157] = true;
+				((bool*)p0)[158] = false;
+				((bool*)p0)[159] = true;
+				((bool*)p0)[188] = IsGeolocatedTerrain();
+
+				if (IsGeolocatedTerrain())
+				{
+					((double*)p0)[24] = (double)TerrainOriginLongitudeInput.Value;
+					((double*)p0)[25] = (double)TerrainOriginLatitudeInput.Value;
+				}
 			}
 
 			return true;

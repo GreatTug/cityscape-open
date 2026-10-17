@@ -26,7 +26,8 @@ def test_all():
         "SmartPropertyGrid.dll",
         "WeifenLuo.WinFormsUI.Docking.dll",
         "test_lifecycle.exe",
-        "test_subsystems.exe"
+        "test_subsystems.exe",
+        "test_terrain_rendering.exe"
     ]
     print("\n[TEST 1] Verifying staged distribution binaries...")
     for f in expected_binaries:
@@ -204,9 +205,27 @@ def test_all():
         calc_hash = sha256.hexdigest().lower()
         assert calc_hash in checksum_text, f"Checksum verification failed for {pkg_name}"
         print(f"  [PASS] {pkg_name:<46} ({pkg_size / (1024*1024):>6.2f} MB) SHA256: {calc_hash[:16]}...")
+ 
+    # 10. Test Massive Terrain Extents, Physical 3D Mesh & Native Unlocked Bounds
+    print("\n[TEST 10] Verifying Massive Terrain Extents, Physical 3D Mesh & Native Unlocked Bounds...")
+    terrain_exe = os.path.join(dist_dir, "test_terrain_rendering.exe")
+    res_terrain = subprocess.run([terrain_exe], capture_output=True, text=True)
+    assert res_terrain.returncode == 0, f"Terrain test failed with exit code {res_terrain.returncode}:\n{res_terrain.stdout}"
+    assert "ALL TERRAIN TESTS PASSED (100% OPERATIONAL)" in res_terrain.stdout, f"Unexpected terrain test output:\n{res_terrain.stdout}"
+    print("  [PASS] Massive 100,000m x 4,800m physical terrain surface & 3D viewport rendering verified")
+
+    # Verify native CityScape.exe machine code unlock
+    with open(exe_native, "rb") as f:
+        native_bytes = f.read()
+    assert native_bytes[0x52520:0x52523] == b"\xb0\x01\xc3", "Native validation bypass verified (mov al, 1; ret)"
+    assert native_bytes[0x2f40e0:0x2f40e5] == b"\xe9\x0b\x01\x00\x00", "Native terrain creation unlock verified (jmp 0x6f4df0)"
+    assert native_bytes[0x2f5030:0x2f5035] == b"\xe9\xd8\x00\x00\x00", "Native tile init unlock verified (jmp 0x6f5d0d)"
+    assert native_bytes[0x1ecc10c:0x1ecc110] == b"\x00\x00\xbe\x4c", "Native 1600m constant #1 verified expanded to 100,000,000m"
+    assert native_bytes[0x2c4d204:0x2c4d208] == b"\x00\x00\xbe\x4c", "Native 1600m constant #2 verified expanded to 100,000,000m"
+    print("  [PASS] Native CityScape.exe 1600m and tile count unlock patches 100% verified in machine code")
 
     print("\n=================================================");
-    print("  ALL 9 COMPREHENSIVE TEST SUITES PASSED (100%)  ");
+    print("  ALL 10 COMPREHENSIVE TEST SUITES PASSED (100%)");
     print("=================================================");
 
 if __name__ == "__main__":

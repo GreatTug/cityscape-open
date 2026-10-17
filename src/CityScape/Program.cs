@@ -246,14 +246,37 @@ namespace CityScape
                         if (dlg.ShowDialog(mainForm) == DialogResult.OK)
                         {
                             var panel = dlg.GetTerrainSettingsPanel();
-                            LogOutput(string.Format("[Terrain] New terrain settings applied ({0:N0}m x {1:N0}m, Tile: {2:N0}m x {3:N0}m, Sampling: {4:F2}m). Terrain mesh initialized.",
-                                panel.TerrainSizeX.Value, panel.TerrainSizeY.Value, panel.TileSizeX.Value, panel.TileSizeY.Value, panel.SamplingDistance.Value), Color.LimeGreen);
+                            float sx = (float)panel.TerrainSizeX.Value;
+                            float sy = (float)panel.TerrainSizeY.Value;
+                            float tx = (float)panel.TileSizeX.Value;
+                            float ty = (float)panel.TileSizeY.Value;
+                            int cx = (int)panel.TileCountX.Value;
+                            int cy = (int)panel.TileCountY.Value;
+                            float sd = (float)panel.SamplingDistance.Value;
+
+                            var terrain = new palDotNet.palVisual.TerrainSurfaceData(sx, sy, tx, ty, cx, cy, sd);
+                            terrain.Name = "User Active Terrain";
+                            if (panel.IsGeolocatedTerrain())
+                            {
+                                terrain.IsGeolocated = true;
+                                terrain.OriginLongitude = (double)panel.TerrainOriginLongitude.Value;
+                                terrain.OriginLatitude = (double)panel.TerrainOriginLatitude.Value;
+                            }
+
+                            palDotNet.palVisual.ControlRender.SetActiveTerrain(terrain);
+                            mainForm.Invalidate(true);
+
+                            LogOutput(string.Format("[Terrain] New physical terrain generated: {0:N0}m × {1:N0}m ({2:F2} km², Aspect {3:F1}:1).",
+                                sx, sy, terrain.AreaSquareKilometers, terrain.AspectRatio), Color.LimeGreen);
+                            LogOutput(string.Format("  -> Tiles: {0} × {1} ({2:N0}m × {3:N0}m) | Sampling: {4:F2}m ({5:N0} sample points)",
+                                cx, cy, tx, ty, sd, terrain.TotalSamplePoints), Color.LightSkyBlue);
+                            LogOutput("  -> 3D Viewport surface mesh, tile boundaries, and coordinate rulers updated.\n", Color.Cyan);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    LogOutput("[Terrain] Note: " + ex.Message, Color.Yellow);
+                    LogOutput("[Terrain Error] " + ex.Message, Color.Yellow);
                 }
             }, Keys.Control | Keys.Shift | Keys.T));
 

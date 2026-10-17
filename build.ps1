@@ -120,6 +120,15 @@ if (Test-Path "CityScape.exe.response.txt") {
     Copy-Item "CityScape.exe.response.txt" -Destination "CityScape_Managed.exe.response.txt" -Force
 }
 
+# Ensure native CityScape.exe has 1600m and tile restrictions removed
+if (Test-Path "tools\apply_native_patch.py") {
+    $pyCmd = if (Test-Path ".venv\Scripts\python.exe") { ".venv\Scripts\python.exe" } elseif (Get-Command py -ErrorAction SilentlyContinue) { "py" } elseif (Get-Command python -ErrorAction SilentlyContinue) { "python" } else { $null }
+    if ($pyCmd) {
+        Write-Host "`n---> Verifying native CityScape.exe terrain unlock..." -ForegroundColor Yellow
+        & $pyCmd tools\apply_native_patch.py
+    }
+}
+
 # Compile modern x64 and ARM64 branch targets
 Write-Host "`n---> Building Modern x64 Target (DirectX 12 / Vulkan 64-bit engine)..." -ForegroundColor Yellow
 & $msbuild -t:Restore src\CityScape\CityScape_x64.csproj -p:Configuration=Release
@@ -156,6 +165,13 @@ if (Test-Path $csc) {
     & $csc /nologo /target:exe /out:"$binDist\test_lifecycle.exe" /reference:"$binDist\palDotNet.dll","$binDist\SmartPropertyGrid.dll","$binDist\WeifenLuo.WinFormsUI.Docking.dll" tools\test_lifecycle.cs
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[OK] tools\test_lifecycle.cs compiled successfully!" -ForegroundColor Green
+    }
+
+    Write-Host "`n---> Compiling tools\test_terrain_rendering.cs..." -ForegroundColor Yellow
+    & $csc /nologo /target:exe /out:"$binDist\test_terrain_rendering.exe" /reference:"System.dll","$binDist\palDotNet.dll","$binDist\edEditorDotNet.dll","System.Windows.Forms.dll","System.Drawing.dll" tools\test_terrain_rendering.cs
+    if ($LASTEXITCODE -eq 0) {
+        Copy-Item "$binDist\test_terrain_rendering.exe" -Destination "test_terrain_rendering.exe" -Force
+        Write-Host "[OK] tools\test_terrain_rendering.cs compiled successfully!" -ForegroundColor Green
     }
 }
 

@@ -1,7 +1,13 @@
+import struct
 import os
 
-cst_path = r"c:\cityscape-open\1.cst"
-if os.path.exists(cst_path):
-    with open(cst_path, "rb") as f:
-        data = f.read(128)
-        print("CST Header ASCII:", "".join([chr(b) if 32 <= b <= 126 else '.' for b in data[:80]]))
+for fname in ["1.cst", "2.cst"]:
+    if os.path.exists(fname):
+        with open(fname, "rb") as f:
+            data = f.read(128)
+            print(f"=== {fname} ({os.path.getsize(fname)} bytes) ===")
+            print("Hex:", data[:32].hex())
+            # try to unpack header
+            if len(data) >= 32:
+                print("Floats:", struct.unpack("<8f", data[:32]))
+                print("Ints:", struct.unpack("<8i", data[:32]))

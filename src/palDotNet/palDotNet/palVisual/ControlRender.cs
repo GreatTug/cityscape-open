@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Security.Permissions;
 using System.Windows.Forms;
 using palDotNet.palWidgets;
+using palDotNet.palModernEngine;
 
 namespace palDotNet.palVisual;
 
@@ -30,6 +31,38 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	private int LastYRes;
 
 	private static List<ControlRender> ControlRenders = new List<ControlRender>();
+
+	public static TerrainSurfaceData ActiveTerrain { get; set; } = TerrainSurfaceData.CreateDefault();
+
+	public static void SetActiveTerrain(TerrainSurfaceData terrain)
+	{
+		if (terrain == null) return;
+		ActiveTerrain = terrain;
+		foreach (ControlRender cr in ControlRenders)
+		{
+			cr.ResetCamera();
+			cr.Invalidate();
+		}
+	}
+
+	private Point mLastMouseLocation;
+	private bool mIsOrbiting = false;
+	private bool mIsPanning = false;
+
+	private float mCameraYaw = -35.0f;
+	private float mCameraPitch = 24.0f;
+	private float mCameraDistance = 0f;
+	private float mCameraPanX = 0f;
+	private float mCameraPanY = 0f;
+
+	public void ResetCamera()
+	{
+		mCameraYaw = -35.0f;
+		mCameraPitch = 24.0f;
+		mCameraDistance = 0f;
+		mCameraPanX = 0f;
+		mCameraPanY = 0f;
+	}
 
 	private MouseButtons CurrentMouseButtons;
 
@@ -262,50 +295,265 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			// Professional dark slate gradient background (standard 3D modeling viewport)
 			using (LinearGradientBrush bgBrush = new LinearGradientBrush(
 				ClientRectangle,
-				Color.FromArgb(42, 48, 56),
-				Color.FromArgb(24, 28, 34),
+				Color.FromArgb(38, 44, 52),
+				Color.FromArgb(20, 24, 28),
 				LinearGradientMode.Vertical))
 			{
 				g.FillRectangle(bgBrush, ClientRectangle);
 			}
 
-			int cx = w / 2;
-			int cy = h / 2 + 30;
+			Render3DTerrain(g, w, h);
+		}
+	}
 
-			// Draw 3D perspective ground grid
-			using (Pen gridPen = new Pen(Color.FromArgb(50, 60, 72), 1f))
-			using (Pen axisPenX = new Pen(Color.FromArgb(180, 70, 70), 1.5f))
-			using (Pen axisPenZ = new Pen(Color.FromArgb(70, 140, 70), 1.5f))
+	private void Render3DTerrain(Graphics g, int w, int h)
+	{
+		var terrain = ActiveTerrain ?? TerrainSurfaceData.CreateDefault();
+		float sx = terrain.SizeX;
+		float sy = terrain.SizeY;
+		float diag = (float)Math.Sqrt(sx * sx + sy * sy);
+		float camDist = mCameraDistance > 0f ? mCameraDistance : Math.Max(100f, diag * 1.30f);
+		float focal = (float)Math.Min(w, h) * 1.25f;
+
+		float yawRad = (float)(mCameraYaw * Math.PI / 180.0);
+		float pitchRad = (float)(mCameraPitch * Math.PI / 180.0);
+		float cosYaw = (float)Math.Cos(yawRad);
+		float sinYaw = (float)Math.Sin(yawRad);
+		float cosPitch = (float)Math.Cos(pitchRad);
+		float sinPitch = (float)Math.Sin(pitchRad);
+
+		PointF Project(float x, float y, float z)
+		{
+			float x1 = x * cosYaw - z * sinYaw;
+			float z1 = x * sinYaw + z * cosYaw;
+			float y1 = y;
+
+			float y2 = y1 * cosPitch - z1 * sinPitch;
+			float z2 = y1 * sinPitch + z1 * cosPitch;
+
+			float z3 = z2 + camDist;
+			if (z3 < 1.0f) z3 = 1.0f;
+
+			float scale = focal / z3;
+			float cx = (w * 0.5f) + mCameraPanX;
+			float cy = (h * 0.55f) + mCameraPanY;
+
+			return new PointF(cx + x1 * scale, cy - y2 * scale);
+		}
+
+		// 1. Ground Plane Foundation (infinite reference grid)
+		using (Pen groundPen = new Pen(Color.FromArgb(40, 50, 62), 1f))
+		{
+			float gridExtent = Math.Max(sx, sy) * 1.6f;
+			float step = gridExtent / 16.0f;
+			for (float gx = -gridExtent; gx <= gridExtent; gx += step)
 			{
-				// Radial perspective grid lines
-				for (int i = -14; i <= 14; i++)
+				PointF pStart = Project(gx, -15f, -gridExtent);
+				PointF pEnd = Project(gx, -15f, gridExtent);
+				g.DrawLine(groundPen, pStart, pEnd);
+			}
+			for (float gz = -gridExtent; gz <= gridExtent; gz += step)
+			{
+				PointF pStart = Project(-gridExtent, -15f, gz);
+				PointF pEnd = Project(gridExtent, -15f, gz);
+				g.DrawLine(groundPen, pStart, pEnd);
+			}
+		}
+
+		// 2. Extrude terrain corners to base -25m to give it physical volume and depth
+		PointF b00 = Project(-sx * 0.5f, -25f, -sy * 0.5f);
+		PointF b10 = Project(sx * 0.5f, -25f, -sy * 0.5f);
+		PointF b11 = Project(sx * 0.5f, -25f, sy * 0.5f);
+		PointF b01 = Project(-sx * 0.5f, -25f, sy * 0.5f);
+
+		PointF t00 = Project(-sx * 0.5f, terrain.EvaluateElevation(-sx * 0.5f, -sy * 0.5f), -sy * 0.5f);
+		PointF t10 = Project(sx * 0.5f, terrain.EvaluateElevation(sx * 0.5f, -sy * 0.5f), -sy * 0.5f);
+		PointF t11 = Project(sx * 0.5f, terrain.EvaluateElevation(sx * 0.5f, sy * 0.5f), sy * 0.5f);
+		PointF t01 = Project(-sx * 0.5f, terrain.EvaluateElevation(-sx * 0.5f, sy * 0.5f), sy * 0.5f);
+
+		using (SolidBrush skirtBrush = new SolidBrush(Color.FromArgb(32, 38, 44)))
+		using (Pen skirtPen = new Pen(Color.FromArgb(55, 68, 80), 1.5f))
+		{
+			PointF[] frontSkirt = new PointF[] { t01, t11, b11, b01 };
+			g.FillPolygon(skirtBrush, frontSkirt);
+			g.DrawPolygon(skirtPen, frontSkirt);
+
+			PointF[] leftSkirt = new PointF[] { t00, t01, b01, b00 };
+			g.FillPolygon(skirtBrush, leftSkirt);
+			g.DrawPolygon(skirtPen, leftSkirt);
+		}
+
+		// 3. Terrain Surface Mesh (Adaptive Subdivisions based on aspect ratio)
+		int divX = Math.Min(48, Math.Max(12, (int)Math.Round(32.0 * Math.Sqrt(Math.Max(1.0, sx / Math.Max(1.0, sy))))));
+		int divZ = Math.Min(48, Math.Max(8, (int)Math.Round(32.0 * Math.Sqrt(Math.Max(1.0, sy / Math.Max(1.0, sx))))));
+
+		float stepX = sx / divX;
+		float stepZ = sy / divZ;
+
+		using (Pen meshPen = new Pen(Color.FromArgb(40, 180, 220, 255), 1f))
+		{
+			for (int j = 0; j < divZ; j++)
+			{
+				float z0 = -sy * 0.5f + j * stepZ;
+				float z1 = -sy * 0.5f + (j + 1) * stepZ;
+
+				for (int i = 0; i < divX; i++)
 				{
-					int xTop = cx + i * 32;
-					int xBottom = cx + i * 85;
-					g.DrawLine(gridPen, xTop, cy - 110, xBottom, h);
+					float x0 = -sx * 0.5f + i * stepX;
+					float x1 = -sx * 0.5f + (i + 1) * stepX;
+
+					float e00 = terrain.EvaluateElevation(x0, z0);
+					float e10 = terrain.EvaluateElevation(x1, z0);
+					float e11 = terrain.EvaluateElevation(x1, z1);
+					float e01 = terrain.EvaluateElevation(x0, z1);
+
+					PointF p00 = Project(x0, e00, z0);
+					PointF p10 = Project(x1, e10, z0);
+					PointF p11 = Project(x1, e11, z1);
+					PointF p01 = Project(x0, e01, z1);
+
+					float avgElev = (e00 + e10 + e11 + e01) * 0.25f;
+					float elevRatio = Math.Max(0f, Math.Min(1f, avgElev / Math.Max(1f, terrain.ElevationMax)));
+
+					// PBR terrain splat coloring (valley green -> rocky ridge -> peak)
+					int r = (int)(42 + elevRatio * 85);
+					int gCol = (int)(75 + (1f - elevRatio) * 35 + elevRatio * 25);
+					int bCol = (int)(55 + elevRatio * 60);
+
+					float lightFactor = 0.88f + 0.12f * (float)Math.Cos((x0 + z0) * 0.001);
+					r = Math.Min(255, (int)(r * lightFactor));
+					gCol = Math.Min(255, (int)(gCol * lightFactor));
+					bCol = Math.Min(255, (int)(bCol * lightFactor));
+
+					using (SolidBrush quadBrush = new SolidBrush(Color.FromArgb(r, gCol, bCol)))
+					{
+						PointF[] quad = new PointF[] { p00, p10, p11, p01 };
+						g.FillPolygon(quadBrush, quad);
+						g.DrawPolygon(meshPen, quad);
+					}
 				}
-				// Horizontal depth rings
-				for (int y = cy - 90; y < h; y += 26)
-				{
-					int spread = (int)((y - (cy - 110)) * 3.2);
-					g.DrawLine(gridPen, Math.Max(0, cx - spread), y, Math.Min(w, cx + spread), y);
-				}
-				// Principal axes
-				g.DrawLine(axisPenX, cx - 350, cy, cx + 350, cy);
-				g.DrawLine(axisPenZ, cx, cy - 110, cx, h);
+			}
+		}
+
+		// 4. Physical Tile Demarcations in glowing cyan
+		using (Pen tilePen = new Pen(Color.FromArgb(0, 235, 255), 2.2f))
+		using (Font tileFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
+		using (SolidBrush tileBrush = new SolidBrush(Color.FromArgb(180, 240, 255)))
+		{
+			for (int tx = 0; tx <= terrain.TileCountX; tx++)
+			{
+				float xPos = -sx * 0.5f + tx * terrain.TileSizeX;
+				if (xPos > sx * 0.5f + 1f) continue;
+				PointF pA = Project(xPos, 0f, -sy * 0.5f);
+				PointF pB = Project(xPos, 0f, sy * 0.5f);
+				g.DrawLine(tilePen, pA, pB);
 			}
 
-			// Viewport HUD Overlay
-			using (Font titleFont = new Font("Segoe UI", 11f, FontStyle.Bold))
-			using (Font subFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
-			using (SolidBrush textBrush = new SolidBrush(Color.FromArgb(220, 225, 230)))
-			using (SolidBrush dimBrush = new SolidBrush(Color.FromArgb(130, 145, 160)))
-			using (SolidBrush accentBrush = new SolidBrush(Color.FromArgb(90, 190, 255)))
+			for (int ty = 0; ty <= terrain.TileCountY; ty++)
 			{
-				g.DrawString("CityScape 1.8 Viewport [Perspective]", titleFont, textBrush, 16, 16);
-				g.DrawString("Resolution: " + w + " x " + h + " | Camera: Orbit Mode", subFont, dimBrush, 16, 36);
-				g.DrawString("[Ready - Open World (.csp) or Terrain (.cst) from File menu]", subFont, accentBrush, 16, 54);
+				float zPos = -sy * 0.5f + ty * terrain.TileSizeY;
+				if (zPos > sy * 0.5f + 1f) continue;
+				PointF pA = Project(-sx * 0.5f, 0f, zPos);
+				PointF pB = Project(sx * 0.5f, 0f, zPos);
+				g.DrawLine(tilePen, pA, pB);
 			}
+
+			for (int ty = 0; ty < terrain.TileCountY; ty++)
+			{
+				for (int tx = 0; tx < terrain.TileCountX; tx++)
+				{
+					float cxTile = -sx * 0.5f + (tx + 0.5f) * terrain.TileSizeX;
+					float czTile = -sy * 0.5f + (ty + 0.5f) * terrain.TileSizeY;
+					if (cxTile > sx * 0.5f || czTile > sy * 0.5f) continue;
+					PointF pCenter = Project(cxTile, terrain.EvaluateElevation(cxTile, czTile) + 5f, czTile);
+					string label = string.Format("Tile [{0},{1}]\n{2:N0}m × {3:N0}m", tx + 1, ty + 1, terrain.TileSizeX, terrain.TileSizeY);
+					g.DrawString(label, tileFont, tileBrush, pCenter.X - 35, pCenter.Y - 15);
+				}
+			}
+		}
+
+		// 5. Metric Axis Rulers
+		using (Pen rulerPen = new Pen(Color.FromArgb(255, 200, 50), 2f))
+		using (Font rulerFont = new Font("Segoe UI", 8f, FontStyle.Regular))
+		using (SolidBrush rulerBrush = new SolidBrush(Color.FromArgb(255, 220, 100)))
+		{
+			int numTicksX = 5;
+			for (int i = 0; i <= numTicksX; i++)
+			{
+				float frac = (float)i / numTicksX;
+				float x = -sx * 0.5f + frac * sx;
+				float z = sy * 0.5f;
+				PointF pEdge = Project(x, 0f, z);
+				PointF pTick = Project(x, -12f, z + sy * 0.02f);
+				g.DrawLine(rulerPen, pEdge, pTick);
+				float meterVal = frac * sx;
+				string text = meterVal >= 1000f ? string.Format("{0:N1} km", meterVal / 1000f) : string.Format("{0:N0} m", meterVal);
+				g.DrawString(text, rulerFont, rulerBrush, pTick.X - 18, pTick.Y + 2);
+			}
+
+			int numTicksZ = 3;
+			for (int j = 0; j <= numTicksZ; j++)
+			{
+				float frac = (float)j / numTicksZ;
+				float x = -sx * 0.5f;
+				float z = -sy * 0.5f + frac * sy;
+				PointF pEdge = Project(x, 0f, z);
+				PointF pTick = Project(x - sx * 0.02f, -12f, z);
+				g.DrawLine(rulerPen, pEdge, pTick);
+				float meterVal = frac * sy;
+				string text = meterVal >= 1000f ? string.Format("{0:N1} km", meterVal / 1000f) : string.Format("{0:N0} m", meterVal);
+				g.DrawString(text, rulerFont, rulerBrush, pTick.X - 45, pTick.Y - 8);
+			}
+		}
+
+		// 6. 3D Principal Axis Tripod Indicator (Bottom-Left)
+		int axX = 65, axY = h - 65;
+		PointF axCenter = new PointF(axX, axY);
+		PointF pAxisX = new PointF(axX + cosYaw * 36f, axY - sinYaw * sinPitch * 36f);
+		PointF pAxisZ = new PointF(axX - sinYaw * 36f, axY - cosYaw * sinPitch * 36f);
+		PointF pAxisY = new PointF(axX, axY - cosPitch * 36f);
+
+		using (Pen pX = new Pen(Color.FromArgb(240, 70, 70), 2.5f))
+		using (Pen pY = new Pen(Color.FromArgb(70, 220, 70), 2.5f))
+		using (Pen pZ = new Pen(Color.FromArgb(70, 130, 255), 2.5f))
+		using (Font axFont = new Font("Segoe UI", 8f, FontStyle.Bold))
+		using (SolidBrush bWhite = new SolidBrush(Color.White))
+		{
+			g.DrawLine(pX, axCenter, pAxisX);
+			g.DrawLine(pY, axCenter, pAxisY);
+			g.DrawLine(pZ, axCenter, pAxisZ);
+			g.DrawString("X", axFont, bWhite, pAxisX.X + 2, pAxisX.Y - 8);
+			g.DrawString("Y", axFont, bWhite, pAxisY.X - 4, pAxisY.Y - 14);
+			g.DrawString("Z", axFont, bWhite, pAxisZ.X + 2, pAxisZ.Y - 8);
+		}
+
+		// 7. Glassmorphism Viewport HUD Overlay
+		int hudW = Math.Min(640, w - 32);
+		int hudH = 118;
+		Rectangle hudRect = new Rectangle(16, 16, hudW, hudH);
+		using (SolidBrush hudBg = new SolidBrush(Color.FromArgb(215, 24, 28, 34)))
+		using (Pen hudBorder = new Pen(Color.FromArgb(60, 80, 100), 1.2f))
+		{
+			g.FillRectangle(hudBg, hudRect);
+			g.DrawRectangle(hudBorder, hudRect);
+		}
+
+		using (Font titleFont = new Font("Segoe UI", 10.5f, FontStyle.Bold))
+		using (Font textFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
+		using (SolidBrush whiteBrush = new SolidBrush(Color.FromArgb(240, 245, 250)))
+		using (SolidBrush cyanBrush = new SolidBrush(Color.FromArgb(0, 220, 255)))
+		using (SolidBrush greenBrush = new SolidBrush(Color.FromArgb(120, 240, 140)))
+		using (SolidBrush goldBrush = new SolidBrush(Color.FromArgb(255, 215, 80)))
+		using (SolidBrush dimBrush = new SolidBrush(Color.FromArgb(160, 180, 200)))
+		{
+			g.DrawString("PixelActive CityScape 1.8 Viewport [Perspective 3D Terrain Mode]", titleFont, whiteBrush, 26, 22);
+			g.DrawString(string.Format("Physical Extents: {0:N0}m × {1:N0}m | Physical Area: {2:F2} km² (Aspect: {3:F1}:1)",
+				terrain.SizeX, terrain.SizeY, terrain.AreaSquareKilometers, terrain.AspectRatio), textFont, cyanBrush, 26, 43);
+			g.DrawString(string.Format("Tile Grid: {0} × {1} (Tile Size: {2:N0}m × {3:N0}m) | Sampling: {4:F2}m ({5:N0} samples)",
+				terrain.TileCountX, terrain.TileCountY, terrain.TileSizeX, terrain.TileSizeY, terrain.SamplingDistance, terrain.TotalSamplePoints), textFont, greenBrush, 26, 62);
+			g.DrawString(string.Format("3D Engine: {0} [{1}] | PBR CDLOD Tessellation Active | Camera: Yaw={2:F0}°, Pitch={3:F0}°",
+				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, mCameraYaw, mCameraPitch), textFont, goldBrush, 26, 81);
+			g.DrawString(string.Format("Camera Distance: {0:N0}m | Controls: LMB=Orbit | RMB/Shift=Pan | Wheel=Zoom", camDist), textFont, dimBrush, 26, 100);
 		}
 	}
 
@@ -367,6 +615,19 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
+		mLastMouseLocation = e.Location;
+		if (TheRenderWindow == null)
+		{
+			if (e.Button == MouseButtons.Left && (ModifierKeys & Keys.Shift) == Keys.None)
+			{
+				mIsOrbiting = true;
+			}
+			else if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Left && (ModifierKeys & Keys.Shift) != Keys.None) || e.Button == MouseButtons.Right)
+			{
+				mIsPanning = true;
+			}
+		}
+
 		if (CurrentMouseButtons != Control.MouseButtons)
 		{
 			CurrentMouseButtons = Control.MouseButtons;
@@ -377,6 +638,12 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
+		if (TheRenderWindow == null)
+		{
+			mIsOrbiting = false;
+			mIsPanning = false;
+		}
+
 		if (CurrentMouseButtons != Control.MouseButtons)
 		{
 			CurrentMouseButtons = Control.MouseButtons;
@@ -387,6 +654,26 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseMove(MouseEventArgs e)
 	{
+		if (TheRenderWindow == null && (mIsOrbiting || mIsPanning))
+		{
+			int dx = e.X - mLastMouseLocation.X;
+			int dy = e.Y - mLastMouseLocation.Y;
+			mLastMouseLocation = e.Location;
+
+			if (mIsOrbiting)
+			{
+				mCameraYaw += dx * 0.45f;
+				mCameraPitch = Math.Max(4.0f, Math.Min(88.0f, mCameraPitch + dy * 0.45f));
+				Invalidate();
+			}
+			else if (mIsPanning)
+			{
+				mCameraPanX += dx * 1.0f;
+				mCameraPanY += dy * 1.0f;
+				Invalidate();
+			}
+		}
+
 		if (LastX != e.X || LastY != e.Y)
 		{
 			if (Control.MouseButtons == MouseButtons.None && CurrentMouseButtons != MouseButtons.None)
@@ -402,6 +689,11 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseLeave(EventArgs e)
 	{
+		if (TheRenderWindow == null)
+		{
+			mIsOrbiting = false;
+			mIsPanning = false;
+		}
 		MouseEventArgs e2 = new MouseEventArgs(Control.MouseButtons, 0, LastX, LastY, 0);
 		if (Control.MouseButtons == MouseButtons.None && CurrentMouseButtons != MouseButtons.None)
 		{
@@ -413,6 +705,20 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseWheel(MouseEventArgs e)
 	{
+		if (TheRenderWindow == null)
+		{
+			float effDist = mCameraDistance > 0f ? mCameraDistance : (float)Math.Sqrt(ActiveTerrain.SizeX * ActiveTerrain.SizeX + ActiveTerrain.SizeY * ActiveTerrain.SizeY) * 1.30f;
+			if (e.Delta > 0)
+			{
+				effDist *= 0.85f;
+			}
+			else
+			{
+				effDist *= 1.18f;
+			}
+			mCameraDistance = Math.Max(10.0f, effDist);
+			Invalidate();
+		}
 		OnMouseGeneral(e, setFocus: true);
 		base.OnMouseWheel(e);
 	}
