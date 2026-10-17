@@ -1500,6 +1500,237 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Hierarchical Z-Buffer (HZB) GPU Occlusion Culling Pipeline.
+    /// Builds a conservative 2x2 max-depth mip pyramid from scene depth buffer and performs
+    /// fast AABB/screen-rect occlusion culling in O(1) per instance, eliminating overdraw
+    /// for dense urban buildings and terrain chunks behind hills.
+    /// </summary>
+    public class HierarchicalZBufferPipeline
+    {
+        public int BaseWidth { get; private set; } = 1024;
+        public int BaseHeight { get; private set; } = 512;
+        public int MipLevels { get; private set; }
+        public float[][] MipPyramid { get; private set; }
+        public int[] MipWidths { get; private set; }
+        public int[] MipHeights { get; private set; }
+
+        public HierarchicalZBufferPipeline()
+        {
+            Initialize(1024, 512);
+        }
+
+        public HierarchicalZBufferPipeline(int baseWidth, int baseHeight)
+        {
+            Initialize(baseWidth, baseHeight);
+        }
+
+        public void Initialize(int baseWidth, int baseHeight)
+        {
+            BaseWidth = Math.Max(1, baseWidth);
+            BaseHeight = Math.Max(1, baseHeight);
+            int maxDim = Math.Max(BaseWidth, BaseHeight);
+            MipLevels = 1 + (int)Math.Floor(Math.Log(maxDim, 2.0));
+
+            MipPyramid = new float[MipLevels][];
+            MipWidths = new int[MipLevels];
+            MipHeights = new int[MipLevels];
+
+            for (int m = 0; m < MipLevels; m++)
+            {
+                int mw = Math.Max(1, BaseWidth >> m);
+                int mh = Math.Max(1, BaseHeight >> m);
+                MipWidths[m] = mw;
+                MipHeights[m] = mh;
+                MipPyramid[m] = new float[mw * mh];
+            }
+        }
+
+        /// <summary>
+        /// Builds conservative max-depth mipmap pyramid from depth buffer.
+        /// Each higher mip texel stores max(d00, d10, d01, d11) occluder depth.
+        /// </summary>
+        public void BuildPyramid(float[] baseDepthBuffer, int width = 0, int height = 0)
+        {
+            if (baseDepthBuffer == null) return;
+            if (width > 0 && height > 0 && (width != BaseWidth || height != BaseHeight))
+            {
+                Initialize(width, height);
+            }
+
+            // Copy Mip 0
+            int baseLen = Math.Min(baseDepthBuffer.Length, MipPyramid[0].Length);
+            Array.Copy(baseDepthBuffer, MipPyramid[0], baseLen);
+
+            // Generate Mips 1..MipLevels-1 via conservative 2x2 max-reduction
+            for (int m = 1; m < MipLevels; m++)
+            {
+                float[] prevMip = MipPyramid[m - 1];
+                float[] currMip = MipPyramid[m];
+                int prevW = MipWidths[m - 1];
+                int prevH = MipHeights[m - 1];
+                int currW = MipWidths[m];
+                int currH = MipHeights[m];
+
+                for (int y = 0; y < currH; y++)
+                {
+                    int prevY0 = y * 2;
+                    int prevY1 = Math.Min(prevH - 1, prevY0 + 1);
+
+                    for (int x = 0; x < currW; x++)
+                    {
+                        int prevX0 = x * 2;
+                        int prevX1 = Math.Min(prevW - 1, prevX0 + 1);
+
+                        float d0 = prevMip[prevY0 * prevW + prevX0];
+                        float d1 = prevMip[prevY0 * prevW + prevX1];
+                        float d2 = prevMip[prevY1 * prevW + prevX0];
+                        float d3 = prevMip[prevY1 * prevW + prevX1];
+
+                        float maxD = Math.Max(Math.Max(d0, d1), Math.Max(d2, d3));
+                        currMip[y * currW + x] = maxD;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Computes optimal HZB mip level based on screen-space bounding rect footprint in pixels.
+        /// Selected level guarantees bounding box spans at most 2x2 texels in the target mip.
+        /// </summary>
+        public int ComputeOptimalMip(float screenPixelWidth, float screenPixelHeight)
+        {
+            float maxDim = Math.Max(screenPixelWidth, screenPixelHeight);
+            if (maxDim <= 1.0f) return 0;
+
+            int mip = (int)Math.Floor(Math.Log(maxDim, 2.0));
+            return Math.Max(0, Math.Min(MipLevels - 1, mip));
+        }
+
+        /// <summary>
+        /// Samples conservative max depth covering normalized screen rectangle [minU, minV, maxU, maxV] in target mip.
+        /// </summary>
+        public float SampleHzbMaxDepth(int mipLevel, float minU, float minV, float maxU, float maxV)
+        {
+            mipLevel = Math.Max(0, Math.Min(MipLevels - 1, mipLevel));
+            float[] mipData = MipPyramid[mipLevel];
+            int mw = MipWidths[mipLevel];
+            int mh = MipHeights[mipLevel];
+
+            int x0 = Math.Max(0, Math.Min(mw - 1, (int)(minU * mw)));
+            int x1 = Math.Max(0, Math.Min(mw - 1, (int)(maxU * mw)));
+            int y0 = Math.Max(0, Math.Min(mh - 1, (int)(minV * mh)));
+            int y1 = Math.Max(0, Math.Min(mh - 1, (int)(maxV * mh)));
+
+            float maxDepth = 0.0f;
+            for (int y = y0; y <= y1; y++)
+            {
+                int rowOffset = y * mw;
+                for (int x = x0; x <= x1; x++)
+                {
+                    float d = mipData[rowOffset + x];
+                    if (d > maxDepth) maxDepth = d;
+                }
+            }
+            return maxDepth;
+        }
+
+        /// <summary>
+        /// Tests if an object with screen bounding rectangle [minU, minV, maxU, maxV] and nearest depth is occluded.
+        /// Returns true if object is occluded (should be culled), false if visible.
+        /// </summary>
+        public bool IsOccluded(float minU, float minV, float maxU, float maxV, float nearestDepth)
+        {
+            // Clamp to screen bounds
+            float u0 = Math.Max(0.0f, Math.Min(1.0f, Math.Min(minU, maxU)));
+            float u1 = Math.Max(0.0f, Math.Min(1.0f, Math.Max(minU, maxU)));
+            float v0 = Math.Max(0.0f, Math.Min(1.0f, Math.Min(minV, maxV)));
+            float v1 = Math.Max(0.0f, Math.Min(1.0f, Math.Max(minV, maxV)));
+
+            float pixelWidth = (u1 - u0) * BaseWidth;
+            float pixelHeight = (v1 - v0) * BaseHeight;
+
+            int mip = ComputeOptimalMip(pixelWidth, pixelHeight);
+            float hzbMaxDepth = SampleHzbMaxDepth(mip, u0, v0, u1, v1);
+
+            // In standard depth (0 = near, 1 = far):
+            // If the nearest depth of the query object is strictly greater than the furthest occluder
+            // depth in that footprint (hzbMaxDepth), the object is completely occluded!
+            return nearestDepth > hzbMaxDepth;
+        }
+
+        /// <summary>
+        /// Projects 3D world AABB into screen UV and depth, then performs HZB occlusion culling.
+        /// </summary>
+        public bool IsAabbOccluded(float minX, float minY, float minZ, float maxX, float maxY, float maxZ,
+            float[] viewProjMatrix4x4)
+        {
+            if (viewProjMatrix4x4 == null || viewProjMatrix4x4.Length < 16) return false;
+
+            float minU = float.MaxValue, minV = float.MaxValue;
+            float maxU = float.MinValue, maxV = float.MinValue;
+            float minDepth = float.MaxValue;
+
+            // 8 corners of 3D AABB
+            float[] cx = { minX, maxX };
+            float[] cy = { minY, maxY };
+            float[] cz = { minZ, maxZ };
+
+            for (int i = 0; i < 2; i++)
+            {
+                for (int j = 0; j < 2; j++)
+                {
+                    for (int k = 0; k < 2; k++)
+                    {
+                        float x = cx[i], y = cy[j], z = cz[k];
+                        // Transform by 4x4 matrix (row-major)
+                        float clipX = x * viewProjMatrix4x4[0] + y * viewProjMatrix4x4[4] + z * viewProjMatrix4x4[8] + viewProjMatrix4x4[12];
+                        float clipY = x * viewProjMatrix4x4[1] + y * viewProjMatrix4x4[5] + z * viewProjMatrix4x4[9] + viewProjMatrix4x4[13];
+                        float clipZ = x * viewProjMatrix4x4[2] + y * viewProjMatrix4x4[6] + z * viewProjMatrix4x4[10] + viewProjMatrix4x4[14];
+                        float clipW = x * viewProjMatrix4x4[3] + y * viewProjMatrix4x4[7] + z * viewProjMatrix4x4[11] + viewProjMatrix4x4[15];
+
+                        if (clipW <= 1e-4f) clipW = 1e-4f;
+                        float invW = 1.0f / clipW;
+                        float ndcX = clipX * invW;
+                        float ndcY = clipY * invW;
+                        float ndcZ = clipZ * invW;
+
+                        float u = ndcX * 0.5f + 0.5f;
+                        float v = 1.0f - (ndcY * 0.5f + 0.5f); // Flip Y for screen UV
+
+                        if (u < minU) minU = u;
+                        if (u > maxU) maxU = u;
+                        if (v < minV) minV = v;
+                        if (v > maxV) maxV = v;
+                        if (ndcZ < minDepth) minDepth = ndcZ;
+                    }
+                }
+            }
+
+            return IsOccluded(minU, minV, maxU, maxV, minDepth);
+        }
+
+        /// <summary>
+        /// Rapidly batch-tests multiple screen bounding rects against HZB.
+        /// Returns total count of occluded objects.
+        /// </summary>
+        public int BatchTestOcclusion(float[] minU, float[] minV, float[] maxU, float[] maxV, float[] nearestDepths, bool[] outOccluded, int count)
+        {
+            if (minU == null || minV == null || maxU == null || maxV == null || nearestDepths == null || outOccluded == null)
+                return 0;
+
+            int n = Math.Min(count, Math.Min(minU.Length, outOccluded.Length));
+            int occludedCount = 0;
+            for (int i = 0; i < n; i++)
+            {
+                bool occ = IsOccluded(minU[i], minV[i], maxU[i], maxV[i], nearestDepths[i]);
+                outOccluded[i] = occ;
+                if (occ) occludedCount++;
+            }
+            return occludedCount;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -1516,6 +1747,7 @@ namespace palDotNet.palModernEngine
         public TemporalAntiAliasingPipeline TemporalAA { get; } = new TemporalAntiAliasingPipeline();
         public GroundTruthAmbientOcclusionPipeline AmbientOcclusion { get; } = new GroundTruthAmbientOcclusionPipeline();
         public ClusteredLightingPipeline ClusteredLighting { get; } = new ClusteredLightingPipeline();
+        public HierarchicalZBufferPipeline OcclusionCulling { get; } = new HierarchicalZBufferPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -2410,6 +2642,107 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("ClusteredLightingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslClusteredPs, Cache));
+
+            // 21. DirectX 12 HLSL SM6 Hierarchical Z-Buffer Downsample and Occlusion Culling Compute Shader
+            string hlslHzbCullCs = @"
+                Texture2D<float> gSourceDepth : register(t0);
+                Texture2D<float> gHzbMipPyramid : register(t1);
+                RWStructuredBuffer<uint> gVisibilityBuffer : register(u0);
+                RWTexture2D<float> gDestinationMip : register(u1);
+
+                cbuffer CullConstants : register(b0) {
+                    float2 gScreenResolution;
+                    float2 gMipResolution;
+                    uint   gObjectCount;
+                    uint   gPassMode; // 0 = Downsample Mip, 1 = Occlusion Query
+                };
+
+                struct ObjectBounds {
+                    float2 minUv;
+                    float2 maxUv;
+                    float  nearestDepth;
+                    uint   objectId;
+                };
+                StructuredBuffer<ObjectBounds> gObjectBounds : register(t2);
+                SamplerState gPointClampSampler : register(s0);
+
+                [numthreads(64, 1, 1)]
+                void main(uint3 dispatchThreadId : SV_DispatchThreadID) {
+                    uint id = dispatchThreadId.x;
+                    if (gPassMode == 0) {
+                        // 2x2 conservative max depth reduction
+                        uint2 destCoord = uint2(id % (uint)gMipResolution.x, id / (uint)gMipResolution.x);
+                        if (destCoord.y < (uint)gMipResolution.y) {
+                            uint2 srcCoord = destCoord * 2;
+                            float d0 = gSourceDepth.Load(int3(srcCoord, 0));
+                            float d1 = gSourceDepth.Load(int3(srcCoord + int2(1, 0), 0));
+                            float d2 = gSourceDepth.Load(int3(srcCoord + int2(0, 1), 0));
+                            float d3 = gSourceDepth.Load(int3(srcCoord + int2(1, 1), 0));
+                            float maxD = max(max(d0, d1), max(d2, d3));
+                            gDestinationMip[destCoord] = maxD;
+                        }
+                    } else {
+                        // GPU Occlusion Culling against HZB
+                        if (id < gObjectCount) {
+                            ObjectBounds bounds = gObjectBounds[id];
+                            float2 size = (bounds.maxUv - bounds.minUv) * gScreenResolution;
+                            float maxDim = max(size.x, size.y);
+                            float mip = clamp(floor(log2(max(1.0f, maxDim))), 0.0f, 10.0f);
+
+                            float4 hzbDepths = gHzbMipPyramid.Gather(gPointClampSampler, (bounds.minUv + bounds.maxUv) * 0.5f);
+                            float maxHzb = max(max(hzbDepths.x, hzbDepths.y), max(hzbDepths.z, hzbDepths.w));
+
+                            // If object nearest depth is behind HZB max depth, occluded (0), else visible (1)
+                            gVisibilityBuffer[bounds.objectId] = (bounds.nearestDepth > maxHzb) ? 0u : 1u;
+                        }
+                    }
+                }
+            ";
+            RegisterModule(new ModernShaderModule("HzbOcclusionCullCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil, hlslHzbCullCs, Cache));
+
+            // 22. Vulkan SPIR-V Hierarchical Z-Buffer GPU Occlusion Culling Compute Shader
+            string glslHzbCullCs = @"
+                #version 460
+                layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+                struct ObjectBounds {
+                    vec2 minUv;
+                    vec2 maxUv;
+                    float nearestDepth;
+                    uint objectId;
+                };
+
+                layout(binding = 0) uniform sampler2D hzbTexture;
+                layout(binding = 1) readonly buffer BoundsBuffer {
+                    ObjectBounds objects[];
+                };
+                layout(binding = 2) writeonly buffer VisibilityBuffer {
+                    uint visibility[];
+                };
+
+                layout(push_constant) uniform PushConstants {
+                    vec2 screenResolution;
+                    uint objectCount;
+                    uint mipCount;
+                } pc;
+
+                void main() {
+                    uint id = gl_GlobalInvocationID.x;
+                    if (id >= pc.objectCount) return;
+
+                    ObjectBounds b = objects[id];
+                    vec2 size = (b.maxUv - b.minUv) * pc.screenResolution;
+                    float maxDim = max(size.x, size.y);
+                    float mip = clamp(floor(log2(max(1.0, maxDim))), 0.0, float(pc.mipCount - 1));
+
+                    vec2 centerUv = (b.minUv + b.maxUv) * 0.5;
+                    vec4 depths = textureGather(hzbTexture, centerUv);
+                    float maxDepth = max(max(depths.x, depths.y), max(depths.z, depths.w));
+
+                    visibility[b.objectId] = (b.nearestDepth > maxDepth) ? 0u : 1u;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("HzbOcclusionCullCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslHzbCullCs, Cache));
         }
     }
 }

@@ -1315,6 +1315,65 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("ClusteredLightingPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 ClusteredLightingPs shader registered");
             Assert(pipeline.GetModule("ClusteredLightingPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V ClusteredLightingPs shader registered");
 
+            // Hierarchical Z-Buffer (HZB) GPU Occlusion Culling Pipeline
+            var hzb = pipeline.OcclusionCulling;
+            Assert(hzb != null, "pipeline.OcclusionCulling initialized");
+            Assert(hzb.BaseWidth == 1024 && hzb.BaseHeight == 512, "HZB base resolution configured to 1024x512");
+            Assert(hzb.MipLevels == 11, $"HZB generates full 11-level depth pyramid (1024x512 down to 1x1): MipLevels={hzb.MipLevels}");
+
+            // Conservative 2x2 Max-Depth Reduction across Mip Levels
+            var testSmallHzb = new HierarchicalZBufferPipeline(4, 4);
+            Assert(testSmallHzb.MipLevels == 3, $"Small HZB 4x4 produces 3 mip levels (4x4, 2x2, 1x1): {testSmallHzb.MipLevels}");
+            float[] smallDepths = new float[] {
+                0.10f, 0.20f,  0.50f, 0.60f,
+                0.30f, 0.40f,  0.70f, 0.80f,
+                0.15f, 0.25f,  0.55f, 0.65f,
+                0.35f, 0.45f,  0.75f, 0.85f
+            };
+            testSmallHzb.BuildPyramid(smallDepths);
+            Assert(Math.Abs(testSmallHzb.MipPyramid[1][0] - 0.40f) < 1e-4f, "HZB 2x2 conservative max-depth reduction verified on Mip 1 (0,0)=0.40");
+            Assert(Math.Abs(testSmallHzb.MipPyramid[1][1] - 0.80f) < 1e-4f, "HZB 2x2 conservative max-depth reduction verified on Mip 1 (1,0)=0.80");
+            Assert(Math.Abs(testSmallHzb.MipPyramid[1][2] - 0.45f) < 1e-4f, "HZB 2x2 conservative max-depth reduction verified on Mip 1 (0,1)=0.45");
+            Assert(Math.Abs(testSmallHzb.MipPyramid[1][3] - 0.85f) < 1e-4f, "HZB 2x2 conservative max-depth reduction verified on Mip 1 (1,1)=0.85");
+            Assert(Math.Abs(testSmallHzb.MipPyramid[2][0] - 0.85f) < 1e-4f, "HZB Mip 2 reduction yields global conservative max occluder depth 0.85");
+
+            // Optimal Mip Level Footprint Selection
+            int mipTiny = hzb.ComputeOptimalMip(2.0f, 2.0f);
+            int mipLarge = hzb.ComputeOptimalMip(256.0f, 128.0f);
+            Assert(mipTiny == 1 && mipLarge == 8, $"HZB optimal mip level selection verified: small(2px)=1, large(256px)=8");
+
+            // Screen Rect Occlusion Tests
+            bool isOccFar = testSmallHzb.IsOccluded(0.0f, 0.0f, 0.45f, 0.45f, 0.45f);
+            bool isOccNear = testSmallHzb.IsOccluded(0.0f, 0.0f, 0.45f, 0.45f, 0.25f);
+            Assert(isOccFar, "Object behind front occluder correctly identified as occluded (culled)");
+            Assert(!isOccNear, "Object in front of occluder correctly identified as visible (rendered)");
+
+            // Batch Occlusion Query
+            float[] queryMinU = new float[] { 0.0f, 0.0f, 0.5f };
+            float[] queryMinV = new float[] { 0.0f, 0.0f, 0.5f };
+            float[] queryMaxU = new float[] { 0.45f, 0.45f, 0.95f };
+            float[] queryMaxV = new float[] { 0.45f, 0.45f, 0.95f };
+            float[] queryDepths = new float[] { 0.50f, 0.20f, 0.90f };
+            bool[] occResults = new bool[3];
+            int occCount = testSmallHzb.BatchTestOcclusion(queryMinU, queryMinV, queryMaxU, queryMaxV, queryDepths, occResults, 3);
+            Assert(occCount == 2 && occResults[0] == true && occResults[1] == false && occResults[2] == true,
+                $"Batch occlusion culling correctly resolved {occCount}/3 instances as occluded");
+
+            // 3D AABB Projected Occlusion Test
+            float[] identityMatrix = new float[] {
+                1f, 0f, 0f, 0f,
+                0f, 1f, 0f, 0f,
+                0f, 0f, 1f, 0f,
+                0f, 0f, 0f, 1f
+            };
+            bool aabbCulled = testSmallHzb.IsAabbOccluded(-0.8f, -0.8f, 0.50f, -0.2f, -0.2f, 0.60f, identityMatrix);
+            bool aabbVisible = testSmallHzb.IsAabbOccluded(-0.8f, -0.8f, 0.10f, -0.2f, -0.2f, 0.20f, identityMatrix);
+            Assert(aabbCulled && !aabbVisible, "3D AABB projection against HZB correctly culls hidden building and preserves visible building");
+
+            // HZB Shaders Registered
+            Assert(pipeline.GetModule("HzbOcclusionCullCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 HzbOcclusionCullCs compute shader registered");
+            Assert(pipeline.GetModule("HzbOcclusionCullCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V HzbOcclusionCullCs compute shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
