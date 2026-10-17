@@ -995,7 +995,7 @@ namespace CityScape.Tests
 
             // 6. Modern Shader Pipeline & Mathematical Models
             var pipeline = new ModernShaderPipeline();
-            Assert(pipeline.RegisteredModuleCount >= 4, $"ModernShaderPipeline loaded {pipeline.RegisteredModuleCount} shader modules (>= 4)");
+            Assert(pipeline.RegisteredModuleCount >= 7, $"ModernShaderPipeline loaded {pipeline.RegisteredModuleCount} shader modules (>= 7)");
             Assert(pipeline.Cache != null, "ModernShaderPipeline persistent on-disk cache initialized");
 
             var pipeline2 = new ModernShaderPipeline();
@@ -1006,6 +1006,12 @@ namespace CityScape.Tests
 
             var terrainPs = pipeline.GetModule("TerrainSplat", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary);
             Assert(terrainPs != null && terrainPs.SourceCode.Contains("mix(rock, grass, slope)"), "Vulkan SPIR-V Terrain pixel shader verified");
+
+            var skyVs = pipeline.GetModule("AtmosphericSky", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil);
+            Assert(skyVs != null && skyVs.SourceCode.Contains("gViewProjNoTranslate"), "HLSL SM6+ Sky Vertex shader verified");
+
+            var shadowVs = pipeline.GetModule("CascadedShadowDepth", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil);
+            Assert(shadowVs != null && shadowVs.SourceCode.Contains("gLightViewProjection"), "HLSL SM6+ Cascaded Shadow depth pass shader verified");
 
             // Cook-Torrance Microfacet PBR evaluation & full BRDF
             var pbrMat = new PbrMaterialParameters { Roughness = 0.3f, Metallic = 0.8f };
@@ -1044,6 +1050,26 @@ namespace CityScape.Tests
             var waterPipe = pipeline.WaterPipeline;
             waterPipe.EvaluateWaterDisplacement(100f, 200f, 5.0f, out float dispX, out float dispY, out float dispZ);
             Assert(Math.Abs(dispY) > 0f, $"Gerstner wave 3D ocean displacement computed: Y={dispY:F3}m");
+
+            // Atmospheric Scattering & Dynamic Sky Dome
+            var atmo = pipeline.Atmosphere;
+            atmo.GetSunDirection(out float sunX, out float sunY, out float sunZ);
+            Assert(Math.Abs(sunX * sunX + sunY * sunY + sunZ * sunZ - 1.0f) < 0.001f, "Atmospheric sun direction is normalized vector");
+            atmo.EvaluateSkyColor(0.8f, out float skyR, out float skyG, out float skyB);
+            Assert(skyB > skyR && skyB > 0.3f, $"Atmospheric daylight sky zenith is blue: ({skyR:F2}, {skyG:F2}, {skyB:F2})");
+            atmo.EvaluateAerialPerspective(2000f, 0.2f, 0.5f, 0.2f, out float fogR, out float fogG, out float fogB);
+            Assert(fogR >= 0f && fogG >= 0f && fogB >= 0f, "Atmospheric aerial perspective fog computed");
+
+            // Cascaded Shadow Maps (CSM) Splits & PCF
+            var csm = pipeline.Shadows;
+            Assert(csm.CascadeSplitDistances != null && csm.CascadeSplitDistances.Length == 4, "CSM has 4 cascade splits");
+            Assert(csm.CascadeSplitDistances[0] < csm.CascadeSplitDistances[1] &&
+                   csm.CascadeSplitDistances[1] < csm.CascadeSplitDistances[2] &&
+                   csm.CascadeSplitDistances[2] < csm.CascadeSplitDistances[3], "CSM cascade split distances monotonically increase");
+            Assert(csm.SelectCascadeIndex(10f) == 0, "Near target (10m) assigned to Cascade 0");
+            Assert(csm.SelectCascadeIndex(4000f) == 3, "Far landscape (4000m) assigned to Cascade 3");
+            Assert(csm.EvaluatePcfShadow(0.5f, 0.49f) == 1.0f, "CSM unshadowed PCF test returns 1.0f");
+            Assert(csm.EvaluatePcfShadow(0.5f, 0.60f) < 1.0f, "CSM shadowed PCF test returns ambient occlusion");
 
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();

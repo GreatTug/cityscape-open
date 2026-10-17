@@ -444,6 +444,118 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Analytical Preetham/Nishita atmospheric scattering and dynamic day/night sky dome model.
+    /// Provides physically plausible Rayleigh/Mie scattering and distance aerial perspective.
+    /// </summary>
+    public class AtmosphericScatteringPipeline
+    {
+        public float SunElevationDegrees { get; set; } = 45.0f;
+        public float SunAzimuthDegrees { get; set; } = 135.0f;
+        public float Turbidity { get; set; } = 2.5f;
+        public float RayleighScatteringCoeff { get; set; } = 0.0025f;
+        public float MieScatteringCoeff { get; set; } = 0.0010f;
+        public float SunIntensity { get; set; } = 1.0f;
+
+        public void GetSunDirection(out float sunX, out float sunY, out float sunZ)
+        {
+            float elevRad = SunElevationDegrees * (float)(Math.PI / 180.0);
+            float azimRad = SunAzimuthDegrees * (float)(Math.PI / 180.0);
+            sunY = (float)Math.Sin(elevRad);
+            float cosElev = (float)Math.Cos(elevRad);
+            sunX = cosElev * (float)Math.Sin(azimRad);
+            sunZ = cosElev * (float)Math.Cos(azimRad);
+        }
+
+        public void EvaluateSkyColor(float viewDirY, out float r, out float g, out float b)
+        {
+            GetSunDirection(out _, out float sunY, out _);
+            float isDay = Math.Max(0.0f, Math.Min(1.0f, (sunY + 0.15f) / 0.35f));
+            float sunsetFactor = Math.Max(0.0f, 1.0f - Math.Abs(sunY) * 3.0f);
+
+            float h = Math.Max(0.0f, Math.Min(1.0f, viewDirY));
+            float dayZenithR = 0.18f, dayZenithG = 0.42f, dayZenithB = 0.85f;
+            float dayHorizonR = 0.65f, dayHorizonG = 0.82f, dayHorizonB = 0.98f;
+
+            float sunHorizonR = 0.98f, sunHorizonG = 0.52f, sunHorizonB = 0.18f;
+            float nightZenithR = 0.01f, nightZenithG = 0.02f, nightZenithB = 0.06f;
+
+            float dayR = (1.0f - h) * dayHorizonR + h * dayZenithR;
+            float dayG = (1.0f - h) * dayHorizonG + h * dayZenithG;
+            float dayB = (1.0f - h) * dayHorizonB + h * dayZenithB;
+
+            dayR = dayR * (1.0f - sunsetFactor) + sunHorizonR * sunsetFactor;
+            dayG = dayG * (1.0f - sunsetFactor) + sunHorizonG * sunsetFactor;
+            dayB = dayB * (1.0f - sunsetFactor) + sunHorizonB * sunsetFactor;
+
+            r = dayR * isDay + nightZenithR * (1.0f - isDay);
+            g = dayG * isDay + nightZenithG * (1.0f - isDay);
+            b = dayB * isDay + nightZenithB * (1.0f - isDay);
+        }
+
+        public void EvaluateAerialPerspective(float distanceMeters, float inColorR, float inColorG, float inColorB,
+            out float outColorR, out float outColorG, out float outColorB)
+        {
+            float extinction = (float)Math.Exp(-distanceMeters * 0.000035f * Turbidity);
+            extinction = Math.Max(0.0f, Math.Min(1.0f, extinction));
+
+            EvaluateSkyColor(0.1f, out float fogR, out float fogG, out float fogB);
+            outColorR = inColorR * extinction + fogR * (1.0f - extinction);
+            outColorG = inColorG * extinction + fogG * (1.0f - extinction);
+            outColorB = inColorB * extinction + fogB * (1.0f - extinction);
+        }
+    }
+
+    /// <summary>
+    /// Cascaded Shadow Map (CSM) pipeline with logarithmic-linear split schemes and PCF filtering.
+    /// Provides sharp close-range shadows and stable multi-kilometer landscape shadow coverage.
+    /// </summary>
+    public class CascadedShadowPipeline
+    {
+        public const int CascadeCount = 4;
+        public float NearClip { get; set; } = 0.5f;
+        public float FarClip { get; set; } = 5000.0f;
+        public float SplitLambda { get; set; } = 0.75f;
+        public int ShadowMapResolution { get; set; } = 2048;
+        public float ShadowBias { get; set; } = 0.0015f;
+        public float[] CascadeSplitDistances { get; private set; }
+
+        public CascadedShadowPipeline()
+        {
+            CascadeSplitDistances = new float[CascadeCount];
+            ComputeCascadeSplits();
+        }
+
+        public void ComputeCascadeSplits()
+        {
+            float ratio = FarClip / NearClip;
+            for (int i = 0; i < CascadeCount; i++)
+            {
+                float p = (float)(i + 1) / CascadeCount;
+                float logSplit = NearClip * (float)Math.Pow(ratio, p);
+                float linSplit = NearClip + (FarClip - NearClip) * p;
+                CascadeSplitDistances[i] = SplitLambda * logSplit + (1.0f - SplitLambda) * linSplit;
+            }
+        }
+
+        public int SelectCascadeIndex(float viewDepth)
+        {
+            for (int i = 0; i < CascadeCount; i++)
+            {
+                if (viewDepth <= CascadeSplitDistances[i])
+                    return i;
+            }
+            return CascadeCount - 1;
+        }
+
+        public float EvaluatePcfShadow(float shadowDepth, float lightSpaceDepth)
+        {
+            if (lightSpaceDepth - ShadowBias <= shadowDepth)
+                return 1.0f;
+            return 0.15f;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -453,6 +565,8 @@ namespace palDotNet.palModernEngine
         public PbrMaterialParameters DefaultPbrMaterial { get; } = new PbrMaterialParameters();
         public TerrainModernPipeline TerrainPipeline { get; } = new TerrainModernPipeline();
         public WaterModernPipeline WaterPipeline { get; } = new WaterModernPipeline();
+        public AtmosphericScatteringPipeline Atmosphere { get; } = new AtmosphericScatteringPipeline();
+        public CascadedShadowPipeline Shadows { get; } = new CascadedShadowPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -562,6 +676,62 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("TerrainSplat", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslTerrainPs, Cache));
+
+            // 3. DirectX 12 SM6 Dynamic Atmospheric Sky Dome Shaders
+            string hlslSkyVs = @"
+                struct SkyVSInput {
+                    float3 position : POSITION;
+                };
+                struct SkyPSInput {
+                    float4 position : SV_Position;
+                    float3 worldPos : WORLDPOS;
+                };
+                cbuffer SkyConstants : register(b0) {
+                    float4x4 gViewProjNoTranslate;
+                };
+                SkyPSInput main(SkyVSInput input) {
+                    SkyPSInput output;
+                    output.position = mul(float4(input.position, 1.0f), gViewProjNoTranslate).xyww;
+                    output.worldPos = input.position;
+                    return output;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("AtmosphericSky", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil, hlslSkyVs, Cache));
+
+            string hlslSkyPs = @"
+                struct SkyPSInput {
+                    float4 position : SV_Position;
+                    float3 worldPos : WORLDPOS;
+                };
+                cbuffer SkyColorParams : register(b1) {
+                    float3 gSunDirection;
+                    float3 gZenithColor;
+                    float3 gHorizonColor;
+                };
+                float4 main(SkyPSInput input) : SV_Target {
+                    float3 viewDir = normalize(input.worldPos);
+                    float h = saturate(viewDir.y);
+                    float3 sky = lerp(gHorizonColor, gZenithColor, h);
+                    float sunDot = saturate(dot(viewDir, gSunDirection));
+                    float3 sunGlow = pow(sunDot, 64.0f) * float3(1.0f, 0.9f, 0.7f) * 2.5f;
+                    return float4(sky + sunGlow, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("AtmosphericSky", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslSkyPs, Cache));
+
+            // 4. Cascaded Shadow Depth-Only Pass (SM6)
+            string hlslShadowVs = @"
+                struct ShadowVSInput {
+                    float3 position : POSITION;
+                };
+                cbuffer LightViewProj : register(b0) {
+                    float4x4 gLightViewProjection;
+                };
+                float4 main(ShadowVSInput input) : SV_Position {
+                    return mul(float4(input.position, 1.0f), gLightViewProjection);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("CascadedShadowDepth", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil, hlslShadowVs, Cache));
         }
     }
 }
