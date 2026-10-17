@@ -861,6 +861,224 @@ namespace palDotNet.palModernEngine
         }
     }
 
+    public enum FoliageLodLevel
+    {
+        Lod0_MeshFull = 0,
+        Lod1_MeshSimplified = 1,
+        Lod2_CrossQuadBillboard = 2,
+        Lod3_ImpostorBillboard = 3,
+        Culled = 4
+    }
+
+    public struct FoliageInstance
+    {
+        public float PosX, PosY, PosZ;
+        public float Yaw;
+        public float ScaleX, ScaleY, ScaleZ;
+        public float WindPhaseOffset;
+        public int FoliageTypeId;
+        public float TintR, TintG, TintB;
+
+        public FoliageInstance(float x, float y, float z, float yaw, float sx, float sy, float sz, int typeId, float phase = 0f, float r = 1f, float g = 1f, float b = 1f)
+        {
+            PosX = x; PosY = y; PosZ = z;
+            Yaw = yaw;
+            ScaleX = sx; ScaleY = sy; ScaleZ = sz;
+            FoliageTypeId = typeId;
+            WindPhaseOffset = phase;
+            TintR = r; TintG = g; TintB = b;
+        }
+    }
+
+    public struct FoliageGpuInstance
+    {
+        public float WorldX, WorldY, WorldZ;
+        public float Scale;
+        public float Yaw;
+        public float WindPhase;
+        public float TintR, TintG, TintB;
+        public FoliageLodLevel Lod;
+    }
+
+    /// <summary>
+    /// Analytical multi-harmonic wind displacement simulation.
+    /// Provides continuous sway, gust flutter, and height-dependent plant stiffness attenuation.
+    /// </summary>
+    public class WindSimulationState
+    {
+        public float WindDirectionAngle { get; set; } = 0.785398f; // ~45 deg
+        public float WindSpeed { get; set; } = 6.5f; // m/s
+        public float GustFrequency { get; set; } = 0.35f; // Hz
+        public float GustAmplitude { get; set; } = 1.2f;
+        public float CurrentTime { get; set; } = 0.0f;
+
+        public void Update(float deltaTime)
+        {
+            CurrentTime += deltaTime;
+        }
+
+        public void EvaluateWindDisplacement(float worldX, float worldZ, float relativeHeight, float plantHeight, float phaseOffset,
+            out float dispX, out float dispY, out float dispZ)
+        {
+            float stiffness = Math.Max(0.0f, Math.Min(1.0f, relativeHeight));
+            stiffness = stiffness * stiffness; // Quadratic stiffness curve (rigid root, flexible canopy)
+
+            float cosDir = (float)Math.Cos(WindDirectionAngle);
+            float sinDir = (float)Math.Sin(WindDirectionAngle);
+
+            // Primary harmonic wave
+            float primaryArg = CurrentTime * WindSpeed * 0.4f + (worldX * cosDir + worldZ * sinDir) * 0.15f + phaseOffset;
+            float primarySway = (float)Math.Sin(primaryArg);
+
+            // Secondary turbulent gust flutter
+            float gustArg = CurrentTime * (WindSpeed * 0.8f + GustFrequency * 6.28318f) + phaseOffset * 2.3f;
+            float gustFlutter = (float)Math.Sin(gustArg) * GustAmplitude;
+
+            // Cross-wind lateral flutter
+            float crossArg = CurrentTime * 2.5f + (worldX - worldZ) * 0.2f + phaseOffset * 1.5f;
+            float crossFlutter = (float)Math.Cos(crossArg) * 0.25f;
+
+            float totalSway = (primarySway + gustFlutter) * (WindSpeed / 10.0f) * stiffness;
+
+            dispX = (cosDir * totalSway - sinDir * crossFlutter * stiffness) * plantHeight * 0.15f;
+            dispZ = (sinDir * totalSway + cosDir * crossFlutter * stiffness) * plantHeight * 0.15f;
+            dispY = -(float)Math.Sqrt(Math.Max(0.0f, dispX * dispX + dispZ * dispZ)) * 0.25f;
+        }
+    }
+
+    /// <summary>
+    /// PBR Foliage GPU Instancing Pipeline with distance LOD binning,
+    /// cross-quad billboard fallbacks, and leaf translucency subsurface scattering.
+    /// </summary>
+    public class FoliageInstancingPipeline
+    {
+        private readonly List<FoliageInstance> _instances = new List<FoliageInstance>();
+
+        public WindSimulationState Wind { get; } = new WindSimulationState();
+
+        public float Lod0Distance { get; set; } = 60.0f;
+        public float Lod1Distance { get; set; } = 180.0f;
+        public float Lod2CrossQuadDistance { get; set; } = 500.0f;
+        public float Lod3ImpostorDistance { get; set; } = 1500.0f;
+        public float MaxCullDistance { get; set; } = 2500.0f;
+
+        public float SubsurfaceStrength { get; set; } = 0.65f;
+        public float SubsurfaceDistortion { get; set; } = 0.35f;
+        public float SubsurfacePower { get; set; } = 4.0f;
+
+        public int TotalInstanceCount => _instances.Count;
+
+        public void Clear()
+        {
+            _instances.Clear();
+        }
+
+        public void AddInstance(FoliageInstance instance)
+        {
+            _instances.Add(instance);
+        }
+
+        public void AddInstances(IEnumerable<FoliageInstance> instances)
+        {
+            if (instances != null)
+            {
+                _instances.AddRange(instances);
+            }
+        }
+
+        public FoliageLodLevel DetermineLod(float distSq)
+        {
+            float maxCullSq = MaxCullDistance * MaxCullDistance;
+            if (distSq > maxCullSq) return FoliageLodLevel.Culled;
+
+            float lod0Sq = Lod0Distance * Lod0Distance;
+            if (distSq <= lod0Sq) return FoliageLodLevel.Lod0_MeshFull;
+
+            float lod1Sq = Lod1Distance * Lod1Distance;
+            if (distSq <= lod1Sq) return FoliageLodLevel.Lod1_MeshSimplified;
+
+            float lod2Sq = Lod2CrossQuadDistance * Lod2CrossQuadDistance;
+            if (distSq <= lod2Sq) return FoliageLodLevel.Lod2_CrossQuadBillboard;
+
+            float lod3Sq = Lod3ImpostorDistance * Lod3ImpostorDistance;
+            if (distSq <= lod3Sq) return FoliageLodLevel.Lod3_ImpostorBillboard;
+
+            return FoliageLodLevel.Culled;
+        }
+
+        public float EvaluateLeafTranslucency(float lightDirX, float lightDirY, float lightDirZ,
+            float normalX, float normalY, float normalZ,
+            float viewDirX, float viewDirY, float viewDirZ)
+        {
+            float lSubX = lightDirX + normalX * SubsurfaceDistortion;
+            float lSubY = lightDirY + normalY * SubsurfaceDistortion;
+            float lSubZ = lightDirZ + normalZ * SubsurfaceDistortion;
+            float invLen = 1.0f / (float)Math.Sqrt(Math.Max(1e-6f, lSubX * lSubX + lSubY * lSubY + lSubZ * lSubZ));
+            lSubX *= invLen; lSubY *= invLen; lSubZ *= invLen;
+
+            float vDotL = -(viewDirX * lSubX + viewDirY * lSubY + viewDirZ * lSubZ);
+            float forwardScatter = (float)Math.Pow(Math.Max(0.0f, vDotL), SubsurfacePower);
+            return forwardScatter * SubsurfaceStrength;
+        }
+
+        public FoliageGpuInstance[] BuildGpuInstanceBuffer(float camX, float camY, float camZ,
+            out int lod0Count, out int lod1Count, out int lod2Count, out int lod3Count, out int culledCount)
+        {
+            lod0Count = 0;
+            lod1Count = 0;
+            lod2Count = 0;
+            lod3Count = 0;
+            culledCount = 0;
+
+            List<FoliageGpuInstance> visible = new List<FoliageGpuInstance>(_instances.Count);
+
+            for (int i = 0; i < _instances.Count; i++)
+            {
+                FoliageInstance inst = _instances[i];
+                float dx = inst.PosX - camX;
+                float dy = inst.PosY - camY;
+                float dz = inst.PosZ - camZ;
+                float distSq = dx * dx + dy * dy + dz * dz;
+
+                FoliageLodLevel lod = DetermineLod(distSq);
+                switch (lod)
+                {
+                    case FoliageLodLevel.Lod0_MeshFull:
+                        lod0Count++;
+                        break;
+                    case FoliageLodLevel.Lod1_MeshSimplified:
+                        lod1Count++;
+                        break;
+                    case FoliageLodLevel.Lod2_CrossQuadBillboard:
+                        lod2Count++;
+                        break;
+                    case FoliageLodLevel.Lod3_ImpostorBillboard:
+                        lod3Count++;
+                        break;
+                    case FoliageLodLevel.Culled:
+                        culledCount++;
+                        continue;
+                }
+
+                visible.Add(new FoliageGpuInstance
+                {
+                    WorldX = inst.PosX,
+                    WorldY = inst.PosY,
+                    WorldZ = inst.PosZ,
+                    Scale = inst.ScaleY,
+                    Yaw = inst.Yaw,
+                    WindPhase = inst.WindPhaseOffset,
+                    TintR = inst.TintR,
+                    TintG = inst.TintG,
+                    TintB = inst.TintB,
+                    Lod = lod
+                });
+            }
+
+            return visible.ToArray();
+        }
+    }
+
     /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
@@ -874,6 +1092,7 @@ namespace palDotNet.palModernEngine
         public AtmosphericScatteringPipeline Atmosphere { get; } = new AtmosphericScatteringPipeline();
         public CascadedShadowPipeline Shadows { get; } = new CascadedShadowPipeline();
         public HdrPostProcessingPipeline PostProcessing { get; } = new HdrPostProcessingPipeline();
+        public FoliageInstancingPipeline Foliage { get; } = new FoliageInstancingPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -1243,6 +1462,184 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("CascadedShadowPcss", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslPcssPs, Cache));
+
+            // 11. Modern Foliage GPU Instanced Vertex Shader with Wind Displacement (DirectX 12 SM6)
+            string hlslFoliageVs = @"
+                struct VSInput {
+                    float3 position : POSITION;
+                    float3 normal   : NORMAL;
+                    float2 uv       : TEXCOORD0;
+                    float2 plantParam : TEXCOORD1;
+                    float3 instWorldPos  : INST_POS;
+                    float  instScale     : INST_SCALE;
+                    float  instYaw       : INST_YAW;
+                    float  instWindPhase : INST_PHASE;
+                    float3 instTint      : INST_TINT;
+                };
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float3 worldPos : WORLDPOS;
+                    float3 normal   : NORMAL;
+                    float2 uv       : TEXCOORD0;
+                    float3 tint     : TINT;
+                };
+
+                cbuffer FrameConstants : register(b0) {
+                    float4x4 gViewProjection;
+                    float3   gCameraPosition;
+                    float    gTime;
+                    float2   gWindDir;
+                    float    gWindSpeed;
+                    float    gGustStrength;
+                };
+
+                PSInput main(VSInput input) {
+                    PSInput output;
+                    float cosY = cos(input.instYaw);
+                    float sinY = sin(input.instYaw);
+                    float3 localPos = input.position * input.instScale;
+                    float3 rotPos = float3(
+                        localPos.x * cosY - localPos.z * sinY,
+                        localPos.y,
+                        localPos.x * sinY + localPos.z * cosY
+                    );
+
+                    float3 worldPos = rotPos + input.instWorldPos;
+                    float stiffness = input.plantParam.x * input.plantParam.x;
+                    float phase = input.instWindPhase + input.plantParam.y;
+
+                    float sway = sin(gTime * gWindSpeed * 0.4f + dot(worldPos.xz, gWindDir) * 0.15f + phase);
+                    float gust = sin(gTime * (gWindSpeed * 0.8f + 2.2f) + phase * 2.3f) * gGustStrength;
+                    float totalDisp = (sway + gust) * (gWindSpeed / 10.0f) * stiffness * input.instScale * 0.15f;
+
+                    worldPos.xz += gWindDir * totalDisp;
+                    worldPos.y -= abs(totalDisp) * 0.25f;
+
+                    output.position = mul(float4(worldPos, 1.0f), gViewProjection);
+                    output.worldPos = worldPos;
+                    output.normal = input.normal;
+                    output.uv = input.uv;
+                    output.tint = input.instTint;
+                    return output;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("FoliageInstancedVs", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil, hlslFoliageVs, Cache));
+
+            // 12. Modern Foliage PBR Subsurface Translucency Pixel Shader (DirectX 12 SM6)
+            string hlslFoliagePs = @"
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float3 worldPos : WORLDPOS;
+                    float3 normal   : NORMAL;
+                    float2 uv       : TEXCOORD0;
+                    float3 tint     : TINT;
+                };
+                Texture2D gFoliageAlbedo : register(t0);
+                SamplerState gSampler    : register(s0);
+
+                cbuffer FoliageLighting : register(b1) {
+                    float3 gLightDir;
+                    float  gAlphaCutoff;
+                    float3 gLightColor;
+                    float  gSubsurfaceStrength;
+                };
+
+                float4 main(PSInput input) : SV_Target {
+                    float4 texCol = gFoliageAlbedo.Sample(gSampler, input.uv);
+                    clip(texCol.a - gAlphaCutoff);
+
+                    float3 normal = normalize(input.normal);
+                    float NdotL = max(0.0f, dot(normal, -gLightDir));
+                    float backLit = max(0.0f, dot(-normal, -gLightDir)) * gSubsurfaceStrength;
+                    float3 diffuse = (NdotL + backLit) * gLightColor;
+
+                    float3 finalRgb = texCol.rgb * input.tint * (diffuse + 0.18f);
+                    return float4(finalRgb, texCol.a);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("FoliagePbrPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslFoliagePs, Cache));
+
+            // 13. Vulkan SPIR-V Modern Foliage Instanced Vertex Shader
+            string glslFoliageVs = @"
+                #version 460
+                layout(location = 0) in vec3 inPos;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec2 inUV;
+                layout(location = 3) in vec2 inPlantParam;
+                layout(location = 4) in vec3 inInstPos;
+                layout(location = 5) in float inInstScale;
+                layout(location = 6) in float inInstYaw;
+                layout(location = 7) in float inInstPhase;
+                layout(location = 8) in vec3 inInstTint;
+
+                layout(location = 0) out vec3 outWorldPos;
+                layout(location = 1) out vec3 outNormal;
+                layout(location = 2) out vec2 outUV;
+                layout(location = 3) out vec3 outTint;
+
+                layout(binding = 0) uniform FoliageFrameUBO {
+                    mat4 viewProj;
+                    vec3 camPos;
+                    float time;
+                    vec2 windDir;
+                    float windSpeed;
+                    float gustStrength;
+                } ubo;
+
+                void main() {
+                    float cosY = cos(inInstYaw);
+                    float sinY = sin(inInstYaw);
+                    vec3 localPos = inPos * inInstScale;
+                    vec3 rotPos = vec3(
+                        localPos.x * cosY - localPos.z * sinY,
+                        localPos.y,
+                        localPos.x * sinY + localPos.z * cosY
+                    );
+                    vec3 worldPos = rotPos + inInstPos;
+                    float stiffness = inPlantParam.x * inPlantParam.x;
+                    float phase = inInstPhase + inPlantParam.y;
+                    float sway = sin(ubo.time * ubo.windSpeed * 0.4 + dot(worldPos.xz, ubo.windDir) * 0.15 + phase);
+                    float totalDisp = sway * (ubo.windSpeed / 10.0) * stiffness * inInstScale * 0.15;
+                    worldPos.xz += ubo.windDir * totalDisp;
+                    worldPos.y -= abs(totalDisp) * 0.25;
+
+                    gl_Position = ubo.viewProj * vec4(worldPos, 1.0);
+                    outWorldPos = worldPos;
+                    outNormal = inNormal;
+                    outUV = inUV;
+                    outTint = inInstTint;
+                }
+            ";
+            RegisterModule(new ModernShaderModule("FoliageInstancedVs", ShaderStage.Vertex, ShaderFormat.SPIR_V_Binary, glslFoliageVs, Cache));
+
+            // 14. Vulkan SPIR-V Modern Foliage PBR Subsurface Pixel Shader
+            string glslFoliagePs = @"
+                #version 460
+                layout(location = 0) in vec3 inWorldPos;
+                layout(location = 1) in vec3 inNormal;
+                layout(location = 2) in vec2 inUV;
+                layout(location = 3) in vec3 inTint;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 1) uniform sampler2D texAlbedo;
+                layout(binding = 2) uniform FoliageLightUBO {
+                    vec3 lightDir;
+                    float alphaCutoff;
+                    vec3 lightColor;
+                    float subsurfaceStrength;
+                } lightUbo;
+
+                void main() {
+                    vec4 albedo = texture(texAlbedo, inUV);
+                    if (albedo.a < lightUbo.alphaCutoff) discard;
+                    vec3 norm = normalize(inNormal);
+                    float NdotL = max(0.0, dot(norm, -lightUbo.lightDir));
+                    float backLit = max(0.0, dot(-norm, -lightUbo.lightDir)) * lightUbo.subsurfaceStrength;
+                    vec3 diffuse = (NdotL + backLit) * lightUbo.lightColor + vec3(0.18);
+                    outColor = vec4(albedo.rgb * inTint * diffuse, albedo.a);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("FoliagePbrPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslFoliagePs, Cache));
         }
     }
 }

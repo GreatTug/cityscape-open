@@ -1142,6 +1142,56 @@ namespace CityScape.Tests
             Assert(ldrR > 0f && ldrR <= 1.0f && ldrG > 0f && ldrG <= 1.0f && ldrB > 0f && ldrB <= 1.0f,
                 $"Full HDR pixel tone mapped and gamma corrected: ({ldrR:F3}, {ldrG:F3}, {ldrB:F3})");
 
+            // PBR Foliage GPU Instancing & Multi-LOD Hierarchies
+            var foliage = pipeline.Foliage;
+            Assert(foliage != null, "pipeline.Foliage initialized");
+            foliage.Clear();
+
+            // Populate multi-distance test instances
+            foliage.AddInstance(new FoliageInstance(0f, 0f, 30f, 0.5f, 1f, 1f, 1f, 0));      // 30m -> LOD 0 Full Mesh
+            foliage.AddInstance(new FoliageInstance(0f, 0f, 120f, 1.2f, 1f, 1f, 1f, 0));     // 120m -> LOD 1 Simplified Mesh
+            foliage.AddInstance(new FoliageInstance(0f, 0f, 350f, 2.1f, 1f, 1f, 1f, 1));     // 350m -> LOD 2 Cross-Quad Billboard
+            foliage.AddInstance(new FoliageInstance(0f, 0f, 1000f, 0.0f, 1f, 1f, 1f, 1));    // 1000m -> LOD 3 Impostor Billboard
+            foliage.AddInstance(new FoliageInstance(0f, 0f, 3000f, 0.0f, 1f, 1f, 1f, 2));    // 3000m -> Culled
+
+            // Batch stream 1,000 instances
+            var batchList = new List<FoliageInstance>(1000);
+            for (int fi = 0; fi < 1000; fi++)
+            {
+                batchList.Add(new FoliageInstance(fi * 1.5f, 0f, (fi % 100) * 20f, (float)(fi * 0.1), 1f, 1f + (fi % 3) * 0.5f, 1f, fi % 4));
+            }
+            foliage.AddInstances(batchList);
+            Assert(foliage.TotalInstanceCount == 1005, $"Foliage instance collection populated: {foliage.TotalInstanceCount} instances");
+
+            // Build GPU Instance Buffer & LOD binning from camera (0, 0, 0)
+            var gpuInstances = foliage.BuildGpuInstanceBuffer(0f, 0f, 0f,
+                out int fLod0, out int fLod1, out int fLod2, out int fLod3, out int fCulled);
+            Assert(fLod0 > 0 && fLod1 > 0 && fLod2 > 0 && fLod3 > 0, $"Foliage LOD bins verified (LOD0: {fLod0}, LOD1: {fLod1}, LOD2: {fLod2}, LOD3: {fLod3})");
+            Assert(fCulled > 0, $"Distant instances outside max view range culled: {fCulled}");
+            Assert(gpuInstances.Length == (1005 - fCulled), "GPU instance buffer contains only active non-culled instances");
+
+            // Wind Simulation State & Analytical Displacement
+            var wind = foliage.Wind;
+            wind.CurrentTime = 5.0f;
+            wind.EvaluateWindDisplacement(100f, 100f, 0.0f, 15f, 0f, out float dispRootX, out _, out float dispRootZ);
+            wind.EvaluateWindDisplacement(100f, 100f, 1.0f, 15f, 0f, out float dispCanopyX, out float dispCanopyY, out float dispCanopyZ);
+
+            Assert(dispRootX == 0.0f && dispRootZ == 0.0f, "Plant root (height=0) has exactly zero wind displacement");
+            float canopyMag = (float)Math.Sqrt(dispCanopyX * dispCanopyX + dispCanopyZ * dispCanopyZ);
+            Assert(canopyMag > 0.1f, $"Canopy top (height=1.0) demonstrates dynamic wind sway: {canopyMag:F3}m");
+            Assert(dispCanopyY < 0.0f, "Canopy exhibits physical vertical compression under bending sway");
+
+            // PBR Leaf Translucency & Subsurface Scattering
+            float scatterBacklit = foliage.EvaluateLeafTranslucency(0f, 0f, -1f, 0f, 0f, 1f, 0f, 0f, 1f); // Sun behind leaf (-Z) towards camera (+Z)
+            float scatterFrontlit = foliage.EvaluateLeafTranslucency(0f, 0f, 1f, 0f, 0f, 1f, 0f, 0f, 1f);  // Sun in front of leaf (+Z)
+            Assert(scatterBacklit > scatterFrontlit, $"Leaf translucency forward scattering high when back-lit ({scatterBacklit:F3} > {scatterFrontlit:F3})");
+
+            // Modern Foliage Shaders Registered
+            Assert(pipeline.GetModule("FoliageInstancedVs", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 FoliageInstancedVs shader registered");
+            Assert(pipeline.GetModule("FoliagePbrPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 FoliagePbrPs shader registered");
+            Assert(pipeline.GetModule("FoliageInstancedVs", ShaderStage.Vertex, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V FoliageInstancedVs shader registered");
+            Assert(pipeline.GetModule("FoliagePbrPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V FoliagePbrPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
