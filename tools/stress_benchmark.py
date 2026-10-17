@@ -112,13 +112,15 @@ def run_stress_benchmark():
     $pbr.Roughness = 0.35; $pbr.Metallic = 0.75
     [float]$diff = 0.0; [float]$spec = 0.0
     [float]$wx = 0.0; [float]$wy = 0.0; [float]$wz = 0.0
+    [float]$outR = 0.0; [float]$outG = 0.0; [float]$outB = 0.0
     $swShader = [System.Diagnostics.Stopwatch]::StartNew()
     for ($s = 0; $s -lt 5000; $s++) {{
         $pbr.EvaluateFullPbrBrdf(0.85, 0.85, 0.98, 0.95, [ref]$diff, [ref]$spec)
         $pipeline.WaterPipeline.EvaluateWaterDisplacement([float]$s, [float]($s * 2), 5.0, [ref]$wx, [ref]$wy, [ref]$wz)
+        $pipeline.PostProcessing.ProcessHdrPixel([float]($diff * 2.5), [float]($spec * 2.0), 0.5, 0.2, 0.2, 0.2, [ref]$outR, [ref]$outG, [ref]$outB)
     }}
     $swShader.Stop()
-    Write-Host "  [PASS] 5,000 PBR BRDF & Ocean Gerstner wave evaluations completed in $($swShader.ElapsedMilliseconds) ms."
+    Write-Host "  [PASS] 5,000 PBR BRDF, Ocean Waves & HDR ACES Post-Processing evaluations completed in $($swShader.ElapsedMilliseconds) ms."
 
     [System.GC]::Collect()
     [System.GC]::WaitForPendingFinalizers()

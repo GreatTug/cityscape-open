@@ -559,6 +559,124 @@ namespace palDotNet.palModernEngine
         }
     }
 
+    public enum ToneMappingOperator
+    {
+        AcesFilmic = 0,
+        ReinhardExtended = 1,
+        UnrealEngine = 2,
+        LinearClamped = 3
+    }
+
+    /// <summary>
+    /// Modern HDR post-processing pipeline featuring ACES filmic tone mapping,
+    /// exposure compensation, physical bloom with soft-knee thresholding, and sRGB gamma correction.
+    /// Supports both DirectX 12 SM6 and Vulkan compute / raster passes.
+    /// </summary>
+    public class HdrPostProcessingPipeline
+    {
+        public ToneMappingOperator Operator { get; set; } = ToneMappingOperator.AcesFilmic;
+        public float ExposureEV { get; set; } = 0.0f;
+        public float BloomThreshold { get; set; } = 1.0f;
+        public float BloomSoftKnee { get; set; } = 0.5f;
+        public float BloomIntensity { get; set; } = 0.08f;
+        public float WhitePoint { get; set; } = 4.0f;
+        public float Gamma { get; set; } = 2.2f;
+
+        public float LinearExposure => (float)Math.Pow(2.0, ExposureEV);
+
+        /// <summary>
+        /// Applies ACES filmic S-curve tone mapping (Narkowicz / Hill approximation).
+        /// Maps infinite linear HDR input [0, inf) to perceptual display range [0, 1].
+        /// </summary>
+        public static float AcesFilmicToneMap(float x)
+        {
+            if (x <= 0.0f) return 0.0f;
+            const float a = 2.51f;
+            const float b = 0.03f;
+            const float c = 2.43f;
+            const float d = 0.59f;
+            const float e = 0.14f;
+            float val = (x * (a * x + b)) / (x * (c * x + d) + e);
+            return Math.Max(0.0f, Math.Min(1.0f, val));
+        }
+
+        public static float ReinhardExtendedToneMap(float x, float maxWhite)
+        {
+            if (x <= 0.0f) return 0.0f;
+            float num = x * (1.0f + (x / (maxWhite * maxWhite)));
+            float den = 1.0f + x;
+            return Math.Max(0.0f, Math.Min(1.0f, num / den));
+        }
+
+        public static float ComputeLuminance(float r, float g, float b)
+        {
+            return 0.2126f * r + 0.7152f * g + 0.0722f * b;
+        }
+
+        /// <summary>
+        /// Evaluates bloom extraction with soft knee to avoid harsh cutoff artifacts.
+        /// </summary>
+        public void ExtractBloom(float hdrR, float hdrG, float hdrB, out float bloomR, out float bloomG, out float bloomB)
+        {
+            float lum = ComputeLuminance(hdrR, hdrG, hdrB);
+            float knee = BloomThreshold * BloomSoftKnee;
+            float soft = lum - BloomThreshold + knee;
+            soft = Math.Max(0.0f, Math.Min(2.0f * knee, soft));
+            soft = (soft * soft) / (4.0f * Math.Max(0.0001f, knee));
+
+            float weight = Math.Max(soft, lum - BloomThreshold);
+            weight = weight / Math.Max(0.0001f, lum);
+            weight = Math.Max(0.0f, weight);
+
+            bloomR = hdrR * weight;
+            bloomG = hdrG * weight;
+            bloomB = hdrB * weight;
+        }
+
+        /// <summary>
+        /// Executes full HDR post-processing: exposure -> bloom accumulation -> tonemapping -> gamma correction.
+        /// </summary>
+        public void ProcessHdrPixel(float hdrR, float hdrG, float hdrB, float bloomR, float bloomG, float bloomB,
+            out float ldrR, out float ldrG, out float ldrB)
+        {
+            float exp = LinearExposure;
+            float inR = hdrR * exp + bloomR * BloomIntensity;
+            float inG = hdrG * exp + bloomG * BloomIntensity;
+            float inB = hdrB * exp + bloomB * BloomIntensity;
+
+            float mapR, mapG, mapB;
+            switch (Operator)
+            {
+                case ToneMappingOperator.AcesFilmic:
+                    mapR = AcesFilmicToneMap(inR);
+                    mapG = AcesFilmicToneMap(inG);
+                    mapB = AcesFilmicToneMap(inB);
+                    break;
+                case ToneMappingOperator.ReinhardExtended:
+                    mapR = ReinhardExtendedToneMap(inR, WhitePoint);
+                    mapG = ReinhardExtendedToneMap(inG, WhitePoint);
+                    mapB = ReinhardExtendedToneMap(inB, WhitePoint);
+                    break;
+                case ToneMappingOperator.UnrealEngine:
+                    mapR = inR / (inR + 0.155f) * 1.019f;
+                    mapG = inG / (inG + 0.155f) * 1.019f;
+                    mapB = inB / (inB + 0.155f) * 1.019f;
+                    break;
+                default:
+                    mapR = Math.Max(0.0f, Math.Min(1.0f, inR));
+                    mapG = Math.Max(0.0f, Math.Min(1.0f, inG));
+                    mapB = Math.Max(0.0f, Math.Min(1.0f, inB));
+                    break;
+            }
+
+            // sRGB Gamma Correction: linear -> gamma 2.2
+            float invGamma = 1.0f / Gamma;
+            ldrR = (float)Math.Pow(Math.Max(0.0f, mapR), invGamma);
+            ldrG = (float)Math.Pow(Math.Max(0.0f, mapG), invGamma);
+            ldrB = (float)Math.Pow(Math.Max(0.0f, mapB), invGamma);
+        }
+    }
+
     /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
@@ -571,6 +689,7 @@ namespace palDotNet.palModernEngine
         public WaterModernPipeline WaterPipeline { get; } = new WaterModernPipeline();
         public AtmosphericScatteringPipeline Atmosphere { get; } = new AtmosphericScatteringPipeline();
         public CascadedShadowPipeline Shadows { get; } = new CascadedShadowPipeline();
+        public HdrPostProcessingPipeline PostProcessing { get; } = new HdrPostProcessingPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -740,6 +859,85 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("CascadedShadowDepth", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil, hlslShadowVs, Cache));
+
+            // 5. High Dynamic Range (HDR) ACES Filmic Tone Mapping & Bloom Shaders (DirectX 12 SM6)
+            string hlslPostPs = @"
+                struct PostVSOutput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+                Texture2D gHdrSceneTexture : register(t0);
+                Texture2D gBloomTexture    : register(t1);
+                SamplerState gLinearClamp  : register(s0);
+
+                cbuffer PostProcessConstants : register(b0) {
+                    float gExposure;
+                    float gBloomIntensity;
+                    float gGamma;
+                    uint  gToneMapOperator;
+                };
+
+                float3 AcesFilmic(float3 x) {
+                    float a = 2.51f;
+                    float b = 0.03f;
+                    float c = 2.43f;
+                    float d = 0.59f;
+                    float e = 0.14f;
+                    return saturate((x * (a * x + b)) / (x * (c * x + d) + e));
+                }
+
+                float4 main(PostVSOutput input) : SV_Target {
+                    float3 hdr = gHdrSceneTexture.Sample(gLinearClamp, input.uv).rgb;
+                    float3 bloom = gBloomTexture.Sample(gLinearClamp, input.uv).rgb;
+                    float3 color = hdr * gExposure + bloom * gBloomIntensity;
+
+                    float3 mapped = color;
+                    if (gToneMapOperator == 0) {
+                        mapped = AcesFilmic(color);
+                    } else if (gToneMapOperator == 1) {
+                        mapped = color / (1.0f + color);
+                    } else if (gToneMapOperator == 2) {
+                        mapped = color / (color + 0.155f) * 1.019f;
+                    }
+
+                    float3 srgb = pow(saturate(mapped), 1.0f / gGamma);
+                    return float4(srgb, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("PostProcessAces", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslPostPs, Cache));
+
+            // 6. Vulkan SPIR-V HDR Post Processing Pixel Shader
+            string glslPostPs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+                layout(binding = 0) uniform sampler2D texHdrScene;
+                layout(binding = 1) uniform sampler2D texBloom;
+                layout(binding = 2) uniform PostUBO {
+                    float exposure;
+                    float bloomIntensity;
+                    float gamma;
+                    uint toneMapOp;
+                } ubo;
+
+                vec3 AcesFilmic(vec3 x) {
+                    float a = 2.51;
+                    float b = 0.03;
+                    float c = 2.43;
+                    float d = 0.59;
+                    float e = 0.14;
+                    return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+                }
+
+                void main() {
+                    vec3 hdr = texture(texHdrScene, inUV).rgb;
+                    vec3 bloom = texture(texBloom, inUV).rgb;
+                    vec3 color = hdr * ubo.exposure + bloom * ubo.bloomIntensity;
+                    vec3 mapped = (ubo.toneMapOp == 0u) ? AcesFilmic(color) : color / (1.0 + color);
+                    outColor = vec4(pow(clamp(mapped, 0.0, 1.0), vec3(1.0 / ubo.gamma)), 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("PostProcessAces", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslPostPs, Cache));
         }
     }
 }

@@ -1074,6 +1074,31 @@ namespace CityScape.Tests
             Assert(csm.EvaluatePcfShadow(0.5f, 0.49f) == 1.0f, "CSM unshadowed PCF test returns 1.0f");
             Assert(csm.EvaluatePcfShadow(0.5f, 0.60f) < 1.0f, "CSM shadowed PCF test returns ambient occlusion");
 
+            // HDR ACES Filmic Tone Mapping, Exposure & Bloom Pipeline
+            var postPipe = pipeline.PostProcessing;
+            Assert(postPipe != null, "pipeline.PostProcessing initialized");
+            Assert(pipeline.GetModule("PostProcessAces", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 PostProcessAces shader registered");
+            Assert(pipeline.GetModule("PostProcessAces", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V PostProcessAces shader registered");
+
+            // Verify ACES Filmic Tone Mapping mathematical curve
+            float darkVal = HdrPostProcessingPipeline.AcesFilmicToneMap(0.1f);
+            float midVal = HdrPostProcessingPipeline.AcesFilmicToneMap(1.0f);
+            float brightVal = HdrPostProcessingPipeline.AcesFilmicToneMap(10.0f);
+            float extremeVal = HdrPostProcessingPipeline.AcesFilmicToneMap(100.0f);
+            Assert(darkVal < midVal && midVal < brightVal && brightVal <= 1.0f && extremeVal <= 1.0f,
+                $"ACES Filmic curve monotonically maps HDR radiance: 0.1->{darkVal:F3}, 1.0->{midVal:F3}, 10->{brightVal:F3}, 100->{extremeVal:F3}");
+
+            // Verify Bloom soft-knee extraction
+            postPipe.ExtractBloom(0.5f, 0.5f, 0.5f, out float blLowR, out _, out _);
+            postPipe.ExtractBloom(2.0f, 2.5f, 3.0f, out float blHighR, out float blHighG, out float blHighB);
+            Assert(blLowR == 0.0f, "Sub-threshold luminance correctly filtered from bloom extraction");
+            Assert(blHighR > 0.0f && blHighB > blHighR, $"Super-threshold HDR highlights extracted for bloom: ({blHighR:F2}, {blHighG:F2}, {blHighB:F2})");
+
+            // Verify Full HDR Pixel processing with ACES tone mapping & sRGB gamma
+            postPipe.ProcessHdrPixel(2.0f, 1.5f, 0.8f, blHighR, blHighG, blHighB, out float ldrR, out float ldrG, out float ldrB);
+            Assert(ldrR > 0f && ldrR <= 1.0f && ldrG > 0f && ldrG <= 1.0f && ldrB > 0f && ldrB <= 1.0f,
+                $"Full HDR pixel tone mapped and gamma corrected: ({ldrR:F3}, {ldrG:F3}, {ldrB:F3})");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
