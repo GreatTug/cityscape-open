@@ -67625,6 +67625,8 @@ internal class _003CModule_003E
 		string defaultProjectPath = new string((sbyte*)System.Runtime.CompilerServices.Unsafe.AsPointer(ref num == 0 ? ref System.Runtime.CompilerServices.Unsafe.As<_0024ArrayType_0024_0024_0024BY00D, _003F>(ref _003FEmptyString_0040_003F_0024arBasicString_0040DVarAllocator_0040_0040_0040_00400PADA) : ref *(_003F*)(*(int*)(int)num)));
 		terrainSettingsDialog.SetDefaultProjectPath(defaultProjectPath);
 		TerrainSettingsPanel terrainSettingsPanel = terrainSettingsDialog.GetTerrainSettingsPanel();
+		((int*)P_0)[54] = 10000000;
+		((int*)P_0)[55] = 10000000;
 		terrainSettingsPanel.SetMaxTerrainSize(((int*)P_0)[54], ((int*)P_0)[55]);
 		terrainSettingsPanel.SetTessellationSampleDistRange(((float*)P_0)[45], ((float*)P_0)[46]);
 		if (((bool*)P_0)[157])
@@ -67646,6 +67648,7 @@ internal class _003CModule_003E
 			terrainSettingsPanel.SetEnableComputeTileCountValues(bEnabled: true);
 			terrainSettingsPanel.ComputeTileCountValues();
 		}
+		((bool*)P_0)[158] = false;
 		terrainSettingsPanel.SetForceSingleTile(((bool*)P_0)[158]);
 		terrainSettingsPanel.SetEnableTessellationSampleDist(((bool*)P_0)[159]);
 		IntPtr intPtr3 = new IntPtr((void*)(int)((uint*)P_0)[38]);

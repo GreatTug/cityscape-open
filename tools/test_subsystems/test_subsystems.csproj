@@ -28,6 +28,10 @@
       <HintPath>..\..\lib\SmartPropertyGrid.dll</HintPath>
       <Private>true</Private>
     </Reference>
+    <Reference Include="Xheo.Licensing">
+      <HintPath>..\..\lib\Xheo.Licensing.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Configuration" />

@@ -546,12 +546,55 @@ namespace CityScape.Tests
             // 2. TerrainSettingsDialog
             using (var dlg = new TerrainSettingsDialog())
             {
-                Assert(dlg.GetTerrainSettingsPanel() != null, "TerrainSettingsDialog has valid TerrainSettingsPanel");
+                var panel = dlg.GetTerrainSettingsPanel();
+                Assert(panel != null, "TerrainSettingsDialog has valid TerrainSettingsPanel");
                 dlg.EnableProjectPanel(true);
                 dlg.EnableProjectPanel(false);
                 dlg.ShowErrorMessage("Non-fatal verification warning message");
                 dlg.ClearMessageInfo();
                 Assert(true, "TerrainSettingsDialog error messaging functional");
+
+                // Native call simulation: SetMaxTerrainSize(1600, 1600) and SetForceSingleTile(true)
+                panel.SetMaxTerrainSize(1600, 1600);
+                Assert(panel.GetTerrainMaxSizeX() >= 10000000f, "MaxTerrainSizeX limit bypassed (unlimited 10,000 km)");
+                Assert(panel.GetTerrainMaxSizeY() >= 10000000f, "MaxTerrainSizeY limit bypassed (unlimited 10,000 km)");
+                Assert(panel.MaxTerrainSizeInfoLabel.Text.Contains("Unlimited") || panel.MaxTerrainSizeInfoLabel.Text.Contains("Sınırsız"), "MaxTerrainSizeInfo displays Unlimited (Sınırsız)");
+
+                panel.SetForceSingleTile(true);
+                Assert(panel.TileSizeX.Enabled, "TileSizeX is unlocked and enabled");
+                Assert(panel.TileSizeY.Enabled, "TileSizeY is unlocked and enabled");
+                Assert(panel.TileCountX.Enabled, "TileCountX is unlocked and enabled");
+                Assert(panel.TileCountY.Enabled, "TileCountY is unlocked and enabled");
+
+                // Trigger OnShown lifecycle
+                var onShownMethod = typeof(TerrainSettingsDialog).GetMethod("OnShown", BindingFlags.NonPublic | BindingFlags.Instance);
+                onShownMethod.Invoke(dlg, new object[] { EventArgs.Empty });
+
+                // Multi-tile calculation verification: Set Terrain size to 10,000m and TileCount to 5
+                panel.TerrainSizeX.Value = 10000m;
+                panel.TerrainSizeY.Value = 10000m;
+                panel.TileCountX.Value = 5m;
+                panel.TileCountY.Value = 5m;
+                Assert(panel.TileSizeX.Value == 2000m, $"TileSizeX computed correctly: {panel.TileSizeX.Value} == 2000");
+                Assert(panel.TileSizeY.Value == 2000m, $"TileSizeY computed correctly: {panel.TileSizeY.Value} == 2000");
+
+                // Direct tile size modification: change TileSizeX to 2500m
+                panel.TileSizeX.Value = 2500m;
+                Assert(panel.TileCountX.Value == 4m, $"TileCountX recomputed correctly: {panel.TileCountX.Value} == 4");
+                Assert(panel.IsDataValid(), "Multi-tile terrain data is fully valid");
+
+                // Render screenshot for visual confirmation
+                dlg.Show();
+                dlg.Refresh();
+                using (Bitmap bmp = new Bitmap(dlg.Width, dlg.Height))
+                {
+                    dlg.DrawToBitmap(bmp, new Rectangle(0, 0, dlg.Width, dlg.Height));
+                    string screenshotDir = @"C:\cityscape-open\tools";
+                    if (!System.IO.Directory.Exists(screenshotDir)) System.IO.Directory.CreateDirectory(screenshotDir);
+                    bmp.Save(System.IO.Path.Combine(screenshotDir, "terrain_unlocked_dialog.png"), System.Drawing.Imaging.ImageFormat.Png);
+                    Console.WriteLine("    [OK] Captured screenshot of unlocked dialog to tools/terrain_unlocked_dialog.png");
+                }
+                dlg.Hide();
             }
 
             // 3. Grid & Geometry dialogs

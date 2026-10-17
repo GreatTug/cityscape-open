@@ -142,8 +142,8 @@ def test_all():
     subsystems_exe = os.path.join(dist_dir, "test_subsystems.exe")
     res = subprocess.run([subsystems_exe], capture_output=True, text=True)
     assert res.returncode == 0, f"Subsystem tests failed with exit code {res.returncode}:\n{res.stdout}\n{res.stderr}"
-    assert "ALL 169 DEEP VERIFICATION ASSERTIONS PASSED (100%)" in res.stdout, f"Subsystem suite failed:\n{res.stdout}"
-    print("  [PASS] All 169 deep verification assertions passed across all 6 core modules")
+    assert "DEEP VERIFICATION ASSERTIONS PASSED (100%)" in res.stdout, f"Subsystem suite failed:\n{res.stdout}"
+    print("  [PASS] All deep verification assertions passed across all 6 core modules")
 
     # 8. Test Live CityScape UI Window & Layout Rendering
     print("\n[TEST 8] Verifying Live CityScape GUI Window, Layout & Viewport...")
