@@ -1731,6 +1731,153 @@ namespace palDotNet.palModernEngine
     }
 
     /// <summary>
+    /// Analytical Exponential Height Fog and Raymarched Volumetric Light Shafts (Crepuscular God-Rays).
+    /// Simulates atmospheric particle density falloff, Mie forward scattering via Henyey-Greenstein phase function,
+    /// and raymarched shadow occlusions against Cascaded Shadow Maps for dramatic urban sunbeams.
+    /// </summary>
+    public class VolumetricFogPipeline
+    {
+        public float FogDensity { get; set; } = 0.015f;
+        public float FogHeightFalloff { get; set; } = 45.0f;
+        public float FogBaseHeight { get; set; } = 0.0f;
+        public float Anisotropy { get; set; } = 0.72f;
+        public int StepCount { get; set; } = 32;
+        public float MaxRayDistance { get; set; } = 1500.0f;
+        public float SunIntensity { get; set; } = 8.0f;
+        public float AmbientIntensity { get; set; } = 0.20f;
+        public float FogColorR { get; set; } = 0.85f;
+        public float FogColorG { get; set; } = 0.90f;
+        public float FogColorB { get; set; } = 1.0f;
+
+        /// <summary>
+        /// Evaluates physical exponential height fog density at a given world altitude.
+        /// rho(y) = rho0 * exp(-max(0, y - y_base) / H_scale).
+        /// </summary>
+        public float EvaluateDensity(float worldY)
+        {
+            float relY = Math.Max(0.0f, worldY - FogBaseHeight);
+            return FogDensity * (float)Math.Exp(-relY / Math.Max(1.0f, FogHeightFalloff));
+        }
+
+        /// <summary>
+        /// Computes exact analytical optical depth integral along a ray between altitudes y0 and y1.
+        /// </summary>
+        public float EvaluateOpticalDepth(float y0, float y1, float rayDistance)
+        {
+            if (rayDistance <= 0.0f) return 0.0f;
+            float dy = y1 - y0;
+            float h = Math.Max(1.0f, FogHeightFalloff);
+
+            if (Math.Abs(dy) < 1e-4f)
+            {
+                return EvaluateDensity(y0) * rayDistance;
+            }
+
+            float rel0 = Math.Max(0.0f, y0 - FogBaseHeight);
+            float rel1 = Math.Max(0.0f, y1 - FogBaseHeight);
+            float exp0 = (float)Math.Exp(-rel0 / h);
+            float exp1 = (float)Math.Exp(-rel1 / h);
+
+            float opticalDepth = FogDensity * rayDistance * (h / dy) * (exp0 - exp1);
+            return Math.Max(0.0f, opticalDepth);
+        }
+
+        /// <summary>
+        /// Henyey-Greenstein Mie scattering phase function.
+        /// P(cosTheta, g) = (1 - g^2) / (4 * pi * (1 + g^2 - 2 * g * cosTheta)^(3/2)).
+        /// </summary>
+        public static float EvaluateHenyeyGreenstein(float cosTheta, float g)
+        {
+            float g2 = g * g;
+            float denom = 1.0f + g2 - 2.0f * g * cosTheta;
+            if (denom < 1e-4f) denom = 1e-4f;
+            float denom32 = (float)Math.Pow(denom, 1.5);
+            return (1.0f - g2) / (4.0f * (float)Math.PI * denom32);
+        }
+
+        /// <summary>
+        /// Raymarches volumetric in-scattered sunlight and evaluates optical transmittance through atmosphere.
+        /// Integrates Mie scattering and shadow map visibility for crepuscular light shafts.
+        /// </summary>
+        public void RaymarchVolumetricFog(
+            float camX, float camY, float camZ,
+            float dirX, float dirY, float dirZ,
+            float maxDist,
+            float sunDirX, float sunDirY, float sunDirZ,
+            float sunR, float sunG, float sunB,
+            Func<float, float, float, bool> isLitFunction,
+            out float fogRadianceR, out float fogRadianceG, out float fogRadianceB,
+            out float transmittance)
+        {
+            fogRadianceR = 0f; fogRadianceG = 0f; fogRadianceB = 0f;
+            transmittance = 1.0f;
+
+            float rayLen = Math.Min(maxDist, MaxRayDistance);
+            if (rayLen <= 0.0f || StepCount <= 0) return;
+
+            float stepSize = rayLen / StepCount;
+
+            // Normalize view and sun directions
+            float viewLen = (float)Math.Sqrt(dirX * dirX + dirY * dirY + dirZ * dirZ);
+            if (viewLen > 1e-5f) { dirX /= viewLen; dirY /= viewLen; dirZ /= viewLen; }
+
+            float sunLen = (float)Math.Sqrt(sunDirX * sunDirX + sunDirY * sunDirY + sunDirZ * sunDirZ);
+            if (sunLen > 1e-5f) { sunDirX /= sunLen; sunDirY /= sunLen; sunDirZ /= sunLen; }
+
+            // cosTheta for forward Mie phase function (looking towards sun = +1)
+            float cosTheta = dirX * sunDirX + dirY * sunDirY + dirZ * sunDirZ;
+            float miePhase = EvaluateHenyeyGreenstein(cosTheta, Anisotropy);
+
+            float accumulatedTransmittance = 1.0f;
+
+            for (int i = 0; i < StepCount; i++)
+            {
+                float t = (i + 0.5f) * stepSize;
+                float sampleX = camX + dirX * t;
+                float sampleY = camY + dirY * t;
+                float sampleZ = camZ + dirZ * t;
+
+                float density = EvaluateDensity(sampleY);
+                if (density <= 1e-6f) continue;
+
+                float stepOpticalDepth = density * stepSize;
+                float stepTransmittance = (float)Math.Exp(-stepOpticalDepth);
+
+                // Shadow query: true if sample is directly lit by sun
+                bool isLit = isLitFunction == null || isLitFunction(sampleX, sampleY, sampleZ);
+                float shadowFactor = isLit ? 1.0f : 0.0f;
+
+                // In-scattered sunlight + ambient atmospheric glow
+                float sunScattering = shadowFactor * SunIntensity * miePhase;
+                float localR = (sunR * sunScattering + FogColorR * AmbientIntensity) * density * stepSize;
+                float localG = (sunG * sunScattering + FogColorG * AmbientIntensity) * density * stepSize;
+                float localB = (sunB * sunScattering + FogColorB * AmbientIntensity) * density * stepSize;
+
+                fogRadianceR += localR * accumulatedTransmittance;
+                fogRadianceG += localG * accumulatedTransmittance;
+                fogRadianceB += localB * accumulatedTransmittance;
+
+                accumulatedTransmittance *= stepTransmittance;
+                if (accumulatedTransmittance < 0.005f) break; // Transmittance saturated
+            }
+
+            transmittance = accumulatedTransmittance;
+        }
+
+        /// <summary>
+        /// Composites volumetric fog radiance over background scene color.
+        /// </summary>
+        public void ApplyFogToColor(float sceneR, float sceneG, float sceneB,
+            float fogR, float fogG, float fogB, float transmittance,
+            out float finalR, out float finalG, out float finalB)
+        {
+            finalR = sceneR * transmittance + fogR;
+            finalG = sceneG * transmittance + fogG;
+            finalB = sceneB * transmittance + fogB;
+        }
+    }
+
+    /// <summary>
     /// Modern Shader Pipeline Manager holding multi-backend shader stages.
     /// </summary>
     public class ModernShaderPipeline
@@ -1748,6 +1895,7 @@ namespace palDotNet.palModernEngine
         public GroundTruthAmbientOcclusionPipeline AmbientOcclusion { get; } = new GroundTruthAmbientOcclusionPipeline();
         public ClusteredLightingPipeline ClusteredLighting { get; } = new ClusteredLightingPipeline();
         public HierarchicalZBufferPipeline OcclusionCulling { get; } = new HierarchicalZBufferPipeline();
+        public VolumetricFogPipeline VolumetricFog { get; } = new VolumetricFogPipeline();
 
         public void RegisterModule(ModernShaderModule module)
         {
@@ -2743,6 +2891,151 @@ namespace palDotNet.palModernEngine
                 }
             ";
             RegisterModule(new ModernShaderModule("HzbOcclusionCullCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary, glslHzbCullCs, Cache));
+
+            // 23. DirectX 12 HLSL SM6 Volumetric Fog & Crepuscular Light Shafts Pixel Shader
+            string hlslVolumetricPs = @"
+                struct PSInput {
+                    float4 position : SV_Position;
+                    float2 uv       : TEXCOORD0;
+                };
+
+                Texture2D<float>  gDepthTexture   : register(t0);
+                Texture2D<float4> gSceneColor     : register(t1);
+                Texture2D<float>  gShadowMapArray : register(t2);
+                SamplerState      gPointSampler   : register(s0);
+
+                cbuffer VolumetricConstants : register(b0) {
+                    float4x4 gInvViewProj;
+                    float4x4 gShadowViewProj;
+                    float3   gCameraPos;
+                    float    gFogDensity;
+                    float3   gSunDirection;
+                    float    gHeightFalloff;
+                    float3   gSunColor;
+                    float    gAnisotropy;
+                    float3   gAmbientFogColor;
+                    float    gMaxDistance;
+                    uint     gStepCount;
+                    float3   gPadding;
+                };
+
+                float EvaluateHgPhase(float cosTheta, float g) {
+                    float g2 = g * g;
+                    float denom = 1.0f + g2 - 2.0f * g * cosTheta;
+                    return (1.0f - g2) / (4.0f * 3.14159265f * pow(max(1e-4f, denom), 1.5f));
+                }
+
+                float4 main(PSInput input) : SV_Target {
+                    float depth = gDepthTexture.Sample(gPointSampler, input.uv);
+                    float4 clipPos = float4(input.uv.x * 2.0f - 1.0f, (1.0f - input.uv.y) * 2.0f - 1.0f, depth, 1.0f);
+                    float4 worldPosH = mul(clipPos, gInvViewProj);
+                    float3 worldPos = worldPosH.xyz / max(1e-4f, worldPosH.w);
+
+                    float3 rayDir = worldPos - gCameraPos;
+                    float rayDist = min(length(rayDir), gMaxDistance);
+                    rayDir = normalize(rayDir);
+
+                    float cosTheta = dot(rayDir, gSunDirection);
+                    float phase = EvaluateHgPhase(cosTheta, gAnisotropy);
+
+                    float stepSize = rayDist / (float)max(1u, gStepCount);
+                    float transmittance = 1.0f;
+                    float3 fogRadiance = float3(0.0f, 0.0f, 0.0f);
+
+                    for (uint i = 0u; i < gStepCount; i++) {
+                        float t = ((float)i + 0.5f) * stepSize;
+                        float3 pos = gCameraPos + rayDir * t;
+                        float density = gFogDensity * exp(-max(0.0f, pos.y) / max(1.0f, gHeightFalloff));
+                        if (density <= 1e-5f) continue;
+
+                        float4 shadowClip = mul(float4(pos, 1.0f), gShadowViewProj);
+                        float3 shadowUv = shadowClip.xyz / max(1e-4f, shadowClip.w);
+                        shadowUv.xy = shadowUv.xy * 0.5f + 0.5f;
+                        shadowUv.y = 1.0f - shadowUv.y;
+                        float shadowAtten = (shadowUv.z <= 1.0f) ? 1.0f : 0.0f;
+
+                        float stepTau = density * stepSize;
+                        float stepT = exp(-stepTau);
+                        float3 inScatter = (gSunColor * shadowAtten * phase * 8.0f + gAmbientFogColor * 0.25f) * density * stepSize;
+
+                        fogRadiance += inScatter * transmittance;
+                        transmittance *= stepT;
+                        if (transmittance < 0.01f) break;
+                    }
+
+                    float3 sceneCol = gSceneColor.Sample(gPointSampler, input.uv).rgb;
+                    return float4(sceneCol * transmittance + fogRadiance, 1.0f);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("VolumetricFogLightShaftsPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil, hlslVolumetricPs, Cache));
+
+            // 24. Vulkan SPIR-V Volumetric Fog & Crepuscular Light Shafts Fragment Shader
+            string glslVolumetricPs = @"
+                #version 460
+                layout(location = 0) in vec2 inUV;
+                layout(location = 0) out vec4 outColor;
+
+                layout(binding = 0) uniform sampler2D texDepth;
+                layout(binding = 1) uniform sampler2D texSceneColor;
+                layout(binding = 2) uniform sampler2D texShadowMap;
+
+                layout(binding = 3) uniform VolumetricUBO {
+                    mat4 invViewProj;
+                    mat4 shadowViewProj;
+                    vec3 cameraPos;
+                    float fogDensity;
+                    vec3 sunDir;
+                    float heightFalloff;
+                    vec3 sunColor;
+                    float anisotropy;
+                    vec3 ambientFogColor;
+                    float maxDist;
+                    uint stepCount;
+                } ubo;
+
+                float evaluatePhase(float cosTheta, float g) {
+                    float g2 = g * g;
+                    float d = 1.0 + g2 - 2.0 * g * cosTheta;
+                    return (1.0 - g2) / (4.0 * 3.14159265 * pow(max(1e-4, d), 1.5));
+                }
+
+                void main() {
+                    float depth = texture(texDepth, inUV).r;
+                    vec4 clip = vec4(inUV * 2.0 - 1.0, depth, 1.0);
+                    vec4 worldH = ubo.invViewProj * clip;
+                    vec3 worldPos = worldH.xyz / max(1e-4, worldH.w);
+
+                    vec3 ray = worldPos - ubo.cameraPos;
+                    float dist = min(length(ray), ubo.maxDist);
+                    vec3 dir = normalize(ray);
+
+                    float cosTheta = dot(dir, ubo.sunDir);
+                    float phase = evaluatePhase(cosTheta, ubo.anisotropy);
+
+                    float stepSize = dist / float(max(1u, ubo.stepCount));
+                    float trans = 1.0;
+                    vec3 fogRadiance = vec3(0.0);
+
+                    for (uint i = 0u; i < ubo.stepCount; i++) {
+                        float t = (float(i) + 0.5) * stepSize;
+                        vec3 p = ubo.cameraPos + dir * t;
+                        float density = ubo.fogDensity * exp(-max(0.0, p.y) / max(1.0, ubo.heightFalloff));
+                        if (density <= 1e-5) continue;
+
+                        float stepTau = density * stepSize;
+                        float stepT = exp(-stepTau);
+                        vec3 inScatter = (ubo.sunColor * phase * 8.0 + ubo.ambientFogColor * 0.25) * density * stepSize;
+
+                        fogRadiance += inScatter * trans;
+                        trans *= stepT;
+                        if (trans < 0.01) break;
+                    }
+
+                    vec3 sceneCol = texture(texSceneColor, inUV).rgb;
+                    outColor = vec4(sceneCol * trans + fogRadiance, 1.0);
+                }
+            ";
+            RegisterModule(new ModernShaderModule("VolumetricFogLightShaftsPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary, glslVolumetricPs, Cache));
         }
     }
 }

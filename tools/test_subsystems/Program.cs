@@ -1374,6 +1374,49 @@ namespace CityScape.Tests
             Assert(pipeline.GetModule("HzbOcclusionCullCs", ShaderStage.Compute, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 HzbOcclusionCullCs compute shader registered");
             Assert(pipeline.GetModule("HzbOcclusionCullCs", ShaderStage.Compute, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V HzbOcclusionCullCs compute shader registered");
 
+            // Volumetric Fog & Raymarched Crepuscular Light Shafts Pipeline
+            var vFog = pipeline.VolumetricFog;
+            Assert(vFog != null, "pipeline.VolumetricFog initialized");
+            Assert(vFog.FogDensity == 0.015f && vFog.FogHeightFalloff == 45.0f, "Volumetric fog configured with 0.015 base density and 45m scale height");
+
+            // Exponential Height Density Falloff
+            float dSea = vFog.EvaluateDensity(0f);
+            float dHigh = vFog.EvaluateDensity(90f);
+            Assert(Math.Abs(dSea - 0.015f) < 1e-4f, "Sea level fog density matches configured base density (0.015)");
+            Assert(dHigh < dSea * 0.2f && dHigh > 0f, $"Exponential height falloff attenuates fog density at altitude (d_90m={dHigh:F5} vs d_0m={dSea:F5})");
+
+            // Analytical Optical Depth Integration
+            float tauHoriz = vFog.EvaluateOpticalDepth(0f, 0f, 100f);
+            Assert(Math.Abs(tauHoriz - 1.50f) < 1e-3f, "Analytical optical depth along horizontal ray matches rho * dist: 1.50");
+            float tauClimb = vFog.EvaluateOpticalDepth(0f, 90f, 100f);
+            Assert(tauClimb < tauHoriz && tauClimb > 0.0f, $"Climbing ray experiences decreasing optical depth due to vertical density falloff ({tauClimb:F3} < {tauHoriz:F3})");
+
+            // Henyey-Greenstein Mie Scattering Phase Function
+            float hgForward = VolumetricFogPipeline.EvaluateHenyeyGreenstein(1.0f, 0.72f);
+            float hgBack = VolumetricFogPipeline.EvaluateHenyeyGreenstein(-1.0f, 0.72f);
+            Assert(hgForward > 1.0f, $"Forward Mie scattering strongly amplifies direct sunlight: {hgForward:F2}");
+            Assert(hgForward > hgBack * 20.0f, $"Forward Mie scattering is dramatically stronger than backscattering ({hgForward:F2} vs {hgBack:F4})");
+
+            // Raymarched Volumetric Light Shafts (Crepuscular Rays)
+            vFog.RaymarchVolumetricFog(0f, 10f, 0f, 0f, 0.2f, 1f, 200f, 0f, 0.2f, 1f, 1.0f, 0.9f, 0.7f,
+                null, out float litFogR, out float litFogG, out float litFogB, out float transLit);
+            Assert(litFogR > 0.0f && transLit < 1.0f,
+                $"Direct unshadowed volumetric sunbeam in-scattering verified: Radiance=({litFogR:F2}, {litFogG:F2}, {litFogB:F2}), Transmittance={transLit:F3}");
+
+            vFog.RaymarchVolumetricFog(0f, 10f, 0f, 0f, 0.2f, 1f, 200f, 0f, 0.2f, 1f, 1.0f, 0.9f, 0.7f,
+                (x, y, z) => false, out float shadFogR, out float shadFogG, out float shadFogB, out float transShad);
+            Assert(litFogR > shadFogR * 5.0f,
+                $"Crepuscular sunbeam creates intense god-ray contrast between lit and shadowed air ({litFogR:F2} vs {shadFogR:F2})");
+            Assert(Math.Abs(transLit - transShad) < 0.01f, "Atmospheric optical transmittance is invariant to shadow state");
+
+            // Final Scene Fog Compositing
+            vFog.ApplyFogToColor(0.2f, 0.5f, 0.8f, litFogR, litFogG, litFogB, transLit, out float compR, out float compG, out float compB);
+            Assert(compR > 0.2f * transLit && compR > 0.0f, "Volumetric fog composited smoothly over background scene");
+
+            // Volumetric Shaders Registered
+            Assert(pipeline.GetModule("VolumetricFogLightShaftsPs", ShaderStage.Pixel, ShaderFormat.HLSL_SM6_Dxil) != null, "DirectX 12 HLSL SM6 VolumetricFogLightShaftsPs shader registered");
+            Assert(pipeline.GetModule("VolumetricFogLightShaftsPs", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary) != null, "Vulkan SPIR-V VolumetricFogLightShaftsPs shader registered");
+
             // Check Backend Root Signatures and Descriptor Layouts
             var dx12Inst = new DirectX12Backend();
             Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
