@@ -35,6 +35,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	public static TerrainSurfaceData ActiveTerrain { get; set; } = TerrainSurfaceData.CreateDefault();
 	public static List<GisBuildingInstance> ActiveBuildings { get; } = new List<GisBuildingInstance>();
 	public static SpatialQuadtree<GisBuildingInstance> BuildingSpatialIndex { get; private set; }
+	public static CdlodTerrainQuadtree TerrainCdlodTree { get; private set; }
 
 	public static void SetActiveBuildings(IEnumerable<GisBuildingInstance> buildings)
 	{
@@ -66,6 +67,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	{
 		if (terrain == null) return;
 		ActiveTerrain = terrain;
+		TerrainCdlodTree = new CdlodTerrainQuadtree(terrain, 4);
 		foreach (ControlRender cr in ControlRenders)
 		{
 			cr.ResetCamera();
@@ -411,53 +413,76 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			g.DrawPolygon(skirtPen, leftSkirt);
 		}
 
-		// 3. Terrain Surface Mesh (Adaptive Subdivisions based on aspect ratio)
-		int divX = Math.Min(48, Math.Max(12, (int)Math.Round(32.0 * Math.Sqrt(Math.Max(1.0, sx / Math.Max(1.0, sy))))));
-		int divZ = Math.Min(48, Math.Max(8, (int)Math.Round(32.0 * Math.Sqrt(Math.Max(1.0, sy / Math.Max(1.0, sx))))));
+		// Camera vectors & Frustum setup
+		float fwdX = sinYaw * cosPitch;
+		float fwdY = sinPitch;
+		float fwdZ = cosYaw * cosPitch;
 
-		float stepX = sx / divX;
-		float stepZ = sy / divZ;
+		float camX = -fwdX * camDist;
+		float camY = -fwdY * camDist;
+		float camZ = -fwdZ * camDist;
+		float farClip = Math.Max(15000f, diag * 3.0f);
+		float aspect = (float)w / Math.Max(1, h);
+
+		var frustum = ViewFrustum3D.CreateFromCamera(camX, camY, camZ, mCameraYaw, mCameraPitch, 65.0f, aspect, 1.0f, farClip);
+
+		// 3. CDLOD Multi-Resolution Hierarchical Terrain Mesh (Frustum-Culled Chunks)
+		if (TerrainCdlodTree == null || TerrainCdlodTree.Terrain != terrain)
+		{
+			TerrainCdlodTree = new CdlodTerrainQuadtree(terrain, 4);
+		}
+
+		int terrainChunksTested = 0;
+		int terrainChunksCulled = 0;
+		var cdlodChunks = TerrainCdlodTree.SelectVisibleChunks(frustum, camX, camY, camZ, out terrainChunksTested, out terrainChunksCulled);
 
 		using (Pen meshPen = new Pen(Color.FromArgb(40, 180, 220, 255), 1f))
 		{
-			for (int j = 0; j < divZ; j++)
+			foreach (var chunk in cdlodChunks)
 			{
-				float z0 = -sy * 0.5f + j * stepZ;
-				float z1 = -sy * 0.5f + (j + 1) * stepZ;
+				int div = Math.Max(2, 8 >> Math.Min(3, chunk.LodLevel));
+				float stepX = (chunk.Node.MaxX - chunk.Node.MinX) / div;
+				float stepZ = (chunk.Node.MaxZ - chunk.Node.MinZ) / div;
 
-				for (int i = 0; i < divX; i++)
+				for (int j = 0; j < div; j++)
 				{
-					float x0 = -sx * 0.5f + i * stepX;
-					float x1 = -sx * 0.5f + (i + 1) * stepX;
+					float z0 = chunk.Node.MinZ + j * stepZ;
+					float z1 = chunk.Node.MinZ + (j + 1) * stepZ;
 
-					float e00 = terrain.EvaluateElevation(x0, z0);
-					float e10 = terrain.EvaluateElevation(x1, z0);
-					float e11 = terrain.EvaluateElevation(x1, z1);
-					float e01 = terrain.EvaluateElevation(x0, z1);
-
-					PointF p00 = Project(x0, e00, z0);
-					PointF p10 = Project(x1, e10, z0);
-					PointF p11 = Project(x1, e11, z1);
-					PointF p01 = Project(x0, e01, z1);
-
-					float avgElev = (e00 + e10 + e11 + e01) * 0.25f;
-					float elevRatio = Math.Max(0f, Math.Min(1f, avgElev / Math.Max(1f, terrain.ElevationMax)));
-
-					// PBR terrain splat coloring (valley green -> rocky ridge -> peak)
-					int r = (int)(42 + elevRatio * 85);
-					int gCol = (int)(75 + (1f - elevRatio) * 35 + elevRatio * 25);
-					int bCol = (int)(55 + elevRatio * 60);
-
-					float lightFactor = 0.88f + 0.12f * (float)Math.Cos((x0 + z0) * 0.001);
-					r = Math.Min(255, (int)(r * lightFactor));
-					gCol = Math.Min(255, (int)(gCol * lightFactor));
-					bCol = Math.Min(255, (int)(bCol * lightFactor));
-
-					using (SolidBrush quadBrush = new SolidBrush(Color.FromArgb(r, gCol, bCol)))
+					for (int i = 0; i < div; i++)
 					{
-						PointF[] quad = new PointF[] { p00, p10, p11, p01 };
-						g.FillPolygon(quadBrush, quad);
-						g.DrawPolygon(meshPen, quad);
+						float x0 = chunk.Node.MinX + i * stepX;
+						float x1 = chunk.Node.MinX + (i + 1) * stepX;
+
+						float e00 = terrain.EvaluateElevation(x0, z0);
+						float e10 = terrain.EvaluateElevation(x1, z0);
+						float e11 = terrain.EvaluateElevation(x1, z1);
+						float e01 = terrain.EvaluateElevation(x0, z1);
+
+						PointF p00 = Project(x0, e00, z0);
+						PointF p10 = Project(x1, e10, z0);
+						PointF p11 = Project(x1, e11, z1);
+						PointF p01 = Project(x0, e01, z1);
+
+						float avgElev = (e00 + e10 + e11 + e01) * 0.25f;
+						float elevRatio = Math.Max(0f, Math.Min(1f, avgElev / Math.Max(1f, terrain.ElevationMax)));
+
+						// PBR terrain splat coloring (valley green -> rocky ridge -> peak)
+						int r = (int)(42 + elevRatio * 85);
+						int gCol = (int)(75 + (1f - elevRatio) * 35 + elevRatio * 25);
+						int bCol = (int)(55 + elevRatio * 60);
+
+						float lightFactor = 0.88f + 0.12f * (float)Math.Cos((x0 + z0) * 0.001);
+						r = Math.Min(255, (int)(r * lightFactor));
+						gCol = Math.Min(255, (int)(gCol * lightFactor));
+						bCol = Math.Min(255, (int)(bCol * lightFactor));
+
+						using (SolidBrush quadBrush = new SolidBrush(Color.FromArgb(r, gCol, bCol)))
+						{
+							PointF[] quad = new PointF[] { p00, p10, p11, p01 };
+							g.FillPolygon(quadBrush, quad);
+							g.DrawPolygon(meshPen, quad);
+						}
 					}
 				}
 			}
@@ -482,17 +507,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 				}
 			}
 
-			float fwdX = sinYaw * cosPitch;
-			float fwdY = sinPitch;
-			float fwdZ = cosYaw * cosPitch;
-
-			float camX = -fwdX * camDist;
-			float camY = -fwdY * camDist;
-			float camZ = -fwdZ * camDist;
-			float farClip = Math.Max(15000f, diag * 3.0f);
-			float aspect = (float)w / Math.Max(1, h);
-
-			var frustum = ViewFrustum3D.CreateFromCamera(camX, camY, camZ, mCameraYaw, mCameraPitch, 65.0f, aspect, 1.0f, farClip);
 			var visibleBuildings = BuildingSpatialIndex.QueryFrustum(frustum, out nodesTested, out nodesCulled);
 
 			using (Pen buildingWirePen = new Pen(Color.FromArgb(70, 90, 110), 1f))
@@ -672,8 +686,8 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 				terrain.SizeX, terrain.SizeY, terrain.AreaSquareKilometers, terrain.AspectRatio), textFont, cyanBrush, 26, 43);
 			g.DrawString(string.Format("Tile Grid: {0} × {1} (Tile Size: {2:N0}m × {3:N0}m) | Sampling: {4:F2}m ({5:N0} samples)",
 				terrain.TileCountX, terrain.TileCountY, terrain.TileSizeX, terrain.TileSizeY, terrain.SamplingDistance, terrain.TotalSamplePoints), textFont, greenBrush, 26, 62);
-			g.DrawString(string.Format("3D Engine: {0} [{1}] | PBR CDLOD Tessellation Active | Camera: Yaw={2:F0}°, Pitch={3:F0}°",
-				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, mCameraYaw, mCameraPitch), textFont, goldBrush, 26, 81);
+			g.DrawString(string.Format("3D Engine: {0} [{1}] | CDLOD Quadtree: {2} chunks ({3} culled) | Camera: Yaw={4:F0}°, Pitch={5:F0}°",
+				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, cdlodChunks.Count, terrainChunksCulled, mCameraYaw, mCameraPitch), textFont, goldBrush, 26, 81);
 			string bldStat = ActiveBuildings.Count > 0
 				? string.Format("3D Buildings: {0:N0} vis / {1:N0} tot (Culled Nodes: {2}/{3})", renderedBuildings, ActiveBuildings.Count, nodesCulled, nodesTested)
 				: "3D Buildings: 0";

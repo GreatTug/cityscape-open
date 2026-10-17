@@ -1274,6 +1274,37 @@ namespace CityScape.Tests
             ControlRender.SetActiveBuildings(buildings);
             Assert(ControlRender.BuildingSpatialIndex != null, "ControlRender.BuildingSpatialIndex automatically created on SetActiveBuildings");
             Assert(ControlRender.BuildingSpatialIndex.TotalItems == buildings.Count, "BuildingSpatialIndex item count matches active buildings count");
+
+            // 8. CDLOD Multi-Resolution Terrain Quadtree Engine
+            var cdlodTerrain = new TerrainSurfaceData { SizeX = 100000f, SizeY = 4800f, ElevationMax = 250f };
+            var cdlodTree = new CdlodTerrainQuadtree(cdlodTerrain, maxLodLevels: 4);
+            Assert(cdlodTree.Root != null, "CdlodTerrainQuadtree root node initialized");
+            Assert(cdlodTree.TotalNodes > 1, $"CdlodTerrainQuadtree hierarchically subdivided into {cdlodTree.TotalNodes} chunk nodes");
+            Assert(cdlodTree.LodRanges != null && cdlodTree.LodRanges.Length == 4, "CDLOD distance ranges populated for 4 LOD tiers");
+            Assert(cdlodTree.LodRanges[0] < cdlodTree.LodRanges[1] && cdlodTree.LodRanges[1] < cdlodTree.LodRanges[2], "CDLOD ranges monotonically scale geometrically");
+
+            // Perform CDLOD Frustum Chunk Selection
+            // Camera looking towards origin from -2000m on Z
+            var cdlodFrustum = ViewFrustum3D.CreateFromCamera(0f, 200f, -2000f, 0f, 0f, 60f, 16f / 9f, 5f, 20000f);
+            var selectedChunks = cdlodTree.SelectVisibleChunks(cdlodFrustum, 0f, 200f, -2000f, out int cdlodTested, out int cdlodCulled);
+            Assert(selectedChunks != null && selectedChunks.Count > 0, $"CDLOD chunk selection returned {selectedChunks.Count} visible chunks");
+            Assert(cdlodCulled > 0, $"CDLOD frustum culling pruned {cdlodCulled} off-screen terrain chunk subtrees");
+
+            // Verify LOD mesh generation
+            var firstChunk = selectedChunks[0];
+            var chunkMesh = firstChunk.GenerateMesh(cdlodTerrain, baseGridResolution: 8);
+            Assert(chunkMesh != null && chunkMesh.Vertices.Count > 0 && chunkMesh.Indices.Count > 0,
+                $"CDLOD chunk generated dynamic LOD mesh with {chunkMesh.Vertices.Count} vertices and {chunkMesh.Indices.Count} indices");
+
+            // Verify normals are normalized
+            var v0 = chunkMesh.Vertices[0];
+            float normLen = (float)Math.Sqrt(v0.Nx * v0.Nx + v0.Ny * v0.Ny + v0.Nz * v0.Nz);
+            Assert(Math.Abs(normLen - 1.0f) < 0.05f, "CDLOD chunk generated normalized vertex normal vector");
+
+            // Viewport CDLOD integration
+            ControlRender.SetActiveTerrain(cdlodTerrain);
+            Assert(ControlRender.TerrainCdlodTree != null, "ControlRender.TerrainCdlodTree populated on SetActiveTerrain");
+            Assert(ControlRender.TerrainCdlodTree.TotalNodes == cdlodTree.TotalNodes, "ControlRender.TerrainCdlodTree node count matches configured quadtree");
         }
     }
 }
