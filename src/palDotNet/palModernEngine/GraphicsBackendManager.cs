@@ -110,6 +110,14 @@ namespace palDotNet.palModernEngine
         }
 
         /// <summary>
+        /// Hot-switches the active graphics backend at runtime using the active window handle.
+        /// </summary>
+        public static bool SwitchBackend(GraphicsBackendType newBackend)
+        {
+            return SwitchBackend(newBackend, _currentHwnd);
+        }
+
+        /// <summary>
         /// Hot-switches the active graphics backend at runtime.
         /// Reallocates GPU device resources and notifies all subscribed viewports.
         /// </summary>
@@ -120,7 +128,10 @@ namespace palDotNet.palModernEngine
                 return true;
             }
 
-            _currentHwnd = windowHandle;
+            if (windowHandle != IntPtr.Zero)
+            {
+                _currentHwnd = windowHandle;
+            }
             IGraphicsBackend oldBackend = _activeBackend;
 
             try
@@ -149,7 +160,7 @@ namespace palDotNet.palModernEngine
                 // Fallback to legacy safe mode if modern backend initialization fails
                 if (newBackend != GraphicsBackendType.DirectX9_Legacy)
                 {
-                    return SwitchBackend(GraphicsBackendType.DirectX9_Legacy, windowHandle);
+                    return SwitchBackend(GraphicsBackendType.DirectX9_Legacy, _currentHwnd);
                 }
                 return false;
             }
@@ -168,40 +179,24 @@ namespace palDotNet.palModernEngine
         public static List<AdapterInfo> EnumerateAvailableAdapters()
         {
             List<AdapterInfo> list = new List<AdapterInfo>();
-
-            // 1. DirectX 12 Modern Adapter
-            list.Add(new AdapterInfo
+            try
             {
-                AdapterName = "DirectX 12 Hardware Rasterizer (D3D12)",
-                VendorName = "Microsoft D3D12 / DXGI 1.6",
-                BackendType = GraphicsBackendType.DirectX12_Modern,
-                SupportedFeatures = GraphicsFeatures.ShaderModel6_DXIL | GraphicsFeatures.MeshShaders | GraphicsFeatures.HardwareTessellation,
-                RuntimeArchitecture = CurrentArchitecture,
-                DedicatedVideoMemoryBytes = 8UL * 1024 * 1024 * 1024
-            });
-
-            // 2. Vulkan 1.3 Modern Adapter
-            list.Add(new AdapterInfo
+                using (var dx12 = new DirectX12Backend())
+                {
+                    list.Add(dx12.Adapter);
+                }
+                using (var vk = new VulkanBackend())
+                {
+                    list.Add(vk.Adapter);
+                }
+                using (var dx9 = new DirectX9LegacyBackend())
+                {
+                    list.Add(dx9.Adapter);
+                }
+            }
+            catch
             {
-                AdapterName = "Vulkan 1.3 Hardware Driver (Vulkan WSI)",
-                VendorName = "Khronos Vulkan Registry",
-                BackendType = GraphicsBackendType.Vulkan_Modern,
-                SupportedFeatures = GraphicsFeatures.SPIR_V_Bytecode | GraphicsFeatures.HardwareTessellation | GraphicsFeatures.MeshShaders,
-                RuntimeArchitecture = CurrentArchitecture,
-                DedicatedVideoMemoryBytes = 8UL * 1024 * 1024 * 1024
-            });
-
-            // 3. DirectX 9 Legacy Safe Mode
-            list.Add(new AdapterInfo
-            {
-                AdapterName = "Direct3D 9.0c Safe Mode Adapter",
-                VendorName = "Microsoft Direct3D 9",
-                BackendType = GraphicsBackendType.DirectX9_Legacy,
-                SupportedFeatures = GraphicsFeatures.ShaderModel3,
-                RuntimeArchitecture = TargetArchitecture.x86_Legacy,
-                DedicatedVideoMemoryBytes = 1024UL * 1024 * 1024
-            });
-
+            }
             return list;
         }
     }

@@ -56,55 +56,9 @@ namespace palDotNet.palModernEngine
                     return ExportGlbBinary(targetFilePath, meshes, sceneName);
                 }
 
-                // glTF JSON + embedded base64 or separate bin
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("{");
-                sb.AppendLine("  \"asset\": { \"version\": \"2.0\", \"generator\": \"PixelActive CityScape 1.8 Modern Engine Exporter\" },");
-                sb.AppendLine("  \"scene\": 0,");
-                sb.AppendLine("  \"scenes\": [ { \"name\": \"" + sceneName + "\", \"nodes\": [ 0 ] } ],");
-                sb.AppendLine("  \"nodes\": [ { \"name\": \"RootNode\", \"children\": [");
-
-                List<ExportMeshData> meshList = new List<ExportMeshData>(meshes ?? new ExportMeshData[0]);
-                if (meshList.Count == 0)
-                {
-                    // Provide a default fallback terrain quad if mesh list empty
-                    var fallback = new ExportMeshData { Name = "TerrainMesh_L0" };
-                    fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 0f });
-                    fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 0f });
-                    fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 1f });
-                    fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 1f });
-                    fallback.Indices.AddRange(new uint[] { 0, 1, 2, 0, 2, 3 });
-                    meshList.Add(fallback);
-                }
-
-                List<string> childIndices = new List<string>();
-                for (int i = 0; i < meshList.Count; i++)
-                {
-                    childIndices.Add((i + 1).ToString());
-                }
-                sb.AppendLine("    " + string.Join(", ", childIndices.ToArray()));
-                sb.AppendLine("  ] } ],");
-
-                // Materials
-                sb.AppendLine("  \"materials\": [");
-                for (int i = 0; i < meshList.Count; i++)
-                {
-                    var m = meshList[i].Material;
-                    sb.AppendLine("    {");
-                    sb.AppendLine("      \"name\": \"Material_" + meshList[i].Name + "\",");
-                    sb.AppendLine("      \"pbrMetallicRoughness\": {");
-                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "        \"baseColorFactor\": [{0:F2}, {1:F2}, {2:F2}, {3:F2}],", m.BaseColorR, m.BaseColorG, m.BaseColorB, m.BaseColorA));
-                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "        \"metallicFactor\": {0:F2},", m.Metallic));
-                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "        \"roughnessFactor\": {0:F2}", m.Roughness));
-                    sb.AppendLine("      }");
-                    sb.Append("    }");
-                    if (i < meshList.Count - 1) sb.Append(",");
-                    sb.AppendLine();
-                }
-                sb.AppendLine("  ]");
-                sb.AppendLine("}");
-
-                File.WriteAllText(targetFilePath, sb.ToString(), Encoding.UTF8);
+                // Self-contained glTF JSON with embedded Base64 data URI buffer
+                BuildGltfStructure(meshes, sceneName, true, out string gltfJson, out byte[] _);
+                File.WriteAllText(targetFilePath, gltfJson, Encoding.UTF8);
                 return true;
             }
             catch
@@ -113,7 +67,7 @@ namespace palDotNet.palModernEngine
             }
         }
 
-        private bool ExportGlbBinary(string targetFilePath, IEnumerable<ExportMeshData> meshes, string sceneName)
+        private static void BuildGltfStructure(IEnumerable<ExportMeshData> meshes, string sceneName, bool embedBase64Uri, out string jsonString, out byte[] binBufferBytes)
         {
             List<ExportMeshData> meshList = new List<ExportMeshData>(meshes ?? new ExportMeshData[0]);
             if (meshList.Count == 0)
@@ -131,7 +85,6 @@ namespace palDotNet.palModernEngine
             using (MemoryStream binMs = new MemoryStream())
             using (BinaryWriter binBw = new BinaryWriter(binMs))
             {
-                // Structures to record accessor metadata
                 int totalMeshes = meshList.Count;
                 int[] posOffsets = new int[totalMeshes];
                 int[] posLengths = new int[totalMeshes];
@@ -192,11 +145,17 @@ namespace palDotNet.palModernEngine
 
                     // Write Indices (uint32)
                     indOffsets[m] = (int)binMs.Position;
-                    for (int i = 0; i < mesh.Indices.Count; i++)
+                    List<uint> indices = mesh.Indices;
+                    if (indices.Count == 0 && mesh.Vertices.Count >= 3)
                     {
-                        binBw.Write(mesh.Indices[i]);
+                        indices = new List<uint>();
+                        for (uint i = 0; i < mesh.Vertices.Count; i++) indices.Add(i);
                     }
-                    indLengths[m] = mesh.Indices.Count * 4;
+                    for (int i = 0; i < indices.Count; i++)
+                    {
+                        binBw.Write(indices[i]);
+                    }
+                    indLengths[m] = indices.Count * 4;
                 }
 
                 // 4-byte pad binary buffer
@@ -205,7 +164,7 @@ namespace palDotNet.palModernEngine
                     binBw.Write((byte)0x00);
                 }
                 binBw.Flush();
-                byte[] binBufferBytes = binMs.ToArray();
+                binBufferBytes = binMs.ToArray();
 
                 // Build GLTF JSON referencing the binary buffer
                 StringBuilder jsonSb = new StringBuilder();
@@ -213,7 +172,7 @@ namespace palDotNet.palModernEngine
                 jsonSb.AppendLine("  \"asset\": { \"version\": \"2.0\", \"generator\": \"PixelActive CityScape 1.8 Modern glTF/GLB Engine\" },");
                 jsonSb.AppendLine("  \"scene\": 0,");
                 jsonSb.AppendLine("  \"scenes\": [ { \"name\": \"" + sceneName + "\", \"nodes\": [ 0 ] } ],");
-                
+
                 // Root node with child nodes
                 jsonSb.AppendLine("  \"nodes\": [");
                 jsonSb.Append("    { \"name\": \"SceneRoot\", \"children\": [");
@@ -257,7 +216,7 @@ namespace palDotNet.palModernEngine
                 jsonSb.AppendLine("  \"materials\": [");
                 for (int i = 0; i < totalMeshes; i++)
                 {
-                    var mat = meshList[i].Material;
+                    var mat = meshList[i].Material ?? new PbrMaterialParameters();
                     jsonSb.AppendLine("    {");
                     jsonSb.AppendLine("      \"name\": \"Material_" + (string.IsNullOrEmpty(meshList[i].Name) ? i.ToString() : meshList[i].Name) + "\",");
                     jsonSb.AppendLine("      \"pbrMetallicRoughness\": {");
@@ -273,23 +232,21 @@ namespace palDotNet.palModernEngine
 
                 // BufferViews (4 bufferViews per mesh: Pos, Norm, UV, Index)
                 jsonSb.AppendLine("  \"bufferViews\": [");
-                int bvIndex = 0;
                 for (int i = 0; i < totalMeshes; i++)
                 {
                     // Pos
-                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }}", posOffsets[i], posLengths[i]));
-                    jsonSb.AppendLine(",");
+                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }},", posOffsets[i], posLengths[i]));
+                    jsonSb.AppendLine();
                     // Norm
-                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }}", normOffsets[i], normLengths[i]));
-                    jsonSb.AppendLine(",");
+                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }},", normOffsets[i], normLengths[i]));
+                    jsonSb.AppendLine();
                     // UV
-                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }}", uvOffsets[i], uvLengths[i]));
-                    jsonSb.AppendLine(",");
+                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }},", uvOffsets[i], uvLengths[i]));
+                    jsonSb.AppendLine();
                     // Index
                     jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34963 }}", indOffsets[i], indLengths[i]));
                     if (i < totalMeshes - 1) jsonSb.Append(",");
                     jsonSb.AppendLine();
-                    bvIndex += 4;
                 }
                 jsonSb.AppendLine("  ],");
 
@@ -298,7 +255,7 @@ namespace palDotNet.palModernEngine
                 for (int i = 0; i < totalMeshes; i++)
                 {
                     int vCount = meshList[i].Vertices.Count;
-                    int iCount = meshList[i].Indices.Count;
+                    int iCount = indLengths[i] / 4;
                     int bBase = i * 4;
 
                     // Pos accessor
@@ -325,43 +282,57 @@ namespace palDotNet.palModernEngine
 
                 // Buffers
                 jsonSb.AppendLine("  \"buffers\": [");
-                jsonSb.AppendLine(string.Format("    {{ \"byteLength\": {0} }}", binBufferBytes.Length));
+                if (embedBase64Uri)
+                {
+                    string base64Uri = "data:application/octet-stream;base64," + Convert.ToBase64String(binBufferBytes);
+                    jsonSb.AppendLine(string.Format("    {{ \"byteLength\": {0}, \"uri\": \"{1}\" }}", binBufferBytes.Length, base64Uri));
+                }
+                else
+                {
+                    jsonSb.AppendLine(string.Format("    {{ \"byteLength\": {0} }}", binBufferBytes.Length));
+                }
                 jsonSb.AppendLine("  ]");
                 jsonSb.AppendLine("}");
 
-                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonSb.ToString());
-                int jsonPadded = (jsonBytes.Length + 3) & ~3;
-
-                // Write complete GLB file
-                using (FileStream fs = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write))
-                using (BinaryWriter bw = new BinaryWriter(fs))
-                {
-                    // 12-byte GLB Header: Magic 0x46546C67 ("glTF"), Version 2, Total Length
-                    uint totalGlbLength = 12u + 8u + (uint)jsonPadded + 8u + (uint)binBufferBytes.Length;
-                    bw.Write(0x46546C67u);
-                    bw.Write(2u);
-                    bw.Write(totalGlbLength);
-
-                    // Chunk 0: JSON
-                    bw.Write((uint)jsonPadded);
-                    bw.Write(0x4E4F534Au); // "JSON"
-                    bw.Write(jsonBytes);
-                    for (int p = jsonBytes.Length; p < jsonPadded; p++) bw.Write((byte)0x20);
-
-                    // Chunk 1: BIN
-                    bw.Write((uint)binBufferBytes.Length);
-                    bw.Write(0x004E4942u); // "BIN\0"
-                    bw.Write(binBufferBytes);
-                }
-
-                return true;
+                jsonString = jsonSb.ToString();
             }
+        }
+
+        private bool ExportGlbBinary(string targetFilePath, IEnumerable<ExportMeshData> meshes, string sceneName)
+        {
+            BuildGltfStructure(meshes, sceneName, false, out string jsonStr, out byte[] binBufferBytes);
+
+            byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonStr);
+            int jsonPadded = (jsonBytes.Length + 3) & ~3;
+
+            using (FileStream fs = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write))
+            using (BinaryWriter bw = new BinaryWriter(fs))
+            {
+                // 12-byte GLB Header: Magic 0x46546C67 ("glTF"), Version 2, Total Length
+                uint totalGlbLength = 12u + 8u + (uint)jsonPadded + 8u + (uint)binBufferBytes.Length;
+                bw.Write(0x46546C67u);
+                bw.Write(2u);
+                bw.Write(totalGlbLength);
+
+                // Chunk 0: JSON
+                bw.Write((uint)jsonPadded);
+                bw.Write(0x4E4F534Au); // "JSON"
+                bw.Write(jsonBytes);
+                for (int p = jsonBytes.Length; p < jsonPadded; p++) bw.Write((byte)0x20);
+
+                // Chunk 1: BIN
+                bw.Write((uint)binBufferBytes.Length);
+                bw.Write(0x004E4942u); // "BIN\0"
+                bw.Write(binBufferBytes);
+            }
+
+            return true;
         }
     }
 
     /// <summary>
     /// Modern Pixar / Apple Universal Scene Description (USD / USDA) Exporter.
-    /// Compatible with NVIDIA Omniverse, Pixar USDview, Apple Reality Composer, and Maya/Houdini.
+    /// Fully compliant with OpenUSD specification, Pixar usdview, NVIDIA Omniverse, and Maya/Blender.
     /// </summary>
     public class UsdModernExporter : IModernExporter
     {
@@ -381,6 +352,18 @@ namespace palDotNet.palModernEngine
                     Directory.CreateDirectory(dir);
                 }
 
+                List<ExportMeshData> meshList = new List<ExportMeshData>(meshes ?? new ExportMeshData[0]);
+                if (meshList.Count == 0)
+                {
+                    var fallback = new ExportMeshData { Name = "TerrainMesh_L0" };
+                    fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 0f });
+                    fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 0f });
+                    fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 1f });
+                    fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 1f });
+                    fallback.Indices.AddRange(new uint[] { 0, 1, 2, 0, 2, 3 });
+                    meshList.Add(fallback);
+                }
+
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("#usda 1.0");
                 sb.AppendLine("(");
@@ -395,12 +378,27 @@ namespace palDotNet.palModernEngine
                 sb.AppendLine("{");
 
                 int index = 0;
-                foreach (var mesh in meshes ?? new ExportMeshData[0])
+                foreach (var mesh in meshList)
                 {
                     string safeName = string.IsNullOrEmpty(mesh.Name) ? ("Mesh_" + index) : mesh.Name.Replace(" ", "_").Replace("-", "_");
                     sb.AppendLine("    def Mesh \"" + safeName + "\"");
                     sb.AppendLine("    {");
-                    sb.AppendLine("        int[] faceVertexCounts = [" + (mesh.Indices.Count > 0 ? (mesh.Indices.Count / 3) : 1) + "]");
+
+                    List<uint> indices = mesh.Indices;
+                    if (indices.Count == 0 && mesh.Vertices.Count >= 3)
+                    {
+                        indices = new List<uint>();
+                        for (uint i = 0; i < mesh.Vertices.Count; i++) indices.Add(i);
+                    }
+
+                    int faceCount = indices.Count / 3;
+                    sb.Append("        int[] faceVertexCounts = [");
+                    for (int f = 0; f < faceCount; f++)
+                    {
+                        sb.Append("3");
+                        if (f < faceCount - 1) sb.Append(", ");
+                    }
+                    sb.AppendLine("]");
 
                     sb.Append("        point3f[] points = [");
                     for (int v = 0; v < mesh.Vertices.Count; v++)
@@ -411,17 +409,64 @@ namespace palDotNet.palModernEngine
                     }
                     sb.AppendLine("]");
 
-                    sb.Append("        int[] faceVertexIndices = [");
-                    for (int i = 0; i < mesh.Indices.Count; i++)
+                    sb.Append("        normal3f[] primvars:normals = [");
+                    for (int v = 0; v < mesh.Vertices.Count; v++)
                     {
-                        sb.Append(mesh.Indices[i]);
-                        if (i < mesh.Indices.Count - 1) sb.Append(", ");
+                        var pt = mesh.Vertices[v];
+                        sb.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "({0:F3}, {1:F3}, {2:F3})", pt.Nx, pt.Ny, pt.Nz));
+                        if (v < mesh.Vertices.Count - 1) sb.Append(", ");
+                    }
+                    sb.AppendLine("] (interpolation = \"vertex\")");
+
+                    sb.Append("        float2[] primvars:st = [");
+                    for (int v = 0; v < mesh.Vertices.Count; v++)
+                    {
+                        var pt = mesh.Vertices[v];
+                        sb.Append(string.Format(System.Globalization.CultureInfo.InvariantCulture, "({0:F3}, {1:F3})", pt.U, pt.V));
+                        if (v < mesh.Vertices.Count - 1) sb.Append(", ");
+                    }
+                    sb.AppendLine("] (interpolation = \"vertex\")");
+
+                    sb.Append("        int[] faceVertexIndices = [");
+                    for (int i = 0; i < indices.Count; i++)
+                    {
+                        sb.Append(indices[i]);
+                        if (i < indices.Count - 1) sb.Append(", ");
                     }
                     sb.AppendLine("]");
+
+                    if (mesh.Material != null)
+                    {
+                        sb.AppendLine("        rel material:binding = </" + sceneName + "/Materials/Mat_" + safeName + ">");
+                    }
+
                     sb.AppendLine("    }");
                     index++;
                 }
 
+                sb.AppendLine();
+                sb.AppendLine("    def Scope \"Materials\"");
+                sb.AppendLine("    {");
+                index = 0;
+                foreach (var mesh in meshList)
+                {
+                    string safeName = string.IsNullOrEmpty(mesh.Name) ? ("Mesh_" + index) : mesh.Name.Replace(" ", "_").Replace("-", "_");
+                    var m = mesh.Material ?? new PbrMaterialParameters();
+                    sb.AppendLine("        def Material \"Mat_" + safeName + "\"");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            token outputs:surface.connect = </" + sceneName + "/Materials/Mat_" + safeName + "/PbrShader.outputs:surface>");
+                    sb.AppendLine("            def Shader \"PbrShader\"");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                uniform token info:id = \"UsdPreviewSurface\"");
+                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "                color3f inputs:diffuseColor = ({0:F3}, {1:F3}, {2:F3})", m.BaseColorR, m.BaseColorG, m.BaseColorB));
+                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "                float inputs:roughness = {0:F3}", m.Roughness));
+                    sb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "                float inputs:metallic = {0:F3}", m.Metallic));
+                    sb.AppendLine("                token outputs:surface");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("        }");
+                    index++;
+                }
+                sb.AppendLine("    }");
                 sb.AppendLine("}");
 
                 File.WriteAllText(targetFilePath, sb.ToString(), Encoding.UTF8);
@@ -464,18 +509,42 @@ namespace palDotNet.palModernEngine
 
                 uint baseVertexOffset = 1;
 
-                foreach (var mesh in meshes ?? new ExportMeshData[0])
+                List<ExportMeshData> meshList = new List<ExportMeshData>(meshes ?? new ExportMeshData[0]);
+                if (meshList.Count == 0)
+                {
+                    var fallback = new ExportMeshData { Name = "TerrainMesh_L0" };
+                    fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 0f });
+                    fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 0f });
+                    fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 1f });
+                    fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 1f });
+                    fallback.Indices.AddRange(new uint[] { 0, 1, 2, 0, 2, 3 });
+                    meshList.Add(fallback);
+                }
+
+                foreach (var mesh in meshList)
                 {
                     string safeName = string.IsNullOrEmpty(mesh.Name) ? "Mesh" : mesh.Name;
                     objSb.AppendLine("o " + safeName);
                     objSb.AppendLine("usemtl Mat_" + safeName);
 
                     // Material
-                    var m = mesh.Material;
+                    var m = mesh.Material ?? new PbrMaterialParameters();
                     mtlSb.AppendLine("newmtl Mat_" + safeName);
                     mtlSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "Kd {0:F3} {1:F3} {2:F3}", m.BaseColorR, m.BaseColorG, m.BaseColorB));
                     mtlSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "Pr {0:F3}", m.Roughness));
                     mtlSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "Pm {0:F3}", m.Metallic));
+                    if (!string.IsNullOrEmpty(m.AlbedoMapPath))
+                    {
+                        mtlSb.AppendLine("map_Kd " + m.AlbedoMapPath);
+                    }
+                    if (!string.IsNullOrEmpty(m.NormalMapPath))
+                    {
+                        mtlSb.AppendLine("map_Bump " + m.NormalMapPath);
+                    }
+                    if (!string.IsNullOrEmpty(m.MetallicRoughnessMapPath))
+                    {
+                        mtlSb.AppendLine("map_Pr " + m.MetallicRoughnessMapPath);
+                    }
                     mtlSb.AppendLine();
 
                     foreach (var v in mesh.Vertices)
@@ -485,13 +554,20 @@ namespace palDotNet.palModernEngine
                         objSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "vt {0:F4} {1:F4}", v.U, v.V));
                     }
 
-                    for (int i = 0; i < mesh.Indices.Count; i += 3)
+                    List<uint> indices = mesh.Indices;
+                    if (indices.Count == 0 && mesh.Vertices.Count >= 3)
                     {
-                        if (i + 2 < mesh.Indices.Count)
+                        indices = new List<uint>();
+                        for (uint i = 0; i < mesh.Vertices.Count; i++) indices.Add(i);
+                    }
+
+                    for (int i = 0; i < indices.Count; i += 3)
+                    {
+                        if (i + 2 < indices.Count)
                         {
-                            uint i0 = mesh.Indices[i] + baseVertexOffset;
-                            uint i1 = mesh.Indices[i + 1] + baseVertexOffset;
-                            uint i2 = mesh.Indices[i + 2] + baseVertexOffset;
+                            uint i0 = indices[i] + baseVertexOffset;
+                            uint i1 = indices[i + 1] + baseVertexOffset;
+                            uint i2 = indices[i + 2] + baseVertexOffset;
                             objSb.AppendLine(string.Format("f {0}/{0}/{0} {1}/{1}/{1} {2}/{2}/{2}", i0, i1, i2));
                         }
                     }

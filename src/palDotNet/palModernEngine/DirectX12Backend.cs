@@ -45,14 +45,31 @@ namespace palDotNet.palModernEngine
 
         public DirectX12Backend()
         {
+            var hw = NativeGpuProber.GetPrimaryHardwareAdapter();
+            string adapterName = hw.HasValue && !string.IsNullOrEmpty(hw.Value.Description)
+                ? (hw.Value.Description + " (D3D12 / DXGI 1.6)")
+                : "DirectX 12 Next-Gen Hardware Device (D3D12 / DXGI 1.6)";
+            string vendorName = hw.HasValue
+                ? NativeGpuProber.ResolveVendorName(hw.Value.VendorId)
+                : "Direct3D 12 Feature Level 12_1 / 12_2";
+            ulong vram = hw.HasValue && hw.Value.DedicatedVideoMemory.ToUInt64() > 0
+                ? hw.Value.DedicatedVideoMemory.ToUInt64()
+                : 8UL * 1024 * 1024 * 1024;
+            uint vendorId = hw.HasValue ? hw.Value.VendorId : 0;
+            uint deviceId = hw.HasValue ? hw.Value.DeviceId : 0;
+            bool isHw = !hw.HasValue || (hw.Value.Flags & 2) == 0;
+
             _adapter = new AdapterInfo
             {
-                AdapterName = "DirectX 12 Next-Gen Hardware Device (D3D12 / DXGI 1.6)",
-                VendorName = "Direct3D 12 Feature Level 12_1 / 12_2",
+                AdapterName = adapterName,
+                VendorName = vendorName,
+                VendorId = vendorId,
+                DeviceId = deviceId,
                 BackendType = GraphicsBackendType.DirectX12_Modern,
                 SupportedFeatures = Features,
                 RuntimeArchitecture = Environment.Is64BitProcess ? TargetArchitecture.x64_Modern : TargetArchitecture.x86_Legacy,
-                DedicatedVideoMemoryBytes = 8UL * 1024 * 1024 * 1024
+                DedicatedVideoMemoryBytes = vram,
+                IsHardwareAccelerated = isHw
             };
         }
 
@@ -123,6 +140,9 @@ namespace palDotNet.palModernEngine
             sb.AppendLine("  DirectX 12 Modern Render Hardware Diagnostic");
             sb.AppendLine("==================================================");
             sb.AppendLine("Backend API       : Microsoft DirectX 12 (D3D12)");
+            sb.AppendLine("Hardware Adapter  : " + _adapter.AdapterName);
+            sb.AppendLine("Hardware Vendor   : " + _adapter.VendorName + (_adapter.VendorId > 0 ? string.Format(" (0x{0:X4})", _adapter.VendorId) : ""));
+            sb.AppendLine("Dedicated VRAM    : " + _adapter.FormattedVram);
             sb.AppendLine("DXGI Version      : DXGI 1.6 (Flip Model / HDR Support)");
             sb.AppendLine("Feature Level     : D3D_FEATURE_LEVEL_12_1 (SM 6.6 DXIL)");
             sb.AppendLine("Target Architecture: " + _adapter.RuntimeArchitecture);

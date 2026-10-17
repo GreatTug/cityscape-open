@@ -1048,6 +1048,8 @@ namespace CityScape.Tests
                 Assert(File.Exists(gltfPath), "glTF export file exists on disk");
                 string gltfContent = File.ReadAllText(gltfPath);
                 Assert(gltfContent.Contains("\"version\": \"2.0\"") && gltfContent.Contains("pbrMetallicRoughness"), "glTF 2.0 file contains PBR metadata");
+                Assert(gltfContent.Contains("\"meshes\":") && gltfContent.Contains("\"accessors\":") && gltfContent.Contains("\"bufferViews\":"), "glTF 2.0 JSON contains complete meshes, accessors, and bufferViews");
+                Assert(gltfContent.Contains("data:application/octet-stream;base64,"), "glTF 2.0 JSON embeds valid self-contained base64 data URI buffer");
 
                 // 7b. glTF 2.0 Binary (.glb)
                 string glbPath = Path.Combine(tempDir, "terrain_test.glb");
@@ -1082,6 +1084,9 @@ namespace CityScape.Tests
                 Assert(File.Exists(usdPath), "USD file exists on disk");
                 string usdContent = File.ReadAllText(usdPath);
                 Assert(usdContent.Contains("#usda 1.0") && usdContent.Contains("def Mesh \"TerrainSubdivisionTile_0_0\""), "USD file contains USDA 1.0 and mesh definitions");
+                Assert(usdContent.Contains("int[] faceVertexCounts = [3]"), "USDA faceVertexCounts contains '3' per triangle face");
+                Assert(usdContent.Contains("primvars:normals") && usdContent.Contains("primvars:st"), "USDA contains standard primvars for normals and texture coordinates");
+                Assert(usdContent.Contains("def Scope \"Materials\"") && usdContent.Contains("UsdPreviewSurface"), "USDA contains PBR material definitions and UsdPreviewSurface shaders");
 
                 // 7d. Modern Wavefront OBJ + PBR MTL
                 string objPath = Path.Combine(tempDir, "terrain_test.obj");
@@ -1091,6 +1096,15 @@ namespace CityScape.Tests
                 Assert(File.Exists(objPath) && File.Exists(mtlPath), "Both OBJ and MTL files generated on disk");
                 string mtlContent = File.ReadAllText(mtlPath);
                 Assert(mtlContent.Contains("newmtl Mat_TerrainSubdivisionTile_0_0") && mtlContent.Contains("Pr 0.400"), "MTL contains PBR roughness (Pr) and metallic (Pm)");
+
+                // 7e. Native GPU Probing Telemetry
+                var dxgiList = NativeGpuProber.GetDxgiAdapters();
+                Assert(dxgiList != null, "NativeGpuProber.GetDxgiAdapters() returned non-null list");
+                var primaryGpu = NativeGpuProber.GetPrimaryHardwareAdapter();
+                if (primaryGpu.HasValue)
+                {
+                    Assert(!string.IsNullOrEmpty(primaryGpu.Value.Description), "Probed primary hardware GPU has valid description");
+                }
             }
             finally
             {

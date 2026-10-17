@@ -44,14 +44,32 @@ namespace palDotNet.palModernEngine
 
         public VulkanBackend()
         {
+            bool hasVkDriver = NativeGpuProber.IsVulkanDriverInstalled();
+            var hw = NativeGpuProber.GetPrimaryHardwareAdapter();
+            string adapterName = hw.HasValue && !string.IsNullOrEmpty(hw.Value.Description)
+                ? (hw.Value.Description + (hasVkDriver ? " (Vulkan 1.3 ICD Driver)" : " (Vulkan Emulated)"))
+                : "Vulkan 1.3 High-Performance Physical Device (vkCreateInstance)";
+            string vendorName = hw.HasValue
+                ? NativeGpuProber.ResolveVendorName(hw.Value.VendorId)
+                : "Khronos Vulkan WSI / spirv-cross";
+            ulong vram = hw.HasValue && hw.Value.DedicatedVideoMemory.ToUInt64() > 0
+                ? hw.Value.DedicatedVideoMemory.ToUInt64()
+                : 8UL * 1024 * 1024 * 1024;
+            uint vendorId = hw.HasValue ? hw.Value.VendorId : 0;
+            uint deviceId = hw.HasValue ? hw.Value.DeviceId : 0;
+            bool isHw = hasVkDriver && (!hw.HasValue || (hw.Value.Flags & 2) == 0);
+
             _adapter = new AdapterInfo
             {
-                AdapterName = "Vulkan 1.3 High-Performance Physical Device (vkCreateInstance)",
-                VendorName = "Khronos Vulkan WSI / spirv-cross",
+                AdapterName = adapterName,
+                VendorName = vendorName,
+                VendorId = vendorId,
+                DeviceId = deviceId,
                 BackendType = GraphicsBackendType.Vulkan_Modern,
                 SupportedFeatures = Features,
                 RuntimeArchitecture = Environment.Is64BitProcess ? TargetArchitecture.x64_Modern : TargetArchitecture.x86_Legacy,
-                DedicatedVideoMemoryBytes = 8UL * 1024 * 1024 * 1024
+                DedicatedVideoMemoryBytes = vram,
+                IsHardwareAccelerated = isHw
             };
         }
 
@@ -122,6 +140,10 @@ namespace palDotNet.palModernEngine
             sb.AppendLine("  Khronos Vulkan 1.3 Modern Hardware Diagnostic");
             sb.AppendLine("==================================================");
             sb.AppendLine("Backend API       : Vulkan 1.3 (VK_KHR_dynamic_rendering)");
+            sb.AppendLine("Hardware Adapter  : " + _adapter.AdapterName);
+            sb.AppendLine("Hardware Vendor   : " + _adapter.VendorName + (_adapter.VendorId > 0 ? string.Format(" (0x{0:X4})", _adapter.VendorId) : ""));
+            sb.AppendLine("Dedicated VRAM    : " + _adapter.FormattedVram);
+            sb.AppendLine("Vulkan Driver DLL : " + (NativeGpuProber.IsVulkanDriverInstalled() ? "vulkan-1.dll (Installed & Linked)" : "Fallback (Emulated)"));
             sb.AppendLine("WSI Surface       : Win32 (VK_KHR_win32_surface / VkSwapchainKHR)");
             sb.AppendLine("API Version       : VK_API_VERSION_1_3 (SPIR-V 1.6 Ingestion)");
             sb.AppendLine("Target Architecture: " + _adapter.RuntimeArchitecture);
