@@ -56,6 +56,7 @@ namespace CityScape.Tests
                 TestBugReporter();
                 TestVisualAndDocking();
                 TestModernGraphicsAndEngine();
+                TestSpatialQuadtreeAndCulling();
 
                 Console.WriteLine("\n=================================================");
                 Console.WriteLine($"  ALL {_totalTests} DEEP VERIFICATION ASSERTIONS PASSED (100%)");
@@ -1186,6 +1187,93 @@ namespace CityScape.Tests
             {
                 try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { }
             }
+        }
+
+        static void TestSpatialQuadtreeAndCulling()
+        {
+            Console.WriteLine("\n[MODULE 8] Testing Spatial Quadtree Scene Graph, Frustum Culling & Spatial Queries...");
+
+            // 1. 3D Bounding Box (AABB) Calculations
+            var box = new BoundingBox3D(10f, 0f, 10f, 50f, 20f, 60f);
+            Assert(box.CenterX == 30f && box.CenterY == 10f && box.CenterZ == 35f, "BoundingBox3D center coordinate calculation");
+            Assert(box.ExtentX == 20f && box.ExtentY == 10f && box.ExtentZ == 25f, "BoundingBox3D half-extents calculation");
+            Assert(box.Contains(30f, 10f, 35f), "BoundingBox3D.Contains center point");
+            Assert(!box.Contains(5f, 10f, 35f), "BoundingBox3D.Contains outside point correctly rejected");
+            Assert(box.Contains2D(30f, 35f), "BoundingBox3D.Contains2D horizontal footprint test");
+
+            var overlappingBox = new BoundingBox3D(40f, 15f, 50f, 80f, 30f, 90f);
+            var disjointBox = new BoundingBox3D(100f, 0f, 100f, 120f, 10f, 120f);
+            Assert(box.Intersects(overlappingBox), "BoundingBox3D AABB overlap detected");
+            Assert(!box.Intersects(disjointBox), "BoundingBox3D disjoint AABB correctly rejected");
+
+            // 2. Slab Ray-AABB Intersection
+            Assert(box.Raycast(0f, 10f, 35f, 1f, 0f, 0f, out float tMin, out float tMax) && tMin == 10f, "BoundingBox3D slab raycast intersection distance");
+            Assert(!box.Raycast(0f, 10f, 35f, -1f, 0f, 0f, out _, out _), "BoundingBox3D slab raycast correctly rejects ray pointing away");
+
+            // 3. 3D View Frustum Construction & Box Intersection
+            // Camera at (0, 20, -100) looking towards +Z
+            var frustum = ViewFrustum3D.CreateFromCamera(0f, 20f, -100f, 0f, 0f, 60f, 16f / 9f, 1f, 1000f);
+            Assert(frustum.Planes != null && frustum.Planes.Length == 6, "ViewFrustum3D initialized with 6 clipping planes");
+
+            var targetInFront = new BoundingBox3D(-10f, 10f, 50f, 10f, 30f, 70f);
+            var targetBehind = new BoundingBox3D(-10f, 10f, -300f, 10f, 30f, -250f);
+            Assert(frustum.IntersectsBox(targetInFront) != FrustumIntersection.Outside, "Target in front of camera intersects view frustum");
+            Assert(frustum.IntersectsBox(targetBehind) == FrustumIntersection.Outside, "Target behind camera is culled outside view frustum");
+
+            // 4. Spatial Quadtree Population & Subdivision
+            var worldBounds = new BoundingBox3D(-2000f, -100f, -2000f, 2000f, 1000f, 2000f);
+            var quadtree = new SpatialQuadtree<GisBuildingInstance>(worldBounds, maxDepth: 4, maxItemsPerLeaf: 4);
+
+            // Populate synthetic city grid with 64 buildings across a 4x4 km world
+            var buildings = new List<GisBuildingInstance>();
+            int id = 0;
+            for (float x = -1500f; x <= 1500f; x += 400f)
+            {
+                for (float z = -1500f; z <= 1500f; z += 400f)
+                {
+                    var fp = new GisBuildingFootprint
+                    {
+                        FloorCount = (id % 15) + 2,
+                        FloorHeightMeters = 3.5f
+                    };
+                    fp.Polygon.Add(new PointF(x - 20f, z - 20f));
+                    fp.Polygon.Add(new PointF(x + 20f, z - 20f));
+                    fp.Polygon.Add(new PointF(x + 20f, z + 20f));
+                    fp.Polygon.Add(new PointF(x - 20f, z + 20f));
+
+                    var b = new GisBuildingInstance(fp, null);
+                    buildings.Add(b);
+                    quadtree.Insert(b);
+                    id++;
+                }
+            }
+
+            Assert(quadtree.TotalItems == buildings.Count, $"SpatialQuadtree indexed all {buildings.Count} buildings");
+            Assert(quadtree.TotalNodes > 1, $"SpatialQuadtree hierarchically subdivided into {quadtree.TotalNodes} nodes");
+
+            // 5. Frustum Culling Query
+            // View Frustum looking towards the north (+Z)
+            var northFrustum = ViewFrustum3D.CreateFromCamera(0f, 50f, -1800f, 0f, 0f, 50f, 16f / 9f, 5f, 2000f);
+            var visibleBuildings = quadtree.QueryFrustum(northFrustum, out int nodesTested, out int nodesCulled);
+            Assert(visibleBuildings.Count > 0, $"Frustum query returned {visibleBuildings.Count} visible buildings");
+            Assert(visibleBuildings.Count < buildings.Count, $"Frustum culling successfully culled off-screen buildings ({visibleBuildings.Count} visible of {buildings.Count} total)");
+            Assert(nodesCulled > 0, $"Hierarchical culling pruned {nodesCulled} node subtrees out of {nodesTested} tested");
+
+            // 6. Spatial Radius Query
+            var nearCenter = quadtree.QueryRadius(0f, 0f, 500f);
+            Assert(nearCenter.Count > 0 && nearCenter.Count < buildings.Count, $"Spatial radius query returned {nearCenter.Count} buildings within 500m radius");
+            foreach (var b in nearCenter)
+            {
+                float dx = b.SpatialBounds.CenterX;
+                float dz = b.SpatialBounds.CenterZ;
+                float dist = (float)Math.Sqrt(dx * dx + dz * dz);
+                Assert(dist <= 500f + 30f, $"Queried building within radius distance (dist={dist:F1}m)");
+            }
+
+            // 7. Viewport Integration Verification
+            ControlRender.SetActiveBuildings(buildings);
+            Assert(ControlRender.BuildingSpatialIndex != null, "ControlRender.BuildingSpatialIndex automatically created on SetActiveBuildings");
+            Assert(ControlRender.BuildingSpatialIndex.TotalItems == buildings.Count, "BuildingSpatialIndex item count matches active buildings count");
         }
     }
 }

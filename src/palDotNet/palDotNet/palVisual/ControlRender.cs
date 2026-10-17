@@ -34,6 +34,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	public static TerrainSurfaceData ActiveTerrain { get; set; } = TerrainSurfaceData.CreateDefault();
 	public static List<GisBuildingInstance> ActiveBuildings { get; } = new List<GisBuildingInstance>();
+	public static SpatialQuadtree<GisBuildingInstance> BuildingSpatialIndex { get; private set; }
 
 	public static void SetActiveBuildings(IEnumerable<GisBuildingInstance> buildings)
 	{
@@ -42,6 +43,19 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		{
 			ActiveBuildings.AddRange(buildings);
 		}
+
+		float halfX = Math.Max(1000f, (ActiveTerrain?.SizeX ?? 2000f) * 0.5f);
+		float halfZ = Math.Max(1000f, (ActiveTerrain?.SizeY ?? 2000f) * 0.5f);
+		var worldBounds = new BoundingBox3D(-halfX, -100f, -halfZ, halfX, 2000f, halfZ);
+		BuildingSpatialIndex = new SpatialQuadtree<GisBuildingInstance>(worldBounds, 6, 16);
+		if (buildings != null)
+		{
+			foreach (var b in buildings)
+			{
+				BuildingSpatialIndex.Insert(b);
+			}
+		}
+
 		foreach (ControlRender cr in ControlRenders)
 		{
 			cr.Invalidate();
@@ -449,13 +463,43 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			}
 		}
 
-		// 3.5. 3D Procedural / GIS Extruded Buildings
+		// 3.5. 3D Procedural / GIS Extruded Buildings with Spatial Quadtree Frustum Culling
+		int renderedBuildings = 0;
+		int nodesTested = 0;
+		int nodesCulled = 0;
+
 		if (ActiveBuildings != null && ActiveBuildings.Count > 0)
 		{
+			if (BuildingSpatialIndex == null)
+			{
+				float halfX = Math.Max(1000f, sx * 0.5f);
+				float halfZ = Math.Max(1000f, sy * 0.5f);
+				var worldBounds = new BoundingBox3D(-halfX, -100f, -halfZ, halfX, 2000f, halfZ);
+				BuildingSpatialIndex = new SpatialQuadtree<GisBuildingInstance>(worldBounds, 6, 16);
+				foreach (var b in ActiveBuildings)
+				{
+					BuildingSpatialIndex.Insert(b);
+				}
+			}
+
+			float fwdX = sinYaw * cosPitch;
+			float fwdY = sinPitch;
+			float fwdZ = cosYaw * cosPitch;
+
+			float camX = -fwdX * camDist;
+			float camY = -fwdY * camDist;
+			float camZ = -fwdZ * camDist;
+			float farClip = Math.Max(15000f, diag * 3.0f);
+			float aspect = (float)w / Math.Max(1, h);
+
+			var frustum = ViewFrustum3D.CreateFromCamera(camX, camY, camZ, mCameraYaw, mCameraPitch, 65.0f, aspect, 1.0f, farClip);
+			var visibleBuildings = BuildingSpatialIndex.QueryFrustum(frustum, out nodesTested, out nodesCulled);
+
 			using (Pen buildingWirePen = new Pen(Color.FromArgb(70, 90, 110), 1f))
 			{
-				foreach (var bld in ActiveBuildings)
+				foreach (var bld in visibleBuildings)
 				{
+					renderedBuildings++;
 					var poly = bld.Footprint.Polygon;
 					int polyN = poly.Count;
 					if (polyN < 3) continue;
@@ -630,7 +674,10 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 				terrain.TileCountX, terrain.TileCountY, terrain.TileSizeX, terrain.TileSizeY, terrain.SamplingDistance, terrain.TotalSamplePoints), textFont, greenBrush, 26, 62);
 			g.DrawString(string.Format("3D Engine: {0} [{1}] | PBR CDLOD Tessellation Active | Camera: Yaw={2:F0}°, Pitch={3:F0}°",
 				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, mCameraYaw, mCameraPitch), textFont, goldBrush, 26, 81);
-			g.DrawString(string.Format("Camera Distance: {0:N0}m | 3D Buildings: {1:N0} | Controls: LMB=Orbit | RMB/Shift=Pan | Wheel=Zoom", camDist, ActiveBuildings.Count), textFont, dimBrush, 26, 100);
+			string bldStat = ActiveBuildings.Count > 0
+				? string.Format("3D Buildings: {0:N0} vis / {1:N0} tot (Culled Nodes: {2}/{3})", renderedBuildings, ActiveBuildings.Count, nodesCulled, nodesTested)
+				: "3D Buildings: 0";
+			g.DrawString(string.Format("Camera Distance: {0:N0}m | {1} | Controls: LMB=Orbit | RMB/Shift=Pan", camDist, bldStat), textFont, dimBrush, 26, 100);
 		}
 	}
 

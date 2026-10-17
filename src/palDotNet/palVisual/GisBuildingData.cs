@@ -55,8 +55,9 @@ namespace palDotNet.palVisual
 
     /// <summary>
     /// 3D extruded procedural building instance placed on the terrain surface.
+    /// Implements ISpatialObject for hierarchical spatial Quadtree indexing and fast frustum culling.
     /// </summary>
-    public class GisBuildingInstance
+    public class GisBuildingInstance : ISpatialObject
     {
         public GisBuildingFootprint Footprint { get; set; }
         public float CenterX { get; set; }
@@ -65,6 +66,30 @@ namespace palDotNet.palVisual
         public float TotalHeight { get; set; }
         public Color FacadeColor { get; set; } = Color.FromArgb(200, 210, 220);
         public Color RoofColor { get; set; } = Color.FromArgb(70, 75, 80);
+
+        public string SpatialId => Footprint?.Name ?? "Building";
+
+        public BoundingBox3D SpatialBounds
+        {
+            get
+            {
+                if (Footprint == null || Footprint.Polygon.Count == 0)
+                {
+                    return new BoundingBox3D(CenterX - 10f, BaseElevation, CenterZ - 10f,
+                                             CenterX + 10f, BaseElevation + TotalHeight, CenterZ + 10f);
+                }
+                float minX = float.MaxValue, minZ = float.MaxValue;
+                float maxX = float.MinValue, maxZ = float.MinValue;
+                foreach (var pt in Footprint.Polygon)
+                {
+                    if (pt.X < minX) minX = pt.X;
+                    if (pt.X > maxX) maxX = pt.X;
+                    if (pt.Y < minZ) minZ = pt.Y;
+                    if (pt.Y > maxZ) maxZ = pt.Y;
+                }
+                return new BoundingBox3D(minX, BaseElevation, minZ, maxX, BaseElevation + TotalHeight, maxZ);
+            }
+        }
 
         public GisBuildingInstance(GisBuildingFootprint footprint, TerrainSurfaceData terrain = null)
         {
