@@ -247,7 +247,22 @@ public class FormApp : FormAppBase
 
 	public void InitializeWidgetView()
 	{
-		TheToolWidgets = new ViewPropertyGrid(ToolWindowGuid);
+		try
+		{
+			if (Environment.Is64BitProcess)
+			{
+				TheToolWidgets = new ViewTool(ToolWindowGuid);
+				TheToolWidgets.Text = "Properties (Modern 64-bit)";
+			}
+			else
+			{
+				TheToolWidgets = new ViewPropertyGrid(ToolWindowGuid);
+			}
+		}
+		catch
+		{
+			TheToolWidgets = new ViewTool(ToolWindowGuid);
+		}
 	}
 
 	public void DefaultLayout()
@@ -380,7 +395,10 @@ public class FormApp : FormAppBase
 		Timer.Stop();
 		WidgetMgr.Instance.Update();
 		ViewPropertyGrid viewPropertyGrid = TheToolWidgets as ViewPropertyGrid;
-		viewPropertyGrid.TheGrid.UnPauseUpdate(forcedPause: true);
+		if (viewPropertyGrid != null && viewPropertyGrid.TheGrid != null)
+		{
+			viewPropertyGrid.TheGrid.UnPauseUpdate(forcedPause: true);
+		}
 		Timer.Start();
 	}
 
@@ -656,7 +674,10 @@ public class FormApp : FormAppBase
 	private void FormApp_FormClosed(object sender, FormClosedEventArgs e)
 	{
 		ViewPropertyGrid viewPropertyGrid = TheToolWidgets as ViewPropertyGrid;
-		viewPropertyGrid.TheGrid.Clear();
+		if (viewPropertyGrid != null && viewPropertyGrid.TheGrid != null)
+		{
+			viewPropertyGrid.TheGrid.Clear();
+		}
 		Focus();
 		Application.DoEvents();
 		WidgetMgr.Instance.SendQuitMessage();
@@ -760,11 +781,14 @@ public class FormApp : FormAppBase
 		if (bank != null && bank.IsWidgetPanel)
 		{
 			ViewPropertyGrid viewPropertyGrid = TheToolWidgets as ViewPropertyGrid;
-			if (viewPropertyGrid.TheGrid.WidgetBank != null)
+			if (viewPropertyGrid != null && viewPropertyGrid.TheGrid != null)
 			{
-				throw new ApplicationException("WidgetPanel already set for tool grid!");
+				if (viewPropertyGrid.TheGrid.WidgetBank != null)
+				{
+					throw new ApplicationException("WidgetPanel already set for tool grid!");
+				}
+				viewPropertyGrid.TheGrid.WidgetBank = bank;
 			}
-			viewPropertyGrid.TheGrid.WidgetBank = bank;
 		}
 	}
 

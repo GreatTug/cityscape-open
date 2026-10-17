@@ -174,8 +174,39 @@ def test_all():
     assert "LIVE GUI TESTS PASSED (100%)!" in ui_test.stdout, f"Unexpected UI test output: {ui_test.stdout}"
     print("  [PASS] Live CityScape multi-architecture GUI windows (Native 49MB, Managed x86, Managed x64) verified active, titled, responsive and rendering")
 
+    # 9. Test Automated Distribution Packages & SHA-256 Checksums
+    print("\n[TEST 9] Verifying Portable Distribution Packages & SHA-256 Checksums...")
+    dist_folder = "dist"
+    expected_packages = [
+        "CityScape_1.8_Modern_x64_Portable.zip",
+        "CityScape_1.8_Modern_ARM64_Portable.zip",
+        "CityScape_1.8_Legacy_x86_Portable.zip",
+        "CityScape_1.8_Decompiled_Edition_Complete.zip"
+    ]
+    import hashlib
+
+    checksum_file = os.path.join(dist_folder, "SHA256SUMS.txt")
+    assert os.path.exists(checksum_file), f"Missing checksum ledger: {checksum_file}"
+    with open(checksum_file, "r", encoding="utf-8") as f:
+        checksum_text = f.read()
+
+    for pkg_name in expected_packages:
+        pkg_path = os.path.join(dist_folder, pkg_name)
+        assert os.path.exists(pkg_path), f"Missing distribution package: {pkg_path}"
+        pkg_size = os.path.getsize(pkg_path)
+        assert pkg_size >= 50_000_000, f"Package {pkg_name} is unexpectedly small: {pkg_size} bytes"
+
+        # Verify SHA-256
+        sha256 = hashlib.sha256()
+        with open(pkg_path, "rb") as pf:
+            while chunk := pf.read(1024 * 1024):
+                sha256.update(chunk)
+        calc_hash = sha256.hexdigest().lower()
+        assert calc_hash in checksum_text, f"Checksum verification failed for {pkg_name}"
+        print(f"  [PASS] {pkg_name:<46} ({pkg_size / (1024*1024):>6.2f} MB) SHA256: {calc_hash[:16]}...")
+
     print("\n=================================================");
-    print("  ALL 8 COMPREHENSIVE TEST SUITES PASSED (100%)  ");
+    print("  ALL 9 COMPREHENSIVE TEST SUITES PASSED (100%)  ");
     print("=================================================");
 
 if __name__ == "__main__":

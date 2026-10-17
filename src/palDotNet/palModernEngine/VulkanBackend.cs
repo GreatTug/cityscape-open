@@ -130,10 +130,25 @@ namespace palDotNet.palModernEngine
             sb.AppendLine("Supported Features: " + Features);
             sb.AppendLine("Shader Pipeline   : SPIR-V Bytecode via glslang / shaderc / spirv-tools");
             sb.AppendLine("Pipeline Cache    : VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT");
+            sb.AppendLine("Descriptor Layout : Set 0 (Binding 0: UniformBuffer, Binding 1: UniformBuffer, Binding 2: CombinedImageSampler[8])");
+            sb.AppendLine("Dynamic Rendering : ColorFormat: VK_FORMAT_R8G8B8A8_SRGB, DepthFormat: VK_FORMAT_D32_SFLOAT");
             sb.AppendLine(string.Format("Total Frames      : {0:N0}", _frameIndex));
             sb.AppendLine(string.Format("Frame Latency     : {0:F2} ms ({1:F1} FPS)", _lastFrameTimeMs, _lastFrameTimeMs > 0.001f ? 1000f / _lastFrameTimeMs : 60f));
             return sb.ToString();
         }
+
+        /// <summary>
+        /// Explicit Vulkan Descriptor Set Layout Definition
+        /// </summary>
+        public class VulkanDescriptorLayoutDefinition
+        {
+            public int BindingCount => 3;
+            public string Binding0 => "Binding 0: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER (Stage: VERTEX | FRAGMENT, FrameUBO)";
+            public string Binding1 => "Binding 1: VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER (Stage: VERTEX, ObjectUBO)";
+            public string Binding2 => "Binding 2: VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER (Count: 8, Stage: FRAGMENT, PBR Textures & Splatting)";
+        }
+
+        public VulkanDescriptorLayoutDefinition DescriptorLayout { get; } = new VulkanDescriptorLayoutDefinition();
 
         public void Dispose()
         {

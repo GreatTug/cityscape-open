@@ -43,4 +43,11 @@ tools/screenshot*
 tools/*.bmp
 tools/*.png
 
+# Distribution archives
+dist/*.zip
+dist/_staging/
+test_x64_*.exe
+ps_trace.txt
+startup_trace.txt
+
 

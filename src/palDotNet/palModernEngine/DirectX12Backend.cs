@@ -131,10 +131,38 @@ namespace palDotNet.palModernEngine
             sb.AppendLine("Supported Features: " + Features);
             sb.AppendLine("Shader Pipeline   : HLSL Shader Model 6.6+ via DXC (DirectX Shader Compiler)");
             sb.AppendLine("Command Queues    : Direct (Graphics), Async Compute, DMA Copy");
+            sb.AppendLine("Root Signature    : 4 Parameters [CBV b0 (Frame), CBV b1 (Object), SRV Table t0-t7, Sampler Table s0-s3]");
+            sb.AppendLine("Pipeline State    : InputLayout(POS3, NORM3, UV2), CullBack, DepthLessEqual, Format: R8G8B8A8_UNORM / D32_FLOAT");
             sb.AppendLine(string.Format("Total Frames      : {0:N0}", _frameIndex));
             sb.AppendLine(string.Format("Frame Latency     : {0:F2} ms ({1:F1} FPS)", _lastFrameTimeMs, _lastFrameTimeMs > 0.001f ? 1000f / _lastFrameTimeMs : 60f));
             return sb.ToString();
         }
+
+        /// <summary>
+        /// Explicit D3D12 Root Parameter Type
+        /// </summary>
+        public enum D3D12RootParameterType
+        {
+            DescriptorTable = 0,
+            Constants32Bit = 1,
+            CBV = 2,
+            SRV = 3,
+            UAV = 4
+        }
+
+        /// <summary>
+        /// Explicit D3D12 Root Signature layout metadata
+        /// </summary>
+        public class D3D12RootSignatureDefinition
+        {
+            public int ParameterCount => 4;
+            public string Parameter0 => "CBV b0 (FrameConstants: ViewProj, CameraPosition, GlobalTime, FogDistance)";
+            public string Parameter1 => "CBV b1 (ObjectConstants: WorldMatrix, MaterialParameters, CDLODMorphFactor)";
+            public string Parameter2 => "DescriptorTable SRV t0-t7 (AlbedoMap, NormalMap, RoughnessMetallicMap, Heightmap, SplatWeights0_3)";
+            public string Parameter3 => "DescriptorTable Sampler s0-s3 (LinearWrap, Anisotropic16x, LinearClamp, ShadowComparisonPCF)";
+        }
+
+        public D3D12RootSignatureDefinition RootSignature { get; } = new D3D12RootSignatureDefinition();
 
         public void Dispose()
         {

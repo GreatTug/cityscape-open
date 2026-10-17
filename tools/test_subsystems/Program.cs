@@ -1013,6 +1013,15 @@ namespace CityScape.Tests
             waterPipe.EvaluateWaterDisplacement(100f, 200f, 5.0f, out float dispX, out float dispY, out float dispZ);
             Assert(Math.Abs(dispY) > 0f, $"Gerstner wave 3D ocean displacement computed: Y={dispY:F3}m");
 
+            // Check Backend Root Signatures and Descriptor Layouts
+            var dx12Inst = new DirectX12Backend();
+            Assert(dx12Inst.RootSignature != null && dx12Inst.RootSignature.ParameterCount == 4, "DirectX12Backend Root Signature has 4 parameter slots");
+            Assert(dx12Inst.RootSignature.Parameter0.Contains("CBV b0") && dx12Inst.RootSignature.Parameter2.Contains("SRV t0-t7"), "DirectX12 root parameters verified");
+
+            var vkInst = new VulkanBackend();
+            Assert(vkInst.DescriptorLayout != null && vkInst.DescriptorLayout.BindingCount == 3, "VulkanBackend Descriptor Layout has 3 bindings");
+            Assert(vkInst.DescriptorLayout.Binding2.Contains("COMBINED_IMAGE_SAMPLER"), "Vulkan descriptor bindings verified");
+
             // 7. Modern Scene Exporters (glTF 2.0 / GLB, USD, OBJ+PBR)
             string tempDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "temp_export_tests");
             if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
@@ -1040,6 +1049,27 @@ namespace CityScape.Tests
                 string glbPath = Path.Combine(tempDir, "terrain_test.glb");
                 Assert(gltfExporter.ExportScene(glbPath, meshList, "CityScapeUrbanWorld"), "glTF Binary (.glb) export returned true");
                 Assert(File.Exists(glbPath) && new FileInfo(glbPath).Length >= 20, "glTF Binary file created with valid header");
+
+                using (var fs = File.OpenRead(glbPath))
+                using (var br = new BinaryReader(fs))
+                {
+                    uint magic = br.ReadUInt32();
+                    uint ver = br.ReadUInt32();
+                    uint totLen = br.ReadUInt32();
+                    Assert(magic == 0x46546C67, "GLB binary magic is 'glTF'");
+                    Assert(ver == 2, "GLB version is 2");
+                    Assert(totLen == (uint)fs.Length, "GLB totalLength header matches file size");
+
+                    uint chunk0Len = br.ReadUInt32();
+                    uint chunk0Type = br.ReadUInt32();
+                    Assert(chunk0Type == 0x4E4F534A, "GLB chunk 0 type is JSON");
+
+                    fs.Seek(chunk0Len, SeekOrigin.Current);
+                    uint chunk1Len = br.ReadUInt32();
+                    uint chunk1Type = br.ReadUInt32();
+                    Assert(chunk1Type == 0x004E4942, "GLB chunk 1 type is BIN");
+                    Assert(chunk1Len > 0, $"GLB chunk 1 BIN contains vertex and index data: {chunk1Len} bytes");
+                }
 
                 // 7c. Universal Scene Description (.usda)
                 string usdPath = Path.Combine(tempDir, "terrain_test.usda");

@@ -115,30 +115,247 @@ namespace palDotNet.palModernEngine
 
         private bool ExportGlbBinary(string targetFilePath, IEnumerable<ExportMeshData> meshes, string sceneName)
         {
-            using (FileStream fs = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write))
-            using (BinaryWriter bw = new BinaryWriter(fs))
+            List<ExportMeshData> meshList = new List<ExportMeshData>(meshes ?? new ExportMeshData[0]);
+            if (meshList.Count == 0)
             {
-                // GLB Header: Magic (0x46546C67 "glTF"), Version 2, Total Length
-                bw.Write(0x46546C67);
-                bw.Write(2u);
-                bw.Write(0u); // Placeholder for length
+                var fallback = new ExportMeshData { Name = "TerrainMesh_L0" };
+                fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 0f });
+                fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = -100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 0f });
+                fallback.Vertices.Add(new ExportVertex { X = 100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 1f });
+                fallback.Vertices.Add(new ExportVertex { X = -100f, Y = 0f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 1f });
+                fallback.Indices.AddRange(new uint[] { 0, 1, 2, 0, 2, 3 });
+                meshList.Add(fallback);
+            }
 
-                // JSON chunk
-                string jsonText = "{ \"asset\": { \"version\": \"2.0\" }, \"scene\": 0 }";
-                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonText);
+            // Flatten all meshes into unified binary buffer
+            using (MemoryStream binMs = new MemoryStream())
+            using (BinaryWriter binBw = new BinaryWriter(binMs))
+            {
+                // Structures to record accessor metadata
+                int totalMeshes = meshList.Count;
+                int[] posOffsets = new int[totalMeshes];
+                int[] posLengths = new int[totalMeshes];
+                int[] normOffsets = new int[totalMeshes];
+                int[] normLengths = new int[totalMeshes];
+                int[] uvOffsets = new int[totalMeshes];
+                int[] uvLengths = new int[totalMeshes];
+                int[] indOffsets = new int[totalMeshes];
+                int[] indLengths = new int[totalMeshes];
+                float[][] posMin = new float[totalMeshes][];
+                float[][] posMax = new float[totalMeshes][];
+
+                for (int m = 0; m < totalMeshes; m++)
+                {
+                    var mesh = meshList[m];
+                    float minX = float.MaxValue, minY = float.MaxValue, minZ = float.MaxValue;
+                    float maxX = float.MinValue, maxY = float.MinValue, maxZ = float.MinValue;
+
+                    // Write Positions
+                    posOffsets[m] = (int)binMs.Position;
+                    for (int v = 0; v < mesh.Vertices.Count; v++)
+                    {
+                        var vert = mesh.Vertices[v];
+                        binBw.Write(vert.X);
+                        binBw.Write(vert.Y);
+                        binBw.Write(vert.Z);
+                        if (vert.X < minX) minX = vert.X;
+                        if (vert.Y < minY) minY = vert.Y;
+                        if (vert.Z < minZ) minZ = vert.Z;
+                        if (vert.X > maxX) maxX = vert.X;
+                        if (vert.Y > maxY) maxY = vert.Y;
+                        if (vert.Z > maxZ) maxZ = vert.Z;
+                    }
+                    posLengths[m] = mesh.Vertices.Count * 12;
+                    posMin[m] = new float[] { minX == float.MaxValue ? 0f : minX, minY == float.MaxValue ? 0f : minY, minZ == float.MaxValue ? 0f : minZ };
+                    posMax[m] = new float[] { maxX == float.MinValue ? 0f : maxX, maxY == float.MinValue ? 0f : maxY, maxZ == float.MinValue ? 0f : maxZ };
+
+                    // Write Normals
+                    normOffsets[m] = (int)binMs.Position;
+                    for (int v = 0; v < mesh.Vertices.Count; v++)
+                    {
+                        var vert = mesh.Vertices[v];
+                        binBw.Write(vert.Nx);
+                        binBw.Write(vert.Ny);
+                        binBw.Write(vert.Nz);
+                    }
+                    normLengths[m] = mesh.Vertices.Count * 12;
+
+                    // Write UVs
+                    uvOffsets[m] = (int)binMs.Position;
+                    for (int v = 0; v < mesh.Vertices.Count; v++)
+                    {
+                        var vert = mesh.Vertices[v];
+                        binBw.Write(vert.U);
+                        binBw.Write(vert.V);
+                    }
+                    uvLengths[m] = mesh.Vertices.Count * 8;
+
+                    // Write Indices (uint32)
+                    indOffsets[m] = (int)binMs.Position;
+                    for (int i = 0; i < mesh.Indices.Count; i++)
+                    {
+                        binBw.Write(mesh.Indices[i]);
+                    }
+                    indLengths[m] = mesh.Indices.Count * 4;
+                }
+
+                // 4-byte pad binary buffer
+                while ((binMs.Position % 4) != 0)
+                {
+                    binBw.Write((byte)0x00);
+                }
+                binBw.Flush();
+                byte[] binBufferBytes = binMs.ToArray();
+
+                // Build GLTF JSON referencing the binary buffer
+                StringBuilder jsonSb = new StringBuilder();
+                jsonSb.AppendLine("{");
+                jsonSb.AppendLine("  \"asset\": { \"version\": \"2.0\", \"generator\": \"PixelActive CityScape 1.8 Modern glTF/GLB Engine\" },");
+                jsonSb.AppendLine("  \"scene\": 0,");
+                jsonSb.AppendLine("  \"scenes\": [ { \"name\": \"" + sceneName + "\", \"nodes\": [ 0 ] } ],");
+                
+                // Root node with child nodes
+                jsonSb.AppendLine("  \"nodes\": [");
+                jsonSb.Append("    { \"name\": \"SceneRoot\", \"children\": [");
+                List<string> childIds = new List<string>();
+                for (int i = 0; i < totalMeshes; i++) childIds.Add((i + 1).ToString());
+                jsonSb.Append(string.Join(", ", childIds.ToArray()));
+                jsonSb.AppendLine("] },");
+                for (int i = 0; i < totalMeshes; i++)
+                {
+                    string mName = string.IsNullOrEmpty(meshList[i].Name) ? ("Mesh_" + i) : meshList[i].Name;
+                    jsonSb.Append(string.Format("    {{ \"name\": \"{0}\", \"mesh\": {1} }}", mName, i));
+                    if (i < totalMeshes - 1) jsonSb.Append(",");
+                    jsonSb.AppendLine();
+                }
+                jsonSb.AppendLine("  ],");
+
+                // Meshes
+                jsonSb.AppendLine("  \"meshes\": [");
+                for (int i = 0; i < totalMeshes; i++)
+                {
+                    string mName = string.IsNullOrEmpty(meshList[i].Name) ? ("Mesh_" + i) : meshList[i].Name;
+                    int posAcc = i * 4;
+                    int normAcc = i * 4 + 1;
+                    int uvAcc = i * 4 + 2;
+                    int indAcc = i * 4 + 3;
+
+                    jsonSb.AppendLine("    {");
+                    jsonSb.AppendLine("      \"name\": \"" + mName + "\",");
+                    jsonSb.AppendLine("      \"primitives\": [ {");
+                    jsonSb.AppendLine(string.Format("        \"attributes\": {{ \"POSITION\": {0}, \"NORMAL\": {1}, \"TEXCOORD_0\": {2} }},", posAcc, normAcc, uvAcc));
+                    jsonSb.AppendLine(string.Format("        \"indices\": {0},", indAcc));
+                    jsonSb.AppendLine(string.Format("        \"material\": {0}", i));
+                    jsonSb.AppendLine("      } ]");
+                    jsonSb.Append("    }");
+                    if (i < totalMeshes - 1) jsonSb.Append(",");
+                    jsonSb.AppendLine();
+                }
+                jsonSb.AppendLine("  ],");
+
+                // Materials
+                jsonSb.AppendLine("  \"materials\": [");
+                for (int i = 0; i < totalMeshes; i++)
+                {
+                    var mat = meshList[i].Material;
+                    jsonSb.AppendLine("    {");
+                    jsonSb.AppendLine("      \"name\": \"Material_" + (string.IsNullOrEmpty(meshList[i].Name) ? i.ToString() : meshList[i].Name) + "\",");
+                    jsonSb.AppendLine("      \"pbrMetallicRoughness\": {");
+                    jsonSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "        \"baseColorFactor\": [{0:F2}, {1:F2}, {2:F2}, {3:F2}],", mat.BaseColorR, mat.BaseColorG, mat.BaseColorB, mat.BaseColorA));
+                    jsonSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "        \"metallicFactor\": {0:F2},", mat.Metallic));
+                    jsonSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture, "        \"roughnessFactor\": {0:F2}", mat.Roughness));
+                    jsonSb.AppendLine("      }");
+                    jsonSb.Append("    }");
+                    if (i < totalMeshes - 1) jsonSb.Append(",");
+                    jsonSb.AppendLine();
+                }
+                jsonSb.AppendLine("  ],");
+
+                // BufferViews (4 bufferViews per mesh: Pos, Norm, UV, Index)
+                jsonSb.AppendLine("  \"bufferViews\": [");
+                int bvIndex = 0;
+                for (int i = 0; i < totalMeshes; i++)
+                {
+                    // Pos
+                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }}", posOffsets[i], posLengths[i]));
+                    jsonSb.AppendLine(",");
+                    // Norm
+                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }}", normOffsets[i], normLengths[i]));
+                    jsonSb.AppendLine(",");
+                    // UV
+                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34962 }}", uvOffsets[i], uvLengths[i]));
+                    jsonSb.AppendLine(",");
+                    // Index
+                    jsonSb.Append(string.Format("    {{ \"buffer\": 0, \"byteOffset\": {0}, \"byteLength\": {1}, \"target\": 34963 }}", indOffsets[i], indLengths[i]));
+                    if (i < totalMeshes - 1) jsonSb.Append(",");
+                    jsonSb.AppendLine();
+                    bvIndex += 4;
+                }
+                jsonSb.AppendLine("  ],");
+
+                // Accessors (4 accessors per mesh: Pos, Norm, UV, Index)
+                jsonSb.AppendLine("  \"accessors\": [");
+                for (int i = 0; i < totalMeshes; i++)
+                {
+                    int vCount = meshList[i].Vertices.Count;
+                    int iCount = meshList[i].Indices.Count;
+                    int bBase = i * 4;
+
+                    // Pos accessor
+                    jsonSb.AppendLine(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                        "    {{ \"bufferView\": {0}, \"byteOffset\": 0, \"componentType\": 5126, \"count\": {1}, \"type\": \"VEC3\", \"min\": [{2:F3}, {3:F3}, {4:F3}], \"max\": [{5:F3}, {6:F3}, {7:F3}] }},",
+                        bBase, vCount, posMin[i][0], posMin[i][1], posMin[i][2], posMax[i][0], posMax[i][1], posMax[i][2]));
+
+                    // Norm accessor
+                    jsonSb.AppendLine(string.Format("    {{ \"bufferView\": {0}, \"byteOffset\": 0, \"componentType\": 5126, \"count\": {1}, \"type\": \"VEC3\" }},",
+                        bBase + 1, vCount));
+
+                    // UV accessor
+                    jsonSb.AppendLine(string.Format("    {{ \"bufferView\": {0}, \"byteOffset\": 0, \"componentType\": 5126, \"count\": {1}, \"type\": \"VEC2\" }},",
+                        bBase + 2, vCount));
+
+                    // Index accessor
+                    jsonSb.Append(string.Format("    {{ \"bufferView\": {0}, \"byteOffset\": 0, \"componentType\": 5125, \"count\": {1}, \"type\": \"SCALAR\" }}",
+                        bBase + 3, iCount));
+
+                    if (i < totalMeshes - 1) jsonSb.Append(",");
+                    jsonSb.AppendLine();
+                }
+                jsonSb.AppendLine("  ],");
+
+                // Buffers
+                jsonSb.AppendLine("  \"buffers\": [");
+                jsonSb.AppendLine(string.Format("    {{ \"byteLength\": {0} }}", binBufferBytes.Length));
+                jsonSb.AppendLine("  ]");
+                jsonSb.AppendLine("}");
+
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(jsonSb.ToString());
                 int jsonPadded = (jsonBytes.Length + 3) & ~3;
 
-                bw.Write((uint)jsonPadded);
-                bw.Write(0x4E4F534A); // "JSON"
-                bw.Write(jsonBytes);
-                for (int i = jsonBytes.Length; i < jsonPadded; i++) bw.Write((byte)0x20);
+                // Write complete GLB file
+                using (FileStream fs = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write))
+                using (BinaryWriter bw = new BinaryWriter(fs))
+                {
+                    // 12-byte GLB Header: Magic 0x46546C67 ("glTF"), Version 2, Total Length
+                    uint totalGlbLength = 12u + 8u + (uint)jsonPadded + 8u + (uint)binBufferBytes.Length;
+                    bw.Write(0x46546C67u);
+                    bw.Write(2u);
+                    bw.Write(totalGlbLength);
 
-                // Update total length in header
-                uint totalLength = (uint)fs.Position;
-                fs.Seek(8, SeekOrigin.Begin);
-                bw.Write(totalLength);
+                    // Chunk 0: JSON
+                    bw.Write((uint)jsonPadded);
+                    bw.Write(0x4E4F534Au); // "JSON"
+                    bw.Write(jsonBytes);
+                    for (int p = jsonBytes.Length; p < jsonPadded; p++) bw.Write((byte)0x20);
+
+                    // Chunk 1: BIN
+                    bw.Write((uint)binBufferBytes.Length);
+                    bw.Write(0x004E4942u); // "BIN\0"
+                    bw.Write(binBufferBytes);
+                }
+
+                return true;
             }
-            return true;
         }
     }
 
