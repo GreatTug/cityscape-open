@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Collections.Generic;
+using System.IO;
 
 namespace palDotNet.palVisual
 {
@@ -76,6 +77,188 @@ namespace palDotNet.palVisual
 
             float reliefScale = Math.Min(ElevationMax, Math.Max(10.0f, Math.Min(SizeX, SizeY) * 0.035f));
             return (w1 + w2 + w3 + 0.5f) * reliefScale;
+        }
+
+        /// <summary>
+        /// Generates a complete physical 3D mesh representation of this terrain surface,
+        /// including surface normals, PBR material properties, and texture UV mapping.
+        /// </summary>
+        public palModernEngine.ExportMeshData GenerateExportMesh(int resX = 64, int resY = 64)
+        {
+            var mesh = new palModernEngine.ExportMeshData();
+            mesh.Name = string.IsNullOrEmpty(Name) ? "ActiveTerrainMesh" : Name.Replace(" ", "_");
+            mesh.Material = new palModernEngine.PbrMaterialParameters
+            {
+                BaseColorR = 0.35f,
+                BaseColorG = 0.55f,
+                BaseColorB = 0.32f,
+                BaseColorA = 1.0f,
+                Roughness = 0.85f,
+                Metallic = 0.05f
+            };
+
+            int nx = Math.Max(2, Math.Min(256, resX));
+            int ny = Math.Max(2, Math.Min(256, resY));
+
+            float halfX = SizeX * 0.5f;
+            float halfY = SizeY * 0.5f;
+            float dx = SizeX / (nx - 1);
+            float dy = SizeY / (ny - 1);
+
+            float[,] heights = new float[nx, ny];
+            for (int i = 0; i < nx; i++)
+            {
+                float x = -halfX + i * dx;
+                for (int j = 0; j < ny; j++)
+                {
+                    float z = -halfY + j * dy;
+                    heights[i, j] = EvaluateElevation(x, z);
+                }
+            }
+
+            for (int i = 0; i < nx; i++)
+            {
+                float x = -halfX + i * dx;
+                float u = (float)i / (nx - 1);
+
+                for (int j = 0; j < ny; j++)
+                {
+                    float z = -halfY + j * dy;
+                    float v = (float)j / (ny - 1);
+                    float y = heights[i, j];
+
+                    float hL = i > 0 ? heights[i - 1, j] : y;
+                    float hR = i < nx - 1 ? heights[i + 1, j] : y;
+                    float hD = j > 0 ? heights[i, j - 1] : y;
+                    float hU = j < ny - 1 ? heights[i, j + 1] : y;
+
+                    float normX = -(hR - hL) / (2.0f * dx);
+                    float normZ = -(hU - hD) / (2.0f * dy);
+                    float normY = 1.0f;
+                    float len = (float)Math.Sqrt(normX * normX + normY * normY + normZ * normZ);
+                    if (len > 0.0001f) { normX /= len; normY /= len; normZ /= len; }
+
+                    mesh.Vertices.Add(new palModernEngine.ExportVertex
+                    {
+                        X = x,
+                        Y = y,
+                        Z = z,
+                        Nx = normX,
+                        Ny = normY,
+                        Nz = normZ,
+                        U = u,
+                        V = v
+                    });
+                }
+            }
+
+            for (int i = 0; i < nx - 1; i++)
+            {
+                for (int j = 0; j < ny - 1; j++)
+                {
+                    uint i00 = (uint)(i * ny + j);
+                    uint i01 = (uint)(i * ny + (j + 1));
+                    uint i10 = (uint)((i + 1) * ny + j);
+                    uint i11 = (uint)((i + 1) * ny + (j + 1));
+
+                    mesh.Indices.Add(i00);
+                    mesh.Indices.Add(i10);
+                    mesh.Indices.Add(i01);
+
+                    mesh.Indices.Add(i01);
+                    mesh.Indices.Add(i10);
+                    mesh.Indices.Add(i11);
+                }
+            }
+
+            return mesh;
+        }
+
+        /// <summary>
+        /// Exports normalized elevation data as a 24-bit Grayscale PNG heightmap image.
+        /// </summary>
+        public bool ExportHeightfieldImage(string filePath, int resX = 512, int resY = 512)
+        {
+            if (string.IsNullOrEmpty(filePath)) return false;
+
+            int rx = Math.Max(16, Math.Min(2048, resX));
+            int ry = Math.Max(16, Math.Min(2048, resY));
+
+            using (Bitmap bmp = new Bitmap(rx, ry, System.Drawing.Imaging.PixelFormat.Format24bppRgb))
+            {
+                float halfX = SizeX * 0.5f;
+                float halfY = SizeY * 0.5f;
+                float dx = SizeX / (rx - 1);
+                float dy = SizeY / (ry - 1);
+                float minH = float.MaxValue;
+                float maxH = float.MinValue;
+                float[,] grid = new float[rx, ry];
+
+                for (int x = 0; x < rx; x++)
+                {
+                    float wx = -halfX + x * dx;
+                    for (int y = 0; y < ry; y++)
+                    {
+                        float wz = -halfY + y * dy;
+                        float h = EvaluateElevation(wx, wz);
+                        grid[x, y] = h;
+                        if (h < minH) minH = h;
+                        if (h > maxH) maxH = h;
+                    }
+                }
+
+                float range = Math.Max(0.001f, maxH - minH);
+                for (int y = 0; y < ry; y++)
+                {
+                    for (int x = 0; x < rx; x++)
+                    {
+                        float norm = (grid[x, y] - minH) / range;
+                        int val = Math.Max(0, Math.Min(255, (int)(norm * 255.0f)));
+                        bmp.SetPixel(x, y, Color.FromArgb(val, val, val));
+                    }
+                }
+
+                bmp.Save(filePath, System.Drawing.Imaging.ImageFormat.Png);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Exports high-precision raw 32-bit floating-point Digital Elevation Model (DEM) data.
+        /// </summary>
+        public bool ExportHeightfieldRaw(string filePath, int resX = 512, int resY = 512)
+        {
+            if (string.IsNullOrEmpty(filePath)) return false;
+
+            int rx = Math.Max(16, Math.Min(2048, resX));
+            int ry = Math.Max(16, Math.Min(2048, resY));
+
+            float halfX = SizeX * 0.5f;
+            float halfY = SizeY * 0.5f;
+            float dx = SizeX / (rx - 1);
+            float dy = SizeY / (ry - 1);
+
+            using (FileStream fs = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (BinaryWriter bw = new BinaryWriter(fs))
+            {
+                bw.Write(System.Text.Encoding.ASCII.GetBytes("RAW_DEM\0"));
+                bw.Write(rx);
+                bw.Write(ry);
+                bw.Write(SizeX);
+                bw.Write(SizeY);
+                bw.Write(SamplingDistance);
+
+                for (int y = 0; y < ry; y++)
+                {
+                    float wz = -halfY + y * dy;
+                    for (int x = 0; x < rx; x++)
+                    {
+                        float wx = -halfX + x * dx;
+                        bw.Write(EvaluateElevation(wx, wz));
+                    }
+                }
+            }
+            return true;
         }
     }
 }

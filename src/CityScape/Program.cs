@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -351,10 +352,13 @@ namespace CityScape
                     sfd.Filter = "glTF 2.0 (*.gltf)|*.gltf|glTF Binary (*.glb)|*.glb";
                     if (sfd.ShowDialog(mainForm) == DialogResult.OK)
                     {
+                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
+                        var meshes = (activeTerrain != null) ? new List<palDotNet.palModernEngine.ExportMeshData> { activeTerrain.GenerateExportMesh(96, 96) } : null;
                         var exporter = new GltfModernExporter();
-                        if (exporter.ExportScene(sfd.FileName, null, "CityScapeUrbanScene"))
+                        if (exporter.ExportScene(sfd.FileName, meshes, "CityScapeUrbanScene"))
                         {
-                            LogOutput("[Exporter] Successfully exported modern scene to: " + sfd.FileName, Color.LimeGreen);
+                            LogOutput(string.Format("[Exporter] Successfully exported modern glTF scene ({0:N0}m × {1:N0}m) to: {2}", 
+                                activeTerrain?.SizeX ?? 0, activeTerrain?.SizeY ?? 0, sfd.FileName), Color.LimeGreen);
                         }
                     }
                 }
@@ -367,10 +371,13 @@ namespace CityScape
                     sfd.Filter = "USD ASCII (*.usda)|*.usda|USD Binary (*.usd)|*.usd";
                     if (sfd.ShowDialog(mainForm) == DialogResult.OK)
                     {
+                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
+                        var meshes = (activeTerrain != null) ? new List<palDotNet.palModernEngine.ExportMeshData> { activeTerrain.GenerateExportMesh(96, 96) } : null;
                         var exporter = new UsdModernExporter();
-                        if (exporter.ExportScene(sfd.FileName, null, "CityScapeUrbanScene"))
+                        if (exporter.ExportScene(sfd.FileName, meshes, "CityScapeUrbanScene"))
                         {
-                            LogOutput("[Exporter] Successfully exported Pixar/Omniverse USD scene to: " + sfd.FileName, Color.LimeGreen);
+                            LogOutput(string.Format("[Exporter] Successfully exported Pixar/Omniverse USD scene ({0:N0}m × {1:N0}m) to: {2}", 
+                                activeTerrain?.SizeX ?? 0, activeTerrain?.SizeY ?? 0, sfd.FileName), Color.LimeGreen);
                         }
                     }
                 }
@@ -383,10 +390,50 @@ namespace CityScape
                     sfd.Filter = "Wavefront OBJ (*.obj)|*.obj";
                     if (sfd.ShowDialog(mainForm) == DialogResult.OK)
                     {
+                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
+                        var meshes = (activeTerrain != null) ? new List<palDotNet.palModernEngine.ExportMeshData> { activeTerrain.GenerateExportMesh(96, 96) } : null;
                         var exporter = new WavefrontPbrModernExporter();
-                        if (exporter.ExportScene(sfd.FileName, null, "CityScapeUrbanScene"))
+                        if (exporter.ExportScene(sfd.FileName, meshes, "CityScapeUrbanScene"))
                         {
-                            LogOutput("[Exporter] Successfully exported Wavefront OBJ + PBR scene to: " + sfd.FileName, Color.LimeGreen);
+                            LogOutput(string.Format("[Exporter] Successfully exported Wavefront OBJ + PBR scene ({0:N0}m × {1:N0}m) to: {2}", 
+                                activeTerrain?.SizeX ?? 0, activeTerrain?.SizeY ?? 0, sfd.FileName), Color.LimeGreen);
+                        }
+                    }
+                }
+            }));
+            menuExportModern.DropDownItems.Add(new ToolStripSeparator());
+            menuExportModern.DropDownItems.Add(new ToolStripMenuItem("Export Terrain &Heightmap (PNG)...", null, (s, e) =>
+            {
+                using (SaveFileDialog sfd = new SaveFileDialog())
+                {
+                    sfd.Title = "Export Terrain Elevation as Grayscale PNG Heightmap";
+                    sfd.Filter = "PNG Image (*.png)|*.png";
+                    sfd.FileName = "terrain_heightmap.png";
+                    if (sfd.ShowDialog(mainForm) == DialogResult.OK)
+                    {
+                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
+                        if (activeTerrain != null && activeTerrain.ExportHeightfieldImage(sfd.FileName, 512, 512))
+                        {
+                            LogOutput(string.Format("[Exporter] Successfully exported 512×512 PNG heightmap ({0:N0}m × {1:N0}m) to: {2}", 
+                                activeTerrain.SizeX, activeTerrain.SizeY, sfd.FileName), Color.LimeGreen);
+                        }
+                    }
+                }
+            }));
+            menuExportModern.DropDownItems.Add(new ToolStripMenuItem("Export High-Precision &RAW DEM...", null, (s, e) =>
+            {
+                using (SaveFileDialog sfd = new SaveFileDialog())
+                {
+                    sfd.Title = "Export High-Precision 32-bit Float RAW Elevation DEM";
+                    sfd.Filter = "RAW DEM Data (*.raw;*.bin)|*.raw;*.bin";
+                    sfd.FileName = "terrain_dem.raw";
+                    if (sfd.ShowDialog(mainForm) == DialogResult.OK)
+                    {
+                        var activeTerrain = palDotNet.palVisual.ControlRender.ActiveTerrain;
+                        if (activeTerrain != null && activeTerrain.ExportHeightfieldRaw(sfd.FileName, 512, 512))
+                        {
+                            LogOutput(string.Format("[Exporter] Successfully exported raw 32-bit float DEM ({0:N0}m × {1:N0}m) to: {2}", 
+                                activeTerrain.SizeX, activeTerrain.SizeY, sfd.FileName), Color.LimeGreen);
                         }
                     }
                 }

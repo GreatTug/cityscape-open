@@ -119,6 +119,114 @@ namespace CityScape.Tests
                     cr2.ResetCamera();
                     Console.WriteLine("  [PASS] Camera reset and viewport orbit/pan state verified");
                 }
+
+                // 5. Test Modern 3D Terrain Mesh & Heightmap Exporters
+                Console.WriteLine("\n---> Verifying Modern 3D Terrain Export Pipeline...");
+                var exportMesh = terrain.GenerateExportMesh(64, 64);
+                if (exportMesh == null || exportMesh.Vertices.Count == 0 || exportMesh.Indices.Count == 0)
+                {
+                    Console.WriteLine("[FAIL] Failed to generate 3D export mesh from TerrainSurfaceData!");
+                    failures++;
+                }
+                else
+                {
+                    Console.WriteLine(string.Format("  [PASS] Generated 3D export mesh: {0:N0} vertices, {1:N0} triangles",
+                        exportMesh.Vertices.Count, exportMesh.Indices.Count / 3));
+                }
+
+                string exportDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "cache", "terrain_exports");
+                Directory.CreateDirectory(exportDir);
+
+                // Test glTF 2.0 / GLB export
+                string gltfPath = Path.Combine(exportDir, "massive_terrain.gltf");
+                string glbPath = Path.Combine(exportDir, "massive_terrain.glb");
+                var gltfExporter = new palDotNet.palModernEngine.GltfModernExporter();
+                var meshList = new System.Collections.Generic.List<palDotNet.palModernEngine.ExportMeshData> { exportMesh };
+                
+                if (gltfExporter.ExportScene(gltfPath, meshList, "MassiveTerrainScene") && File.Exists(gltfPath))
+                {
+                    Console.WriteLine(string.Format("  [PASS] glTF 2.0 exporter verified: {0} ({1:N0} bytes)",
+                        Path.GetFileName(gltfPath), new FileInfo(gltfPath).Length));
+                }
+                else
+                {
+                    Console.WriteLine("[FAIL] glTF 2.0 export failed!");
+                    failures++;
+                }
+
+                if (gltfExporter.ExportScene(glbPath, meshList, "MassiveTerrainScene") && File.Exists(glbPath))
+                {
+                    Console.WriteLine(string.Format("  [PASS] GLB binary exporter verified: {0} ({1:N0} bytes)",
+                        Path.GetFileName(glbPath), new FileInfo(glbPath).Length));
+                }
+                else
+                {
+                    Console.WriteLine("[FAIL] GLB binary export failed!");
+                    failures++;
+                }
+
+                // Test Pixar OpenUSD export
+                string usdPath = Path.Combine(exportDir, "massive_terrain.usda");
+                var usdExporter = new palDotNet.palModernEngine.UsdModernExporter();
+                if (usdExporter.ExportScene(usdPath, meshList, "MassiveTerrainScene") && File.Exists(usdPath))
+                {
+                    string usdContent = File.ReadAllText(usdPath);
+                    if (usdContent.Contains("#usda 1.0") && usdContent.Contains("UsdPreviewSurface"))
+                    {
+                        Console.WriteLine(string.Format("  [PASS] Pixar USD exporter verified: {0} ({1:N0} bytes)",
+                            Path.GetFileName(usdPath), new FileInfo(usdPath).Length));
+                    }
+                    else
+                    {
+                        Console.WriteLine("[FAIL] USDA output missing required OpenUSD headers!");
+                        failures++;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("[FAIL] Pixar USD export failed!");
+                    failures++;
+                }
+
+                // Test Wavefront OBJ + PBR export
+                string objPath = Path.Combine(exportDir, "massive_terrain.obj");
+                var objExporter = new palDotNet.palModernEngine.WavefrontPbrModernExporter();
+                if (objExporter.ExportScene(objPath, meshList, "MassiveTerrainScene") && File.Exists(objPath))
+                {
+                    Console.WriteLine(string.Format("  [PASS] Wavefront OBJ + PBR exporter verified: {0} ({1:N0} bytes)",
+                        Path.GetFileName(objPath), new FileInfo(objPath).Length));
+                }
+                else
+                {
+                    Console.WriteLine("[FAIL] Wavefront OBJ export failed!");
+                    failures++;
+                }
+
+                // Test Heightfield PNG export
+                string pngHeightmap = Path.Combine(exportDir, "massive_terrain_heightmap.png");
+                if (terrain.ExportHeightfieldImage(pngHeightmap, 256, 256) && File.Exists(pngHeightmap))
+                {
+                    Console.WriteLine(string.Format("  [PASS] Grayscale PNG heightmap exporter verified: {0} ({1:N0} bytes)",
+                        Path.GetFileName(pngHeightmap), new FileInfo(pngHeightmap).Length));
+                }
+                else
+                {
+                    Console.WriteLine("[FAIL] PNG heightmap export failed!");
+                    failures++;
+                }
+
+                // Test RAW 32-bit Float DEM export
+                string rawDemPath = Path.Combine(exportDir, "massive_terrain_dem.raw");
+                if (terrain.ExportHeightfieldRaw(rawDemPath, 256, 256) && File.Exists(rawDemPath))
+                {
+                    Console.WriteLine(string.Format("  [PASS] RAW 32-bit float DEM exporter verified: {0} ({1:N0} bytes)",
+                        Path.GetFileName(rawDemPath), new FileInfo(rawDemPath).Length));
+                }
+                else
+                {
+                    Console.WriteLine("[FAIL] RAW DEM export failed!");
+                    failures++;
+                }
             }
             catch (Exception ex)
             {
