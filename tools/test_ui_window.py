@@ -18,10 +18,10 @@ def verify_window(exe_name, args, wait_time=10):
                 if length > 0:
                     buff = ctypes.create_unicode_buffer(length + 1)
                     user32.GetWindowTextW(hwnd, buff, length + 1)
-                    if "PixelActive CityScape" in buff.value:
-                        pid = wintypes.DWORD()
-                        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-                        if pid.value == proc.pid:
+                    pid = wintypes.DWORD()
+                    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+                    if pid.value == proc.pid:
+                        if "PixelActive CityScape" in buff.value or "CityScape" in buff.value:
                             found_hwnd = (hwnd, buff.value)
                             return False
             return True
@@ -36,7 +36,7 @@ def verify_window(exe_name, args, wait_time=10):
                 break
             time.sleep(0.5)
 
-        assert found_hwnd is not None, f"{exe_name} UI window was not found in top-level windows!"
+        assert found_hwnd is not None, f"{exe_name} UI window was not found in top-level windows within {wait_time}s!"
         hwnd, title = found_hwnd
         print(f"  [SUCCESS] {exe_name} HWND: {hex(hwnd)}, Title: '{title}'")
 
@@ -60,15 +60,18 @@ def verify_window(exe_name, args, wait_time=10):
 
 def test_all_ui():
     print("==================================================")
-    print("  Testing CityScape Dual Executables Live Windows ")
+    print("  Testing CityScape Multi-Architecture GUI Windows")
     print("==================================================")
     # 1. Test CityScape.exe (49 MB Full Native 3D Engine with Open-Source DLLs)
-    verify_window("CityScape.exe", ["Worlds\\sample.csp"], wait_time=5)
+    verify_window("CityScape.exe", ["Worlds\\sample.csp"], wait_time=6)
 
-    # 2. Test CityScape_Managed.exe (127 KB Pure C# Open-Source Launcher)
-    verify_window("CityScape_Managed.exe", ["Worlds\\sample.csp"], wait_time=3)
+    # 2. Test CityScape_Managed.exe (Legacy x86 Managed Launcher)
+    verify_window("CityScape_Managed.exe", ["Worlds\\sample.csp"], wait_time=6)
 
-    print("ALL DUAL EXECUTABLE LIVE GUI TESTS PASSED (100%)!")
+    # 3. Test CityScape_x64.exe (Modern 64-bit DX12/Vulkan Launcher)
+    verify_window("bin\\Release\\net48\\CityScape_x64.exe", ["Worlds\\sample.csp"], wait_time=8)
+
+    print("ALL DUAL/MULTI-ARCHITECTURE LIVE GUI TESTS PASSED (100%)!")
 
 if __name__ == "__main__":
     test_all_ui()

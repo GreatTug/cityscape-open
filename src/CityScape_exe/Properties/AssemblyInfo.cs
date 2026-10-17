@@ -4,13 +4,13 @@ using System.Runtime.InteropServices;
 using System.Security.Permissions;
 
 [assembly: CLSCompliant(true)]
-[assembly: AssemblyTitle("CityScape [Autodesk Promo]")]
+[assembly: AssemblyTitle("CityScape [Decompiled Edition]")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyCompany("PixelActive Inc.")]
+[assembly: AssemblyCompany("PixelActive Inc. / Academic Restoration")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyDescription("For artists and designers at video game studios and simulation companies, CityScape provides the best tool for quickly developing beautiful urban environments due to its ease of use, intelligent adjustment, support for large scale worlds, and integration with commercial and custom real time rendering engines.")]
+[assembly: AssemblyDescription("PixelActive CityScape 1.8 Decompiled Edition - Akademik araştırmalara uygun hale getirilmiş hobi projesi (Academic Research & Hobby Project).")]
 [assembly: AssemblyTrademark("")]
-[assembly: AssemblyCopyright("Copyright (c) 2010")]
-[assembly: AssemblyProduct("CityScape [Autodesk Promo]")]
+[assembly: AssemblyCopyright("Copyright (c) 2010 PixelActive Inc. / 2026 Academic Restoration")]
+[assembly: AssemblyProduct("CityScape [Decompiled Edition]")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, UnmanagedCode = true)]
 [assembly: AssemblyVersion("1.8.3.34904")]

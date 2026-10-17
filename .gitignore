@@ -25,10 +25,22 @@ assets/extracted/
 /CityScape_Managed.exe.config
 /CityScape_Managed.exe.response.txt
 /CityScape_Native.exe*
+/CityScape_x64.exe
+/CityScape_x64.exe.config
+/CityScape_ARM64.exe
+/CityScape_ARM64.exe.config
 /BugReporter.exe
 /test_subsystems.exe
 /test_lifecycle.exe
 /*.dll
 /*.pdb
+/*.bak
 /lib/CityScape.exe
+/dgVoodoo.conf
+/lib/dgVoodoo.conf
+/lib/d3d9.dll
+tools/screenshot*
+tools/*.bmp
+tools/*.png
+
 

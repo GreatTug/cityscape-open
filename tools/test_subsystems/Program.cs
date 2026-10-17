@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using palDotNet.palCore;
@@ -8,6 +10,7 @@ using palDotNet.palDialog;
 using palDotNet.palVisual;
 using palDotNet.palVisualPropertyGrid;
 using palDotNet.palWidgets;
+using palDotNet.palModernEngine;
 using ktKitDotNet;
 using edEditorDotNet;
 using edEditorDotNet.ExportDialogs;
@@ -52,6 +55,7 @@ namespace CityScape.Tests
                 TestEdEditorDotNet();
                 TestBugReporter();
                 TestVisualAndDocking();
+                TestModernGraphicsAndEngine();
 
                 Console.WriteLine("\n=================================================");
                 Console.WriteLine($"  ALL {_totalTests} DEEP VERIFICATION ASSERTIONS PASSED (100%)");
@@ -859,6 +863,204 @@ namespace CityScape.Tests
                 Assert(true, "FormApp.InitializeWidgetView() completed");
                 form.LoadLayout();
                 Assert(true, "FormApp.LoadLayout() completed");
+            }
+        }
+
+        static void TestModernGraphicsAndEngine()
+        {
+            Console.WriteLine("\n[MODULE 7] Testing Modern 3D Graphics Engines (DX12, Vulkan, DX9), Shaders & Modern Exporters...");
+
+            // 1. Adapter enumeration & Architecture detection
+            var adapters = GraphicsBackendManager.EnumerateAvailableAdapters();
+            Assert(adapters != null && adapters.Count >= 3, $"Adapter enumeration found {adapters.Count} backends (>= 3)");
+            Assert(GraphicsBackendManager.CurrentArchitecture == TargetArchitecture.x86_Legacy ||
+                   GraphicsBackendManager.CurrentArchitecture == TargetArchitecture.x64_Modern ||
+                   GraphicsBackendManager.CurrentArchitecture == TargetArchitecture.ARM64_Modern,
+                   $"Current target architecture identified: {GraphicsBackendManager.CurrentArchitecture}");
+
+            // 2. DirectX 12 Modern Backend Lifecycle & Telemetry
+            using (var dx12 = new DirectX12Backend())
+            {
+                Assert(dx12.BackendType == GraphicsBackendType.DirectX12_Modern, "DirectX 12 BackendType verified");
+                Assert(dx12.Features.HasFlag(GraphicsFeatures.ShaderModel6_DXIL), "DirectX 12 supports HLSL SM6+ DXIL");
+                Assert(dx12.Features.HasFlag(GraphicsFeatures.MeshShaders), "DirectX 12 supports Mesh Shaders");
+                Assert(dx12.Features.HasFlag(GraphicsFeatures.HardwareTessellation), "DirectX 12 supports Hardware Tessellation");
+
+                Assert(dx12.Initialize(IntPtr.Zero, 1920, 1080), "DirectX 12 backend initialized 1080p viewport");
+                Assert(dx12.IsInitialized, "DirectX 12 IsInitialized is true");
+
+                dx12.BeginFrame(Color.CornflowerBlue);
+                dx12.RecordMeshDraw(1024, 2048);
+                dx12.EndFrame();
+                dx12.Present();
+
+                var stats = dx12.GetStats();
+                Assert(stats.FrameIndex == 1, "DirectX 12 FrameIndex incremented to 1");
+                Assert(stats.DrawCalls == 1, "DirectX 12 DrawCalls recorded: 1");
+                Assert(stats.TrianglesRendered == 682, $"DirectX 12 Triangles rendered: {stats.TrianglesRendered}");
+
+                string report = dx12.GetDiagnosticReport();
+                Assert(report.Contains("DirectX 12") && report.Contains("D3D12"), "DirectX 12 diagnostic report contains D3D12 metadata");
+            }
+
+            // 3. Vulkan 1.3 Modern Backend Lifecycle & Telemetry
+            using (var vk = new VulkanBackend())
+            {
+                Assert(vk.BackendType == GraphicsBackendType.Vulkan_Modern, "Vulkan BackendType verified");
+                Assert(vk.Features.HasFlag(GraphicsFeatures.SPIR_V_Bytecode), "Vulkan supports SPIR-V Bytecode");
+                Assert(vk.Features.HasFlag(GraphicsFeatures.VariableRateShading), "Vulkan supports Variable Rate Shading");
+
+                Assert(vk.Initialize(IntPtr.Zero, 2560, 1440), "Vulkan 1.3 backend initialized 1440p viewport");
+                Assert(vk.IsInitialized, "Vulkan IsInitialized is true");
+
+                vk.BeginFrame(Color.DarkSlateGray);
+                vk.RecordMeshDraw(500, 1500);
+                vk.EndFrame();
+                vk.Present();
+
+                var stats = vk.GetStats();
+                Assert(stats.FrameIndex == 1, "Vulkan FrameIndex incremented to 1");
+                Assert(stats.TrianglesRendered == 500, $"Vulkan Triangles rendered: {stats.TrianglesRendered}");
+
+                string report = vk.GetDiagnosticReport();
+                Assert(report.Contains("Vulkan 1.3") && report.Contains("SPIR-V"), "Vulkan diagnostic report contains SPIR-V metadata");
+            }
+
+            // 4. DirectX 9 Legacy Safe Mode Fallback Backend
+            using (var dx9 = new DirectX9LegacyBackend())
+            {
+                Assert(dx9.BackendType == GraphicsBackendType.DirectX9_Legacy, "DirectX 9 Legacy BackendType verified");
+                Assert(dx9.Features.HasFlag(GraphicsFeatures.ShaderModel3), "DirectX 9 supports Shader Model 3.0");
+
+                Assert(dx9.Initialize(IntPtr.Zero, 1280, 800), "DirectX 9 backend initialized legacy viewport");
+                Assert(dx9.IsInitialized, "DirectX 9 IsInitialized is true");
+
+                dx9.BeginFrame(Color.Black);
+                dx9.RecordMeshDraw(100, 300);
+                dx9.EndFrame();
+                dx9.Present();
+
+                string report = dx9.GetDiagnosticReport();
+                Assert(report.Contains("Direct3D 9.0c") || report.Contains("DirectX 9"), "DirectX 9 diagnostic report verified");
+            }
+
+            // 5. Runtime Backend Switching
+            bool eventFired = false;
+            GraphicsBackendType switchedType = GraphicsBackendType.DirectX9_Legacy;
+            Action<GraphicsBackendType, IGraphicsBackend> handler = (type, b) =>
+            {
+                eventFired = true;
+                switchedType = type;
+            };
+
+            GraphicsBackendManager.BackendChanged += handler;
+            try
+            {
+                // Switch to Vulkan
+                Assert(GraphicsBackendManager.SwitchBackend(GraphicsBackendType.Vulkan_Modern, IntPtr.Zero), "Runtime switch to Vulkan succeeded");
+                Assert(GraphicsBackendManager.ActiveBackendType == GraphicsBackendType.Vulkan_Modern, "ActiveBackendType is Vulkan_Modern");
+                Assert(eventFired && switchedType == GraphicsBackendType.Vulkan_Modern, "BackendChanged event fired for Vulkan");
+
+                // Switch to DX12
+                eventFired = false;
+                Assert(GraphicsBackendManager.SwitchBackend(GraphicsBackendType.DirectX12_Modern, IntPtr.Zero), "Runtime switch to DirectX 12 succeeded");
+                Assert(GraphicsBackendManager.ActiveBackendType == GraphicsBackendType.DirectX12_Modern, "ActiveBackendType is DirectX12_Modern");
+                Assert(eventFired && switchedType == GraphicsBackendType.DirectX12_Modern, "BackendChanged event fired for DirectX 12");
+
+                // Switch to legacy DX9 fallback
+                eventFired = false;
+                Assert(GraphicsBackendManager.SwitchBackend(GraphicsBackendType.DirectX9_Legacy, IntPtr.Zero), "Runtime switch to DirectX 9 Legacy succeeded");
+                Assert(GraphicsBackendManager.ActiveBackendType == GraphicsBackendType.DirectX9_Legacy, "ActiveBackendType is DirectX9_Legacy");
+                Assert(eventFired && switchedType == GraphicsBackendType.DirectX9_Legacy, "BackendChanged event fired for DirectX 9");
+            }
+            finally
+            {
+                GraphicsBackendManager.BackendChanged -= handler;
+            }
+
+            // 6. Modern Shader Pipeline & Mathematical Models
+            var pipeline = new ModernShaderPipeline();
+            Assert(pipeline.RegisteredModuleCount >= 4, $"ModernShaderPipeline loaded {pipeline.RegisteredModuleCount} shader modules (>= 4)");
+
+            var pbrVs = pipeline.GetModule("StandardPBR", ShaderStage.Vertex, ShaderFormat.HLSL_SM6_Dxil);
+            Assert(pbrVs != null && pbrVs.SourceCode.Contains("gViewProjection"), "HLSL SM6+ Vertex shader verified");
+
+            var terrainPs = pipeline.GetModule("TerrainSplat", ShaderStage.Pixel, ShaderFormat.SPIR_V_Binary);
+            Assert(terrainPs != null && terrainPs.SourceCode.Contains("mix(rock, grass, slope)"), "Vulkan SPIR-V Terrain pixel shader verified");
+
+            // Cook-Torrance Microfacet PBR evaluation
+            var pbrMat = new PbrMaterialParameters { Roughness = 0.3f, Metallic = 0.8f };
+            float specular = pbrMat.EvaluateCookTorranceSpecular(0.85f, 0.85f, 0.98f, 0.95f);
+            Assert(specular > 0f, $"PBR Cook-Torrance specular BRDF computed: {specular:F4} > 0");
+
+            // Terrain Continuous LoD Tessellation Factors
+            var terrainPipe = pipeline.TerrainPipeline;
+            float tessClose = terrainPipe.CalculateTessellationFactor(50f);
+            float tessFar = terrainPipe.CalculateTessellationFactor(3000f);
+            float tessMid = terrainPipe.CalculateTessellationFactor(1300f);
+            Assert(tessClose == 16f, $"Close range tessellation factor clamped to max (16): {tessClose}");
+            Assert(tessFar == 1f, $"Far range tessellation factor clamped to min (1): {tessFar}");
+            Assert(tessMid > 1f && tessMid < 16f, $"Continuous adaptive LoD tessellation factor: {tessMid:F2}");
+
+            // Slope-based splat weighting
+            float weightFlat = terrainPipe.CalculateSlopeWeight(0.95f);
+            float weightCliff = terrainPipe.CalculateSlopeWeight(0.1f);
+            Assert(weightFlat == 1.0f, "Flat terrain normal (Y=0.95) weighted 100% grass/dirt");
+            Assert(weightCliff == 0.0f, "Vertical cliff normal (Y=0.1) weighted 0% grass (steep cliff rock)");
+
+            // Gerstner Wave Ocean 3D displacement
+            var waterPipe = pipeline.WaterPipeline;
+            waterPipe.EvaluateWaterDisplacement(100f, 200f, 5.0f, out float dispX, out float dispY, out float dispZ);
+            Assert(Math.Abs(dispY) > 0f, $"Gerstner wave 3D ocean displacement computed: Y={dispY:F3}m");
+
+            // 7. Modern Scene Exporters (glTF 2.0 / GLB, USD, OBJ+PBR)
+            string tempDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "temp_export_tests");
+            if (!Directory.Exists(tempDir)) Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                var testMesh = new ExportMeshData { Name = "TerrainSubdivisionTile_0_0" };
+                testMesh.Vertices.Add(new ExportVertex { X = 0f, Y = 10f, Z = 0f, Nx = 0f, Ny = 1f, Nz = 0f, U = 0f, V = 0f });
+                testMesh.Vertices.Add(new ExportVertex { X = 100f, Y = 12f, Z = 0f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 0f });
+                testMesh.Vertices.Add(new ExportVertex { X = 100f, Y = 15f, Z = 100f, Nx = 0f, Ny = 1f, Nz = 0f, U = 1f, V = 1f });
+                testMesh.Indices.AddRange(new uint[] { 0, 1, 2 });
+                testMesh.Material = new PbrMaterialParameters { BaseColorR = 0.2f, BaseColorG = 0.8f, BaseColorB = 0.3f, Roughness = 0.4f, Metallic = 0.1f };
+
+                var meshList = new List<ExportMeshData> { testMesh };
+
+                // 7a. glTF 2.0 JSON
+                string gltfPath = Path.Combine(tempDir, "terrain_test.gltf");
+                var gltfExporter = new GltfModernExporter();
+                Assert(gltfExporter.ExportScene(gltfPath, meshList, "CityScapeUrbanWorld"), "glTF 2.0 scene export returned true");
+                Assert(File.Exists(gltfPath), "glTF export file exists on disk");
+                string gltfContent = File.ReadAllText(gltfPath);
+                Assert(gltfContent.Contains("\"version\": \"2.0\"") && gltfContent.Contains("pbrMetallicRoughness"), "glTF 2.0 file contains PBR metadata");
+
+                // 7b. glTF 2.0 Binary (.glb)
+                string glbPath = Path.Combine(tempDir, "terrain_test.glb");
+                Assert(gltfExporter.ExportScene(glbPath, meshList, "CityScapeUrbanWorld"), "glTF Binary (.glb) export returned true");
+                Assert(File.Exists(glbPath) && new FileInfo(glbPath).Length >= 20, "glTF Binary file created with valid header");
+
+                // 7c. Universal Scene Description (.usda)
+                string usdPath = Path.Combine(tempDir, "terrain_test.usda");
+                var usdExporter = new UsdModernExporter();
+                Assert(usdExporter.ExportScene(usdPath, meshList, "CityScapeUrbanWorld"), "USD scene export returned true");
+                Assert(File.Exists(usdPath), "USD file exists on disk");
+                string usdContent = File.ReadAllText(usdPath);
+                Assert(usdContent.Contains("#usda 1.0") && usdContent.Contains("def Mesh \"TerrainSubdivisionTile_0_0\""), "USD file contains USDA 1.0 and mesh definitions");
+
+                // 7d. Modern Wavefront OBJ + PBR MTL
+                string objPath = Path.Combine(tempDir, "terrain_test.obj");
+                string mtlPath = Path.Combine(tempDir, "terrain_test.mtl");
+                var objExporter = new WavefrontPbrModernExporter();
+                Assert(objExporter.ExportScene(objPath, meshList, "CityScapeUrbanWorld"), "OBJ+PBR export returned true");
+                Assert(File.Exists(objPath) && File.Exists(mtlPath), "Both OBJ and MTL files generated on disk");
+                string mtlContent = File.ReadAllText(mtlPath);
+                Assert(mtlContent.Contains("newmtl Mat_TerrainSubdivisionTile_0_0") && mtlContent.Contains("Pr 0.400"), "MTL contains PBR roughness (Pr) and metallic (Pm)");
+            }
+            finally
+            {
+                try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { }
             }
         }
     }

@@ -1,12 +1,12 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("PixelActive CityScape")]
-[assembly: AssemblyDescription("Open-Source Reconstruction of PixelActive CityScape 1.8 (Autodesk Promo Edition)")]
+[assembly: AssemblyTitle("PixelActive CityScape 1.8 (Decompiled Edition)")]
+[assembly: AssemblyDescription("PixelActive CityScape 1.8 (Decompiled Edition) - Akademik araştırmalara uygun hale getirilmiş hobi projesi (Academic Research & Hobby Edition)")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("PixelActive Inc. / Autodesk Inc.")]
-[assembly: AssemblyProduct("CityScape")]
-[assembly: AssemblyCopyright("Copyright © PixelActive Inc. 2007-2010")]
+[assembly: AssemblyCompany("Akademik Araştırma & Hobi Projesi (Original: PixelActive Inc. / Autodesk Inc.)")]
+[assembly: AssemblyProduct("CityScape 1.8 (Decompiled Edition)")]
+[assembly: AssemblyCopyright("Original © PixelActive Inc. 2007-2010 | Decompiled Edition 2026")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

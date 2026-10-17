@@ -17,6 +17,8 @@ def test_all():
         "BugReporter.exe",
         "CityScape.exe",
         "CityScape_Managed.exe",
+        "CityScape_x64.exe",
+        "CityScape_ARM64.exe",
         "CityScape.exe.config",
         "D3DX9_42.DLL",
         "FreeImage.dll",
@@ -32,13 +34,34 @@ def test_all():
         assert os.path.exists(path), f"Missing binary: {path}"
         print(f"  [PASS] {f:<32} ({os.path.getsize(path):>10,} bytes)")
 
-    # 2. Test Dual Executables (Managed CLI flags & Native 49MB presence)
+    # 2. Test Multi-Architecture Executables & Modern Backend CLI flags
     exe_managed = os.path.join(dist_dir, "CityScape_Managed.exe")
-    print("\n[TEST 2] Verifying CityScape_Managed.exe CLI execution flags & dual-binary parity...")
-    for flag in ["--version", "--diagnostics", "--help"]:
+    exe_x64 = os.path.join(dist_dir, "CityScape_x64.exe")
+    exe_arm64 = os.path.join(dist_dir, "CityScape_ARM64.exe")
+    print("\n[TEST 2] Verifying Multi-Architecture Executables (x86, x64, ARM64) & Graphics Backend Switching...")
+
+    for flag in ["--version", "--diagnostics", "--help", "--backend=dx12", "--backend=vulkan", "--backend=dx9"]:
         res = subprocess.run([exe_managed, flag], capture_output=True, text=True)
         assert res.returncode == 0, f"Flag {flag} failed with code {res.returncode}"
-        print(f"  [PASS] CityScape_Managed.exe {flag:<15} exited 0")
+        print(f"  [PASS] CityScape_Managed.exe {flag:<18} exited 0")
+
+    for flag in ["--version", "--diagnostics", "--help", "--backend=dx12", "--backend=vulkan", "--backend=dx9"]:
+        res_x64 = subprocess.run([exe_x64, flag], capture_output=True, text=True)
+        assert res_x64.returncode == 0, f"x64 Flag {flag} failed with code {res_x64.returncode}"
+        print(f"  [PASS] CityScape_x64.exe     {flag:<18} exited 0")
+
+    # Verify PE Machine types
+    import struct
+    def get_pe_machine(path):
+        with open(path, "rb") as f:
+            data = f.read(1024)
+            pe_off = struct.unpack_from("<I", data, 0x3c)[0]
+            return struct.unpack_from("<H", data, pe_off + 4)[0]
+
+    assert get_pe_machine(exe_managed) == 0x014c, "CityScape_Managed.exe is x86 (0x014c)"
+    assert get_pe_machine(exe_x64) == 0x8664, "CityScape_x64.exe is AMD64 (0x8664)"
+    assert get_pe_machine(exe_arm64) == 0xaa64, "CityScape_ARM64.exe is ARM64 (0xaa64)"
+    print("  [PASS] Verified distinct PE hardware targets: x86 (0x014C), x64 (0x8664), ARM64 (0xAA64)")
 
     exe_native = os.path.join(dist_dir, "CityScape.exe")
     assert os.path.getsize(exe_native) >= 40_000_000, f"CityScape.exe is not full native hybrid binary: {os.path.getsize(exe_native)} bytes"
@@ -138,18 +161,18 @@ def test_all():
     print("  [PASS] Full lifecycle (Layout, WidgetView, PropertyGrid) passed with 0 exceptions")
 
     # 7. Test Deep Subsystems Verification
-    print("\n[TEST 7] Running Deep Subsystem Verification Suite (all 6 modules)...")
+    print("\n[TEST 7] Running Deep Subsystem Verification Suite (all 7 modules including Modern 3D Engine)...")
     subsystems_exe = os.path.join(dist_dir, "test_subsystems.exe")
     res = subprocess.run([subsystems_exe], capture_output=True, text=True)
     assert res.returncode == 0, f"Subsystem tests failed with exit code {res.returncode}:\n{res.stdout}\n{res.stderr}"
     assert "DEEP VERIFICATION ASSERTIONS PASSED (100%)" in res.stdout, f"Subsystem suite failed:\n{res.stdout}"
-    print("  [PASS] All deep verification assertions passed across all 6 core modules")
+    print("  [PASS] All deep verification assertions passed across all 7 core modules")
 
     # 8. Test Live CityScape UI Window & Layout Rendering
     print("\n[TEST 8] Verifying Live CityScape GUI Window, Layout & Viewport...")
     ui_test = subprocess.run([sys.executable, "tools/test_ui_window.py"], capture_output=True, text=True)
-    assert "ALL DUAL EXECUTABLE LIVE GUI TESTS PASSED (100%)!" in ui_test.stdout, f"Unexpected UI test output: {ui_test.stdout}"
-    print("  [PASS] Live CityScape dual GUI windows (Native 49MB & Managed 127KB) verified active, titled, responsive and rendering")
+    assert "LIVE GUI TESTS PASSED (100%)!" in ui_test.stdout, f"Unexpected UI test output: {ui_test.stdout}"
+    print("  [PASS] Live CityScape multi-architecture GUI windows (Native 49MB, Managed x86, Managed x64) verified active, titled, responsive and rendering")
 
     print("\n=================================================");
     print("  ALL 8 COMPREHENSIVE TEST SUITES PASSED (100%)  ");

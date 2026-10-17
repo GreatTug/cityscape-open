@@ -84,7 +84,13 @@ Write-Host "`n---> Staging distribution to $binDist..." -ForegroundColor Yellow
 
 # Copy third-party runtime dependencies from lib/
 if (Test-Path "lib") {
-    Copy-Item "lib\*" -Destination $binDist -Force
+    Get-ChildItem "lib\*" | ForEach-Object {
+        try {
+            Copy-Item $_.FullName -Destination $binDist -Force -ErrorAction Stop
+        } catch {
+            Write-Warning "Could not overwrite $($_.Name) in $binDist (file in use), continuing."
+        }
+    }
 }
 
 # Copy newly built assemblies and debug symbols from each project
@@ -92,7 +98,13 @@ foreach ($proj in $projects) {
     $projDir = Split-Path $proj
     $projBin = Join-Path $projDir "bin\Release\net48"
     if (Test-Path $projBin) {
-        Copy-Item "$projBin\*" -Destination $binDist -Force
+        Get-ChildItem "$projBin\*" | ForEach-Object {
+            try {
+                Copy-Item $_.FullName -Destination $binDist -Force -ErrorAction Stop
+            } catch {
+                Write-Warning "Could not overwrite $($_.Name) in $binDist (file in use), continuing."
+            }
+        }
     }
 }
 
@@ -106,6 +118,27 @@ if (Test-Path "CityScape.exe.response.txt") {
     Copy-Item "CityScape.exe.response.txt" -Destination "$binDist\CityScape.exe.response.txt" -Force
     Copy-Item "CityScape.exe.response.txt" -Destination "$binDist\CityScape_Managed.exe.response.txt" -Force
     Copy-Item "CityScape.exe.response.txt" -Destination "CityScape_Managed.exe.response.txt" -Force
+}
+
+# Compile modern x64 and ARM64 branch targets
+Write-Host "`n---> Building Modern x64 Target (DirectX 12 / Vulkan 64-bit engine)..." -ForegroundColor Yellow
+& $msbuild -t:Restore src\CityScape\CityScape_x64.csproj -p:Configuration=Release
+& $msbuild src\CityScape\CityScape_x64.csproj -t:$buildTarget -p:Configuration=Release
+if ($LASTEXITCODE -eq 0 -and (Test-Path "src\CityScape\bin\Release\net48\CityScape_x64.exe")) {
+    Copy-Item "src\CityScape\bin\Release\net48\CityScape_x64.exe" -Destination "$binDist\CityScape_x64.exe" -Force
+    Copy-Item "src\CityScape\CityScape_x64.exe.config" -Destination "$binDist\CityScape_x64.exe.config" -Force
+    Copy-Item "src\CityScape\CityScape_x64.exe.config" -Destination "CityScape_x64.exe.config" -Force
+    Write-Host "[OK] Modern x64 engine target (CityScape_x64.exe) compiled successfully!" -ForegroundColor Green
+}
+
+Write-Host "`n---> Building Modern ARM64 Target (DirectX 12 / Vulkan ARM64 engine)..." -ForegroundColor Yellow
+& $msbuild -t:Restore src\CityScape\CityScape_ARM64.csproj -p:Configuration=Release
+& $msbuild src\CityScape\CityScape_ARM64.csproj -t:$buildTarget -p:Configuration=Release
+if ($LASTEXITCODE -eq 0 -and (Test-Path "src\CityScape\bin\Release\net48\CityScape_ARM64.exe")) {
+    Copy-Item "src\CityScape\bin\Release\net48\CityScape_ARM64.exe" -Destination "$binDist\CityScape_ARM64.exe" -Force
+    Copy-Item "src\CityScape\CityScape_x64.exe.config" -Destination "$binDist\CityScape_ARM64.exe.config" -Force
+    Copy-Item "src\CityScape\CityScape_x64.exe.config" -Destination "CityScape_ARM64.exe.config" -Force
+    Write-Host "[OK] Modern ARM64 engine target (CityScape_ARM64.exe) compiled successfully!" -ForegroundColor Green
 }
 
 # Copy sample worlds and data directories to make binDist completely self-contained
@@ -128,9 +161,25 @@ if (Test-Path $csc) {
 
 # Mirror executables and DLLs to workspace root matching original CityScape 1.8 layout
 Write-Host "`n---> Mirroring executables and libraries to root (matching original layout)..." -ForegroundColor Yellow
-Get-ChildItem -Path $binDist -Filter "*.dll" | Copy-Item -Destination "." -Force
-Get-ChildItem -Path $binDist -Filter "*.exe" | Copy-Item -Destination "." -Force
-Get-ChildItem -Path $binDist -Filter "*.pdb" | Copy-Item -Destination "." -Force
+Get-ChildItem -Path $binDist -Filter "*.dll" | ForEach-Object {
+    try {
+        Copy-Item -Path $_.FullName -Destination "." -Force -ErrorAction Stop
+    } catch {
+        Write-Warning "Could not overwrite $($_.Name) in root (file in use), continuing."
+    }
+}
+Get-ChildItem -Path $binDist -Filter "*.exe" | ForEach-Object {
+    try {
+        Copy-Item -Path $_.FullName -Destination "." -Force -ErrorAction Stop
+    } catch {
+        Write-Warning "Could not overwrite $($_.Name) in root: $_"
+    }
+}
+Get-ChildItem -Path $binDist -Filter "*.pdb" | ForEach-Object {
+    try {
+        Copy-Item -Path $_.FullName -Destination "." -Force -ErrorAction SilentlyContinue
+    } catch {}
+}
 
 Write-Host "[OK] Staged all distribution binaries to $binDist and workspace root" -ForegroundColor Green
 

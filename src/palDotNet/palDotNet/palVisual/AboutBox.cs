@@ -189,10 +189,10 @@ public class AboutBox : Form
 		this.linkLabelWebsite.LinkBehavior = System.Windows.Forms.LinkBehavior.NeverUnderline;
 		this.linkLabelWebsite.Location = new System.Drawing.Point(12, 285);
 		this.linkLabelWebsite.Name = "linkLabelWebsite";
-		this.linkLabelWebsite.Size = new System.Drawing.Size(123, 13);
+		this.linkLabelWebsite.Size = new System.Drawing.Size(180, 13);
 		this.linkLabelWebsite.TabIndex = 26;
 		this.linkLabelWebsite.TabStop = true;
-		this.linkLabelWebsite.Text = "http://pixelactive3d.com";
+		this.linkLabelWebsite.Text = "https://github.com/cityscape-open";
 		this.linkLabelWebsite.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(linkLabelWebsite_LinkClicked);
 		this.BackColor = System.Drawing.SystemColors.Control;
 		this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
@@ -212,7 +212,7 @@ public class AboutBox : Form
 		base.ShowIcon = false;
 		base.ShowInTaskbar = false;
 		base.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-		this.Text = "AboutBox";
+		this.Text = "About PixelActive CityScape 1.8 (Decompiled Edition)";
 		base.ResumeLayout(false);
 		base.PerformLayout();
 	}
@@ -220,12 +220,18 @@ public class AboutBox : Form
 	public AboutBox()
 	{
 		InitializeComponent();
-		Text = $"About {AssemblyTitle}";
-		labelProductName.Text = AssemblyProduct;
-		labelVersion.Text = $"Version {AssemblyVersion}";
-		labelCopyright.Text = AssemblyCopyright;
-		labelCompanyName.Text = AssemblyCompany;
-		textBoxDescription.Text = AssemblyDescription;
+		Text = "About PixelActive CityScape 1.8 (Decompiled Edition)";
+		labelProductName.Text = "PixelActive CityScape 1.8 (Decompiled Edition)";
+		labelVersion.Text = $"Version {AssemblyVersion} [Decompiled Edition]";
+		labelCopyright.Text = "Original © PixelActive Inc. / Autodesk Inc. | Reconstructed 2026";
+		labelCompanyName.Text = "Akademik Araştırma & Hobi Projesi";
+		linkLabelWebsite.Text = "https://github.com/cityscape-open";
+		textBoxDescription.Text =
+			"PixelActive CityScape 1.8 (Decompiled Edition)\r\n\r\n" +
+			"Bu yazılım, akademik araştırmalara uygun hale getirilmiş kar amacı gütmeyen bir hobi projesidir.\r\n" +
+			"Yazılım arkeolojisi, tersine mühendislik ve 3D kentsel simülasyon araştırmaları için restore edilmiştir.\r\n\r\n" +
+			"This software has been reconstructed solely for academic research, educational study, and non-commercial hobby experimentation.\r\n\r\n" +
+			"All original copyrights and trademarks remain with PixelActive Inc. / Autodesk Inc.";
 	}
 
 	private void okButton_Click(object sender, EventArgs e)
@@ -237,7 +243,7 @@ public class AboutBox : Form
 	{
 		try
 		{
-			Process.Start("http://pixelactive3d.com");
+			Process.Start("https://github.com/cityscape-open");
 		}
 		catch (Exception)
 		{

@@ -1,0 +1,15 @@
+Starting CityScape Main (x86)...
+Trace A: Before EnableVisualStyles
+Trace B: After EnableVisualStyles
+Trace C: After SetCompatibleTextRenderingDefault
+Trace D: InitParams
+Trace E: Before WidgetMgr
+Trace F: After WidgetMgr
+Trace F1: After reader
+Trace F2: After writer
+Trace F3: After stream assign
+Trace F4: After EventQuit
+Trace F5: Before new FormApp
+Trace F6: After new FormApp
+Trace F7: After BuildApplicationMenus
+Trace F8: Before Application.Run
