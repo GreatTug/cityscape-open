@@ -32,6 +32,7 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	private static List<ControlRender> ControlRenders = new List<ControlRender>();
 
+	// Data models maintained for subsystem compatibility
 	public static TerrainSurfaceData ActiveTerrain { get; set; } = TerrainSurfaceData.CreateDefault();
 	public static List<GisBuildingInstance> ActiveBuildings { get; } = new List<GisBuildingInstance>();
 	public static SpatialQuadtree<GisBuildingInstance> BuildingSpatialIndex { get; private set; }
@@ -72,42 +73,8 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		AsyncMeshWorker.ClearCache();
 		foreach (ControlRender cr in ControlRenders)
 		{
-			if (resetCamera || cr.mCameraDistance <= 0f)
-			{
-				cr.ResetCamera();
-			}
 			cr.Invalidate();
 		}
-	}
-
-	private Point mLastMouseLocation;
-	private bool mIsOrbiting = false;
-	private bool mIsPanning = false;
-
-	private float mCameraYaw = -35.0f;
-	private float mCameraPitch = 24.0f;
-	private float mCameraDistance = 0f;
-	private float mCameraPanX = 0f;
-	private float mCameraPanY = 0f;
-
-	public void ResetCamera()
-	{
-		mCameraYaw = -35.0f;
-		mCameraPitch = 24.0f;
-		mCameraDistance = 0f;
-		mCameraPanX = 0f;
-		mCameraPanY = 0f;
-	}
-
-	public void FitCameraToExtents()
-	{
-		float sx = ActiveTerrain?.SizeX ?? 2000f;
-		float sy = ActiveTerrain?.SizeY ?? 2000f;
-		float diag = (float)Math.Sqrt(sx * sx + sy * sy);
-		mCameraDistance = Math.Max(100f, diag * 1.30f);
-		mCameraPanX = 0f;
-		mCameraPanY = 0f;
-		Invalidate();
 	}
 
 	private MouseButtons CurrentMouseButtons;
@@ -326,383 +293,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		}
 	}
 
-	protected override void OnPaint(PaintEventArgs pe)
-	{
-		base.OnPaint(pe);
-		if (TheRenderWindow == null)
-		{
-			Graphics g = pe.Graphics;
-			g.SmoothingMode = SmoothingMode.AntiAlias;
-
-			int w = Width;
-			int h = Height;
-			if (w <= 0 || h <= 0) return;
-
-			// Professional dark slate gradient background (standard 3D modeling viewport)
-			using (LinearGradientBrush bgBrush = new LinearGradientBrush(
-				ClientRectangle,
-				Color.FromArgb(38, 44, 52),
-				Color.FromArgb(20, 24, 28),
-				LinearGradientMode.Vertical))
-			{
-				g.FillRectangle(bgBrush, ClientRectangle);
-			}
-
-			Render3DTerrain(g, w, h);
-		}
-	}
-
-	private void Render3DTerrain(Graphics g, int w, int h)
-	{
-		var terrain = ActiveTerrain ?? TerrainSurfaceData.CreateDefault();
-		float sx = terrain.SizeX;
-		float sy = terrain.SizeY;
-		float diag = (float)Math.Sqrt(sx * sx + sy * sy);
-		float camDist = mCameraDistance > 0f ? mCameraDistance : Math.Max(100f, diag * 1.30f);
-		float focal = (float)Math.Min(w, h) * 1.25f;
-
-		float yawRad = (float)(mCameraYaw * Math.PI / 180.0);
-		float pitchRad = (float)(mCameraPitch * Math.PI / 180.0);
-		float cosYaw = (float)Math.Cos(yawRad);
-		float sinYaw = (float)Math.Sin(yawRad);
-		float cosPitch = (float)Math.Cos(pitchRad);
-		float sinPitch = (float)Math.Sin(pitchRad);
-
-		PointF Project(float x, float y, float z)
-		{
-			float x1 = x * cosYaw - z * sinYaw;
-			float z1 = x * sinYaw + z * cosYaw;
-			float y1 = y;
-
-			float y2 = y1 * cosPitch - z1 * sinPitch;
-			float z2 = y1 * sinPitch + z1 * cosPitch;
-
-			float z3 = z2 + camDist;
-			if (z3 < 1.0f) z3 = 1.0f;
-
-			float scale = focal / z3;
-			float cx = (w * 0.5f) + mCameraPanX;
-			float cy = (h * 0.55f) + mCameraPanY;
-
-			return new PointF(cx + x1 * scale, cy - y2 * scale);
-		}
-
-		// 1. Ground Plane Foundation with Fixed Real-World Metric Spacing
-		using (Pen groundPen = new Pen(Color.FromArgb(32, 42, 54), 1f))
-		using (Pen majorPen = new Pen(Color.FromArgb(48, 62, 78), 1.5f))
-		{
-			float maxDim = Math.Max(sx, sy);
-			float metricStep = 1000f; // 1 km standard metric spacing
-			if (maxDim > 30000f) metricStep = 5000f; // 5 km for 30km+
-			else if (maxDim < 2000f) metricStep = 250f; // 250m for small terrains
-
-			float gridExtent = Math.Max(maxDim * 1.5f, 5000f);
-			for (float gx = -gridExtent; gx <= gridExtent; gx += metricStep)
-			{
-				bool isMajor = Math.Abs(gx % (metricStep * 5f)) < 1f;
-				PointF pStart = Project(gx, -15f, -gridExtent);
-				PointF pEnd = Project(gx, -15f, gridExtent);
-				g.DrawLine(isMajor ? majorPen : groundPen, pStart, pEnd);
-			}
-			for (float gz = -gridExtent; gz <= gridExtent; gz += metricStep)
-			{
-				bool isMajor = Math.Abs(gz % (metricStep * 5f)) < 1f;
-				PointF pStart = Project(-gridExtent, -15f, gz);
-				PointF pEnd = Project(gridExtent, -15f, gz);
-				g.DrawLine(isMajor ? majorPen : groundPen, pStart, pEnd);
-			}
-		}
-
-		// 2. Extrude terrain corners to base -25m to give it physical volume and depth
-		PointF b00 = Project(-sx * 0.5f, -25f, -sy * 0.5f);
-		PointF b10 = Project(sx * 0.5f, -25f, -sy * 0.5f);
-		PointF b11 = Project(sx * 0.5f, -25f, sy * 0.5f);
-		PointF b01 = Project(-sx * 0.5f, -25f, sy * 0.5f);
-
-		PointF t00 = Project(-sx * 0.5f, terrain.EvaluateElevation(-sx * 0.5f, -sy * 0.5f), -sy * 0.5f);
-		PointF t10 = Project(sx * 0.5f, terrain.EvaluateElevation(sx * 0.5f, -sy * 0.5f), -sy * 0.5f);
-		PointF t11 = Project(sx * 0.5f, terrain.EvaluateElevation(sx * 0.5f, sy * 0.5f), sy * 0.5f);
-		PointF t01 = Project(-sx * 0.5f, terrain.EvaluateElevation(-sx * 0.5f, sy * 0.5f), sy * 0.5f);
-
-		using (SolidBrush skirtBrush = new SolidBrush(Color.FromArgb(32, 38, 44)))
-		using (Pen skirtPen = new Pen(Color.FromArgb(55, 68, 80), 1.5f))
-		{
-			PointF[] frontSkirt = new PointF[] { t01, t11, b11, b01 };
-			g.FillPolygon(skirtBrush, frontSkirt);
-			g.DrawPolygon(skirtPen, frontSkirt);
-
-			PointF[] leftSkirt = new PointF[] { t00, t01, b01, b00 };
-			g.FillPolygon(skirtBrush, leftSkirt);
-			g.DrawPolygon(skirtPen, leftSkirt);
-		}
-
-		// Camera vectors & Frustum setup
-		float fwdX = sinYaw * cosPitch;
-		float fwdY = sinPitch;
-		float fwdZ = cosYaw * cosPitch;
-
-		float camX = -fwdX * camDist;
-		float camY = -fwdY * camDist;
-		float camZ = -fwdZ * camDist;
-		float farClip = Math.Max(15000f, diag * 3.0f);
-		float aspect = (float)w / Math.Max(1, h);
-
-		var frustum = ViewFrustum3D.CreateFromOrbitProjection(mCameraYaw, mCameraPitch, camDist, w, h, focal, 1.0f, farClip);
-
-		// 3. CDLOD Multi-Resolution Hierarchical Terrain Mesh (Frustum-Culled Chunks)
-		if (TerrainCdlodTree == null || TerrainCdlodTree.Terrain != terrain)
-		{
-			TerrainCdlodTree = new CdlodTerrainQuadtree(terrain, 4);
-		}
-
-		int terrainChunksTested = 0;
-		int terrainChunksCulled = 0;
-		var cdlodChunks = TerrainCdlodTree.SelectVisibleChunks(frustum, camX, camY, camZ, out terrainChunksTested, out terrainChunksCulled);
-
-		// Pre-warm / enqueue background worker tasks for selected visible chunks
-		foreach (var c in cdlodChunks)
-		{
-			AsyncMeshWorker.EnqueueRequest(c.Node, c.LodLevel, terrain, 16, c.MorphFactor, enableSkirts: true);
-		}
-
-		using (Pen meshPen = new Pen(Color.FromArgb(40, 180, 220, 255), 1f))
-		{
-			foreach (var chunk in cdlodChunks)
-			{
-				float chunkLenX = chunk.Node.MaxX - chunk.Node.MinX;
-				float chunkLenZ = chunk.Node.MaxZ - chunk.Node.MinZ;
-
-				// Bind polygon density directly to terrain.SamplingDistance
-				float sampleDist = terrain.SamplingDistance > 0.01f ? terrain.SamplingDistance : 2.0f;
-				int naturalDivX = Math.Max(1, (int)Math.Round(chunkLenX / sampleDist));
-				int naturalDivZ = Math.Max(1, (int)Math.Round(chunkLenZ / sampleDist));
-
-				int divX = Math.Min(48, Math.Max(2, naturalDivX >> Math.Min(4, chunk.LodLevel)));
-				int divZ = Math.Min(48, Math.Max(2, naturalDivZ >> Math.Min(4, chunk.LodLevel)));
-
-				float stepX = chunkLenX / divX;
-				float stepZ = chunkLenZ / divZ;
-
-				for (int j = 0; j < divZ; j++)
-				{
-					float z0 = chunk.Node.MinZ + j * stepZ;
-					float z1 = chunk.Node.MinZ + (j + 1) * stepZ;
-
-					for (int i = 0; i < divX; i++)
-					{
-						float x0 = chunk.Node.MinX + i * stepX;
-						float x1 = chunk.Node.MinX + (i + 1) * stepX;
-
-						float e00 = terrain.EvaluateElevation(x0, z0);
-						float e10 = terrain.EvaluateElevation(x1, z0);
-						float e11 = terrain.EvaluateElevation(x1, z1);
-						float e01 = terrain.EvaluateElevation(x0, z1);
-
-						PointF p00 = Project(x0, e00, z0);
-						PointF p10 = Project(x1, e10, z0);
-						PointF p11 = Project(x1, e11, z1);
-						PointF p01 = Project(x0, e01, z1);
-
-						float avgElev = (e00 + e10 + e11 + e01) * 0.25f;
-						float elevRatio = Math.Max(0f, Math.Min(1f, avgElev / Math.Max(1f, terrain.ElevationMax)));
-
-						// PBR terrain splat coloring (valley green -> rocky ridge -> peak)
-						int r = (int)(42 + elevRatio * 85);
-						int gCol = (int)(75 + (1f - elevRatio) * 35 + elevRatio * 25);
-						int bCol = (int)(55 + elevRatio * 60);
-
-						float lightFactor = 0.88f + 0.12f * (float)Math.Cos((x0 + z0) * 0.001);
-						r = Math.Min(255, (int)(r * lightFactor));
-						gCol = Math.Min(255, (int)(gCol * lightFactor));
-						bCol = Math.Min(255, (int)(bCol * lightFactor));
-
-						using (SolidBrush quadBrush = new SolidBrush(Color.FromArgb(r, gCol, bCol)))
-						{
-							PointF[] quad = new PointF[] { p00, p10, p11, p01 };
-							g.FillPolygon(quadBrush, quad);
-							g.DrawPolygon(meshPen, quad);
-						}
-					}
-				}
-			}
-		}
-
-		// 3.5. 3D Procedural / GIS Extruded Buildings with Spatial Quadtree Frustum Culling
-		int renderedBuildings = 0;
-		int nodesTested = 0;
-		int nodesCulled = 0;
-
-		if (ActiveBuildings != null && ActiveBuildings.Count > 0)
-		{
-			if (BuildingSpatialIndex == null)
-			{
-				float halfX = Math.Max(1000f, sx * 0.5f);
-				float halfZ = Math.Max(1000f, sy * 0.5f);
-				var worldBounds = new BoundingBox3D(-halfX, -100f, -halfZ, halfX, 2000f, halfZ);
-				BuildingSpatialIndex = new SpatialQuadtree<GisBuildingInstance>(worldBounds, 6, 16);
-				foreach (var b in ActiveBuildings)
-				{
-					BuildingSpatialIndex.Insert(b);
-				}
-			}
-
-			var visibleBuildings = BuildingSpatialIndex.QueryFrustum(frustum, out nodesTested, out nodesCulled);
-
-			using (Pen buildingWirePen = new Pen(Color.FromArgb(70, 90, 110), 1f))
-			{
-				foreach (var bld in visibleBuildings)
-				{
-					renderedBuildings++;
-					var poly = bld.Footprint.Polygon;
-					int polyN = poly.Count;
-					if (polyN < 3) continue;
-
-					float bY = bld.BaseElevation;
-					float tY = bld.BaseElevation + bld.TotalHeight;
-
-					PointF[] topPoints = new PointF[polyN];
-					for (int p = 0; p < polyN; p++)
-					{
-						topPoints[p] = Project(poly[p].X, tY, poly[p].Y);
-					}
-
-					for (int p = 0; p < polyN; p++)
-					{
-						int next = (p + 1) % polyN;
-						PointF p0_bot = Project(poly[p].X, bY, poly[p].Y);
-						PointF p1_bot = Project(poly[next].X, bY, poly[next].Y);
-						PointF p1_top = topPoints[next];
-						PointF p0_top = topPoints[p];
-
-						float dx = poly[next].X - poly[p].X;
-						float dz = poly[next].Y - poly[p].Y;
-						float normX = dz;
-						float normZ = -dx;
-						float nLen = (float)Math.Sqrt(normX * normX + normZ * normZ);
-						float shade = 0.75f;
-						if (nLen > 0.0001f)
-						{
-							normX /= nLen;
-							normZ /= nLen;
-							shade = Math.Max(0.4f, Math.Min(1.0f, (normX * 0.6f + normZ * 0.6f + 0.5f) * 0.85f));
-						}
-
-						Color wallCol = Color.FromArgb(
-							(int)(bld.FacadeColor.R * shade),
-							(int)(bld.FacadeColor.G * shade),
-							(int)(bld.FacadeColor.B * shade));
-
-						using (SolidBrush wallBrush = new SolidBrush(wallCol))
-						{
-							PointF[] wallQuad = new PointF[] { p0_bot, p1_bot, p1_top, p0_top };
-							g.FillPolygon(wallBrush, wallQuad);
-							g.DrawPolygon(buildingWirePen, wallQuad);
-						}
-					}
-
-					using (SolidBrush roofBrush = new SolidBrush(bld.RoofColor))
-					{
-						g.FillPolygon(roofBrush, topPoints);
-						g.DrawPolygon(buildingWirePen, topPoints);
-					}
-				}
-			}
-		}
-
-		// 4. Physical Tile Demarcations in glowing cyan
-		using (Pen tilePen = new Pen(Color.FromArgb(0, 235, 255), 2.2f))
-		using (Font tileFont = new Font("Segoe UI", 8.5f, FontStyle.Bold))
-		using (SolidBrush tileBrush = new SolidBrush(Color.FromArgb(180, 240, 255)))
-		{
-			for (int tx = 0; tx <= terrain.TileCountX; tx++)
-			{
-				float xPos = -sx * 0.5f + tx * terrain.TileSizeX;
-				if (xPos > sx * 0.5f + 1f) continue;
-				PointF pA = Project(xPos, 0f, -sy * 0.5f);
-				PointF pB = Project(xPos, 0f, sy * 0.5f);
-				g.DrawLine(tilePen, pA, pB);
-			}
-
-			for (int ty = 0; ty <= terrain.TileCountY; ty++)
-			{
-				float zPos = -sy * 0.5f + ty * terrain.TileSizeY;
-				if (zPos > sy * 0.5f + 1f) continue;
-				PointF pA = Project(-sx * 0.5f, 0f, zPos);
-				PointF pB = Project(sx * 0.5f, 0f, zPos);
-				g.DrawLine(tilePen, pA, pB);
-			}
-
-			for (int ty = 0; ty < terrain.TileCountY; ty++)
-			{
-				for (int tx = 0; tx < terrain.TileCountX; tx++)
-				{
-					float cxTile = -sx * 0.5f + (tx + 0.5f) * terrain.TileSizeX;
-					float czTile = -sy * 0.5f + (ty + 0.5f) * terrain.TileSizeY;
-					if (cxTile > sx * 0.5f || czTile > sy * 0.5f) continue;
-					PointF pCenter = Project(cxTile, terrain.EvaluateElevation(cxTile, czTile) + 5f, czTile);
-					string label = string.Format("Tile [{0},{1}]\n{2:N0}m × {3:N0}m", tx + 1, ty + 1, terrain.TileSizeX, terrain.TileSizeY);
-					g.DrawString(label, tileFont, tileBrush, pCenter.X - 35, pCenter.Y - 15);
-				}
-			}
-		}
-
-		// 5. Metric Axis Rulers
-		using (Pen rulerPen = new Pen(Color.FromArgb(255, 200, 50), 2f))
-		using (Font rulerFont = new Font("Segoe UI", 8f, FontStyle.Regular))
-		using (SolidBrush rulerBrush = new SolidBrush(Color.FromArgb(255, 220, 100)))
-		{
-			int numTicksX = 5;
-			for (int i = 0; i <= numTicksX; i++)
-			{
-				float frac = (float)i / numTicksX;
-				float x = -sx * 0.5f + frac * sx;
-				float z = sy * 0.5f;
-				PointF pEdge = Project(x, 0f, z);
-				PointF pTick = Project(x, -12f, z + sy * 0.02f);
-				g.DrawLine(rulerPen, pEdge, pTick);
-				float meterVal = frac * sx;
-				string text = meterVal >= 1000f ? string.Format("{0:N1} km", meterVal / 1000f) : string.Format("{0:N0} m", meterVal);
-				g.DrawString(text, rulerFont, rulerBrush, pTick.X - 18, pTick.Y + 2);
-			}
-
-			int numTicksZ = 3;
-			for (int j = 0; j <= numTicksZ; j++)
-			{
-				float frac = (float)j / numTicksZ;
-				float x = -sx * 0.5f;
-				float z = -sy * 0.5f + frac * sy;
-				PointF pEdge = Project(x, 0f, z);
-				PointF pTick = Project(x - sx * 0.02f, -12f, z);
-				g.DrawLine(rulerPen, pEdge, pTick);
-				float meterVal = frac * sy;
-				string text = meterVal >= 1000f ? string.Format("{0:N1} km", meterVal / 1000f) : string.Format("{0:N0} m", meterVal);
-				g.DrawString(text, rulerFont, rulerBrush, pTick.X - 45, pTick.Y - 8);
-			}
-		}
-
-		// 6. 3D Principal Axis Tripod Indicator (Bottom-Left)
-		int axX = 65, axY = h - 65;
-		PointF axCenter = new PointF(axX, axY);
-		PointF pAxisX = new PointF(axX + cosYaw * 36f, axY - sinYaw * sinPitch * 36f);
-		PointF pAxisZ = new PointF(axX - sinYaw * 36f, axY - cosYaw * sinPitch * 36f);
-		PointF pAxisY = new PointF(axX, axY - cosPitch * 36f);
-
-		using (Pen pX = new Pen(Color.FromArgb(240, 70, 70), 2.5f))
-		using (Pen pY = new Pen(Color.FromArgb(70, 220, 70), 2.5f))
-		using (Pen pZ = new Pen(Color.FromArgb(70, 130, 255), 2.5f))
-		using (Font axFont = new Font("Segoe UI", 8f, FontStyle.Bold))
-		using (SolidBrush bWhite = new SolidBrush(Color.White))
-		{
-			g.DrawLine(pX, axCenter, pAxisX);
-			g.DrawLine(pY, axCenter, pAxisY);
-			g.DrawLine(pZ, axCenter, pAxisZ);
-			g.DrawString("X", axFont, bWhite, pAxisX.X + 2, pAxisX.Y - 8);
-			g.DrawString("Y", axFont, bWhite, pAxisY.X - 4, pAxisY.Y - 14);
-			g.DrawString("Z", axFont, bWhite, pAxisZ.X + 2, pAxisZ.Y - 8);
-		}
-
-	}
-
 	[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
 	protected override void WndProc(ref Message m)
 	{
@@ -761,19 +351,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseDown(MouseEventArgs e)
 	{
-		mLastMouseLocation = e.Location;
-		if (TheRenderWindow == null)
-		{
-			if (e.Button == MouseButtons.Left && (ModifierKeys & Keys.Shift) == Keys.None)
-			{
-				mIsOrbiting = true;
-			}
-			else if (e.Button == MouseButtons.Middle || (e.Button == MouseButtons.Left && (ModifierKeys & Keys.Shift) != Keys.None) || e.Button == MouseButtons.Right)
-			{
-				mIsPanning = true;
-			}
-		}
-
 		if (CurrentMouseButtons != Control.MouseButtons)
 		{
 			CurrentMouseButtons = Control.MouseButtons;
@@ -784,12 +361,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseUp(MouseEventArgs e)
 	{
-		if (TheRenderWindow == null)
-		{
-			mIsOrbiting = false;
-			mIsPanning = false;
-		}
-
 		if (CurrentMouseButtons != Control.MouseButtons)
 		{
 			CurrentMouseButtons = Control.MouseButtons;
@@ -800,26 +371,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseMove(MouseEventArgs e)
 	{
-		if (TheRenderWindow == null && (mIsOrbiting || mIsPanning))
-		{
-			int dx = e.X - mLastMouseLocation.X;
-			int dy = e.Y - mLastMouseLocation.Y;
-			mLastMouseLocation = e.Location;
-
-			if (mIsOrbiting)
-			{
-				mCameraYaw += dx * 0.45f;
-				mCameraPitch = Math.Max(4.0f, Math.Min(88.0f, mCameraPitch + dy * 0.45f));
-				Invalidate();
-			}
-			else if (mIsPanning)
-			{
-				mCameraPanX += dx * 1.0f;
-				mCameraPanY += dy * 1.0f;
-				Invalidate();
-			}
-		}
-
 		if (LastX != e.X || LastY != e.Y)
 		{
 			if (Control.MouseButtons == MouseButtons.None && CurrentMouseButtons != MouseButtons.None)
@@ -835,11 +386,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseLeave(EventArgs e)
 	{
-		if (TheRenderWindow == null)
-		{
-			mIsOrbiting = false;
-			mIsPanning = false;
-		}
 		MouseEventArgs e2 = new MouseEventArgs(Control.MouseButtons, 0, LastX, LastY, 0);
 		if (Control.MouseButtons == MouseButtons.None && CurrentMouseButtons != MouseButtons.None)
 		{
@@ -851,28 +397,8 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnMouseWheel(MouseEventArgs e)
 	{
-		if (TheRenderWindow == null)
-		{
-			float effDist = mCameraDistance > 0f ? mCameraDistance : (float)Math.Sqrt(ActiveTerrain.SizeX * ActiveTerrain.SizeX + ActiveTerrain.SizeY * ActiveTerrain.SizeY) * 1.30f;
-			if (e.Delta > 0)
-			{
-				effDist *= 0.85f;
-			}
-			else
-			{
-				effDist *= 1.18f;
-			}
-			mCameraDistance = Math.Max(10.0f, effDist);
-			Invalidate();
-		}
 		OnMouseGeneral(e, setFocus: true);
 		base.OnMouseWheel(e);
-	}
-
-	protected override void OnMouseDoubleClick(MouseEventArgs e)
-	{
-		FitCameraToExtents();
-		base.OnMouseDoubleClick(e);
 	}
 
 	private void ControlRender_Resize(object sender, EventArgs e)
@@ -885,11 +411,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 
 	protected override void OnKeyDown(KeyEventArgs e)
 	{
-		if (e.KeyCode == Keys.F || e.KeyCode == Keys.Home || e.KeyCode == Keys.R)
-		{
-			FitCameraToExtents();
-			e.Handled = true;
-		}
 		Focus();
 		if (WidgetMgr.Instance != null)
 		{
@@ -898,9 +419,22 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		base.OnKeyDown(e);
 	}
 
+	public void ResetCamera()
+	{
+		// Camera reset handled via RenderWindow / WidgetMgr in native engine
+	}
+
+	public void FitCameraToExtents()
+	{
+		// Camera extents framing handled via RenderWindow / WidgetMgr in native engine
+	}
+
 	protected override void OnKeyUp(KeyEventArgs e)
 	{
-		WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyReleased);
+		if (WidgetMgr.Instance != null)
+		{
+			WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyReleased);
+		}
 		base.OnKeyUp(e);
 	}
 

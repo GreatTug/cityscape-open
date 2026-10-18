@@ -122,8 +122,12 @@ if (Test-Path "CityScape.exe.response.txt") {
 
 # Ensure Vulkan 1.3 translation layer (DXVK) is the default 3D backend
 if (Test-Path "lib\d3d9_dxvk.dll") {
-    Copy-Item "lib\d3d9_dxvk.dll" -Destination "$binDist\d3d9.dll" -Force
-    Copy-Item "lib\d3d9_dxvk.dll" -Destination "d3d9.dll" -Force
+    try {
+        Copy-Item "lib\d3d9_dxvk.dll" -Destination "$binDist\d3d9.dll" -Force -ErrorAction Stop
+        Copy-Item "lib\d3d9_dxvk.dll" -Destination "d3d9.dll" -Force -ErrorAction Stop
+    } catch {
+        Write-Warning "Could not overwrite d3d9.dll (file may be in use): $_"
+    }
 }
 
 # Compile modern x64 and ARM64 branch targets
