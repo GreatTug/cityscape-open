@@ -200,6 +200,13 @@ Get-ChildItem -Path $binDist -Filter "*.pdb" | ForEach-Object {
 
 Write-Host "[OK] Staged all distribution binaries to $binDist and workspace root" -ForegroundColor Green
 
+# Apply surgical native in-place unlock patch to CityScape.exe
+if (Test-Path "tools\apply_native_patch.py") {
+    Write-Host "`n---> Applying native terrain unlock patch to CityScape.exe..." -ForegroundColor Yellow
+    $pyCmd = if (Test-Path ".venv\Scripts\python.exe") { ".venv\Scripts\python.exe" } else { "python" }
+    & $pyCmd tools\apply_native_patch.py
+}
+
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host "  All CityScape assemblies built successfully!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Cyan

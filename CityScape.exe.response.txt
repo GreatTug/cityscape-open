@@ -3,5 +3,3 @@
 -archives="c:\cityscape-open\assets\assets.parc"
 -archiveMountPaths="c:\cityscape-open\assets\"
 -OutputToFileTemp=true
--Project="c:\cityscape-open\Worlds\sample.csp"
--Terrain="c:\cityscape-open\1.cst"
