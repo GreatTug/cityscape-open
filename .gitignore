@@ -50,5 +50,7 @@ dist/_staging/
 test_x64_*.exe
 ps_trace.txt
 startup_trace.txt
+*.log
+/lib/d3d9*.dll
 
 
