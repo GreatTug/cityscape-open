@@ -120,13 +120,10 @@ if (Test-Path "CityScape.exe.response.txt") {
     Copy-Item "CityScape.exe.response.txt" -Destination "CityScape_Managed.exe.response.txt" -Force
 }
 
-# Ensure native CityScape.exe has 1600m and tile restrictions removed
-if (Test-Path "tools\apply_native_patch.py") {
-    $pyCmd = if (Test-Path ".venv\Scripts\python.exe") { ".venv\Scripts\python.exe" } elseif (Get-Command py -ErrorAction SilentlyContinue) { "py" } elseif (Get-Command python -ErrorAction SilentlyContinue) { "python" } else { $null }
-    if ($pyCmd) {
-        Write-Host "`n---> Verifying native CityScape.exe terrain unlock..." -ForegroundColor Yellow
-        & $pyCmd tools\apply_native_patch.py
-    }
+# Ensure Vulkan 1.3 translation layer (DXVK) is the default 3D backend
+if (Test-Path "lib\d3d9_dxvk.dll") {
+    Copy-Item "lib\d3d9_dxvk.dll" -Destination "$binDist\d3d9.dll" -Force
+    Copy-Item "lib\d3d9_dxvk.dll" -Destination "d3d9.dll" -Force
 }
 
 # Compile modern x64 and ARM64 branch targets

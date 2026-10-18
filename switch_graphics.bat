@@ -1,52 +1,71 @@
 @echo off
 setlocal
-echo ========================================================
-echo   CityScape 1.8 3D Graphics Backend Switcher
-echo ========================================================
+title CityScape 1.8 Graphics Backend Switcher
 
-if "%~1"=="" goto usage
-if /I "%~1"=="vulkan" goto do_vulkan
-if /I "%~1"=="directx" goto do_dx
-if /I "%~1"=="dx12" goto do_dx
-if /I "%~1"=="native" goto do_native
-if /I "%~1"=="dx9" goto do_native
-goto usage
+set "PARAM=%~1"
+
+if not "%PARAM%"=="" goto handle_param
+
+:menu
+cls
+echo ========================================================
+echo   CityScape 1.8 - 3D Graphics Backend Switcher
+echo ========================================================
+echo.
+echo   [1] Khronos Vulkan 1.3 [DXVK on RTX 4060] - VARSAYILAN / ONERILEN
+echo   [2] DirectX 11 / 12 [dgVoodoo Flip-Model]
+echo   [3] Orijinal Windows Direct3D 9 [Native]
+echo.
+set /p "CHOICE=Seciminiz [1/2/3, Varsayilan: 1]: "
+if "%CHOICE%"=="" set "CHOICE=1"
+if "%CHOICE%"=="1" goto do_vulkan
+if "%CHOICE%"=="2" goto do_dx
+if "%CHOICE%"=="3" goto do_native
+goto menu
+
+:handle_param
+if /I "%PARAM%"=="vulkan" goto do_vulkan
+if /I "%PARAM%"=="directx" goto do_dx
+if /I "%PARAM%"=="dx12" goto do_dx
+if /I "%PARAM%"=="native" goto do_native
+if /I "%PARAM%"=="dx9" goto do_native
+goto menu
 
 :do_vulkan
-echo [SWITCH] Activating Khronos Vulkan 1.3 backend [DXVK]...
+echo.
+echo [SWITCH] Khronos Vulkan 1.3 [DXVK] aktif ediliyor...
 if exist "%~dp0lib\d3d9_dxvk.dll" (
     copy /Y "%~dp0lib\d3d9_dxvk.dll" "%~dp0d3d9.dll" >nul
     if exist "%~dp0bin\Release\net48" copy /Y "%~dp0lib\d3d9_dxvk.dll" "%~dp0bin\Release\net48\d3d9.dll" >nul
-    echo [OK] Active backend is now VULKAN 1.3 [DXVK].
-    exit /b 0
+    echo [BASARILI] Aktif 3B Motor: VULKAN 1.3 [DXVK]
 ) else (
-    echo [ERROR] lib\d3d9_dxvk.dll not found!
-    exit /b 1
+    echo [HATA] lib\d3d9_dxvk.dll bulunamadi!
 )
+goto end
 
 :do_dx
-echo [SWITCH] Activating DirectX 11 / 12 backend [dgVoodoo]...
+echo.
+echo [SWITCH] DirectX 11 / 12 [dgVoodoo] aktif ediliyor...
 if exist "%~dp0lib\d3d9_dgvoodoo.dll" (
     copy /Y "%~dp0lib\d3d9_dgvoodoo.dll" "%~dp0d3d9.dll" >nul
     if exist "%~dp0bin\Release\net48" copy /Y "%~dp0lib\d3d9_dgvoodoo.dll" "%~dp0bin\Release\net48\d3d9.dll" >nul
-    echo [OK] Active backend is now DIRECTX 11 / 12 [dgVoodoo].
-    exit /b 0
+    echo [BASARILI] Aktif 3B Motor: DIRECTX 11 / 12 [dgVoodoo]
 ) else (
-    echo [ERROR] lib\d3d9_dgvoodoo.dll not found!
-    exit /b 1
+    echo [HATA] lib\d3d9_dgvoodoo.dll bulunamadi!
 )
+goto end
 
 :do_native
-echo [SWITCH] Activating Native Direct3D 9 backend...
+echo.
+echo [SWITCH] Orijinal Windows Direct3D 9 aktif ediliyor...
 if exist "%~dp0d3d9.dll" del /F "%~dp0d3d9.dll"
 if exist "%~dp0bin\Release\net48\d3d9.dll" del /F "%~dp0bin\Release\net48\d3d9.dll"
-echo [OK] Active backend is now NATIVE DIRECT3D 9.
-exit /b 0
+echo [BASARILI] Aktif 3B Motor: YEREL DIRECT3D 9
+goto end
 
-:usage
-echo Usage:
-echo   switch_graphics.bat vulkan     - Use Khronos Vulkan 1.3 via DXVK
-echo   switch_graphics.bat directx    - Use DirectX 11 / 12 via dgVoodoo
-echo   switch_graphics.bat native     - Use Native Windows Direct3D 9
+:end
 echo.
+echo CityScape.exe secilen grafik motoruyla baslatilmaya hazir.
+echo.
+if "%PARAM%"=="" pause
 exit /b 0
