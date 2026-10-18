@@ -701,38 +701,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 			g.DrawString("Z", axFont, bWhite, pAxisZ.X + 2, pAxisZ.Y - 8);
 		}
 
-		// 7. Glassmorphism Viewport HUD Overlay
-		int hudW = Math.Min(640, w - 32);
-		int hudH = 118;
-		Rectangle hudRect = new Rectangle(16, 16, hudW, hudH);
-		using (SolidBrush hudBg = new SolidBrush(Color.FromArgb(215, 24, 28, 34)))
-		using (Pen hudBorder = new Pen(Color.FromArgb(60, 80, 100), 1.2f))
-		{
-			g.FillRectangle(hudBg, hudRect);
-			g.DrawRectangle(hudBorder, hudRect);
-		}
-
-		using (Font titleFont = new Font("Segoe UI", 10.5f, FontStyle.Bold))
-		using (Font textFont = new Font("Segoe UI", 8.5f, FontStyle.Regular))
-		using (SolidBrush whiteBrush = new SolidBrush(Color.FromArgb(240, 245, 250)))
-		using (SolidBrush cyanBrush = new SolidBrush(Color.FromArgb(0, 220, 255)))
-		using (SolidBrush greenBrush = new SolidBrush(Color.FromArgb(120, 240, 140)))
-		using (SolidBrush goldBrush = new SolidBrush(Color.FromArgb(255, 215, 80)))
-		using (SolidBrush dimBrush = new SolidBrush(Color.FromArgb(160, 180, 200)))
-		{
-			g.DrawString("PixelActive CityScape 1.8 Viewport [Perspective 3D Terrain Mode]", titleFont, whiteBrush, 26, 22);
-			g.DrawString(string.Format("Physical Extents: {0:N0}m × {1:N0}m | Physical Area: {2:F2} km² (Aspect: {3:F1}:1)",
-				terrain.SizeX, terrain.SizeY, terrain.AreaSquareKilometers, terrain.AspectRatio), textFont, cyanBrush, 26, 43);
-			g.DrawString(string.Format("Tile Grid: {0} × {1} (Tile Size: {2:N0}m × {3:N0}m) | Sampling: {4:F2}m ({5:N0} samples)",
-				terrain.TileCountX, terrain.TileCountY, terrain.TileSizeX, terrain.TileSizeY, terrain.SamplingDistance, terrain.TotalSamplePoints), textFont, greenBrush, 26, 62);
-			g.DrawString(string.Format("3D Engine: {0} [{1}] | CDLOD: {2} chunks ({3} culled) | Async Cache: {4} meshes ({5} pending)",
-				GraphicsBackendManager.ActiveBackendType, GraphicsBackendManager.CurrentArchitecture, cdlodChunks.Count, terrainChunksCulled,
-				AsyncMeshWorker.CompletedCacheCount, AsyncMeshWorker.PendingQueueCount), textFont, goldBrush, 26, 81);
-			string bldStat = ActiveBuildings.Count > 0
-				? string.Format("3D Buildings: {0:N0} vis / {1:N0} tot (Culled Nodes: {2}/{3})", renderedBuildings, ActiveBuildings.Count, nodesCulled, nodesTested)
-				: "3D Buildings: 0";
-			g.DrawString(string.Format("Camera Distance: {0:N0}m | {1} | Controls: LMB=Orbit | RMB/Shift=Pan | Scroll=Zoom | F/Home=Fit", camDist, bldStat), textFont, dimBrush, 26, 100);
-		}
 	}
 
 	[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
