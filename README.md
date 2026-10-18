@@ -18,27 +18,20 @@ Open-source reconstruction, modernization, and preservation of **PixelActive Cit
 
 Bu depo, PixelActive / Autodesk tarafından 2010 yılında geliştirilen **CityScape 1.8** kentsel modelleme ve 3B şehir simülasyonu yazılımının tersine mühendislik ile açık kaynak hale getirilmiş, modernize edilmiş ve derlenebilir sürümünü içerir:
 - **REA (Reverse Engineer Anything)** ve **ILSpy** kullanılarak tüm .NET kütüphaneleri ve arayüz modülleri decompile edilip modernize edilmiştir.
-- **Çoklu Grafik Altyapısı (Multi-Backend 3D Engine)**:
-  - **Microsoft DirectX 12 (D3D12 / DXGI 1.6)**: HLSL SM6+ DXIL derleme, açık kök imzaları (Root Signatures), tanımlayıcı tabloları (Descriptor Tables) ve modern flip-model swapchain.
-  - **Khronos Vulkan 1.3**: Yerel SPIR-V bytecode işleme, dinamik çizim (`VK_KHR_dynamic_rendering`) ve optimize `VkDescriptorSetLayout` yönetimi.
-  - **DirectX 9 Legacy Geriye Dönük Uyumluluk**: Orijinal Direct3D 9 motoru, eski bilgisayarlar için %100 kararlı fallback olarak korunmuştur.
-- **Çoklu Donanım Mimarisi Desteği (Multi-Architecture Targets)**:
-  - **x64 Modern (`CityScape_x64.exe`)**: 64-bit bellek adresleme, dinamik `RemotePtr.Use64Bit` serileştirme ve modern Windows 11 entegrasyonu.
-  - **ARM64 Modern (`CityScape_ARM64.exe`)**: Snapdragon X Elite ve ARM64 Windows cihazlar için yerel derlenmiş yürütülebilir dosya.
-  - **x86 Legacy (`CityScape.exe` - 49.07 MB & `CityScape_Managed.exe`)**: Kilitleri açılmış 10.000m+ dev arazi sistemi.
-- **Modern Shader & Render Pipeline**:
-  - **Cook-Torrance GGX PBR**: Gerçek zamanlı mikro yüzey metalik/pürüzlülük ışıklandırma modeli.
-  - **CDLOD (Continuous Distance Level-of-Detail)**: Araziler için sürekli ve pürüzsüz adaptif teğetsel tessellation.
-  - **Slope-Based Multi-Layer Splatting**: Eğim açısına göre kaya, çimen ve toprak dokularını gerçekçi harmanlama.
-  - **Gerstner Waves**: 3B çok harmonikli okyanus ve su yüzeyi dalga simülasyonu.
+- **Gerçek 3B Motor (`CityScape.exe` - 49.07 MB)**:
+  - PixelActive'in orijinal tam 3B motorunu, Direct3D 9 donanımsal çizim hattını, prosedürel yol ağlarını, arazi LOD sistemini ve COLLADA entegrasyonunu içerir.
+  - Decompile edilip .NET 4.8'e modernize edilen açık kaynak kütüphanelerimizle (`palDotNet.dll`, `edEditorDotNet.dll`, `ktKitDotNet.dll`, `gisImageryDotNet.dll`) %100 uyumlu olarak çalışır.
+- **Yönetilen Test Kabukları (Managed Shells - `CityScape_Managed.exe`, `CityScape_x64.exe`, `CityScape_ARM64.exe`)**:
+  - Saf C# (.NET Framework 4.8) ile derlenen, C++ bağımlılığı olmadan arayüz, dock panel, PropertyGrid ve layout yapılarını test etmek ve hata ayıklamak için geliştirilmiş hafif geliştirici kabuklarıdır.
+  - 32-bit yerel makine kodu içermedikleri için yedek GDI+ tuvali üzerinden UI durumunu doğrularlar.
 - **Modern 3B Dışa Aktarıcılar (Modern 3D Exporters)**:
   - **Khronos glTF 2.0 / GLB Binary**: Blender, Unreal Engine 5, Unity ve Three.js için tam ikili BIN/JSON tamponları.
   - **Pixar USD / USDA**: Pixar Universal Scene Description ve NVIDIA Omniverse uyumluluğu.
   - **Wavefront OBJ + PBR MTL**: Geleneksel 3B yazılımlar için normal ve roughness/metallic destekli materyaller.
 - **Otomatik Taşınabilir Paketleme (`package.bat` / `tools/package.ps1`)**:
+  - `dist/CityScape_1.8_Legacy_x86_Portable.zip` (Tam 49 MB D3D9 Motorlu Sürüm)
   - `dist/CityScape_1.8_Modern_x64_Portable.zip`
   - `dist/CityScape_1.8_Modern_ARM64_Portable.zip`
-  - `dist/CityScape_1.8_Legacy_x86_Portable.zip`
   - `dist/CityScape_1.8_Decompiled_Edition_Complete.zip`
   - SHA-256 kriptografik doğrulama defteri (`dist/SHA256SUMS.txt`).
 
@@ -104,20 +97,18 @@ Validates staged binaries, CLI flags, PE hardware targets, CSP world parsing, PA
 
 ---
 
-## 🎮 Command-Line Usage
+## 🎮 Çalıştırma & Kullanım (Execution & Usage)
 
 ```cmd
-# Launch modern 64-bit engine with DirectX 12
-CityScape_x64.exe --backend=dx12
+# 1. Ana ve Tam Fonksiyonel 3B Şehir Motoru (Direct3D 9, Yol & Bina Çizimi, Arazi)
+CityScape.exe
 
-# Launch modern 64-bit engine with Vulkan 1.3
-CityScape_x64.exe --backend=vulkan
+# Belirli bir dünyayı doğrudan açmak için:
+CityScape.exe Worlds\sample.csp
 
-# Print detailed GPU hardware diagnostics
+# 2. Yönetilen Test / Hata Ayıklama Kabuğu (.NET Diagnostik & Layout İncelemesi)
+CityScape_Managed.exe --diagnostics
 CityScape_x64.exe --diagnostics
-
-# Launch legacy 32-bit DirectX 9 engine
-CityScape_Managed.exe --backend=dx9
 ```
 
 ---

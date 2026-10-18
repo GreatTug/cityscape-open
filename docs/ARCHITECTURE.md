@@ -80,3 +80,8 @@ In MSVC 2008 C++/CLI (`/clr`), a single executable can statically link unmanaged
 All managed .NET assemblies (`palDotNet.dll`, `edEditorDotNet.dll`, `ktKitDotNet.dll`, `gisImageryDotNet.dll`, `BugReporter.exe`) have been 100% decompiled, modernized to .NET 4.8, and recompiled with **0 errors and 0 warnings**.
 Both executables are verified live in the automated test suite (`test.bat`).
 
+#### Viewport System Distinction:
+* **Gerçek 3B Direct3D 9 Viewport (`CityScape.exe`)**: `CityScape.exe` çalıştırıldığında C++ motoru `WidgetMgr` üzerinden `RenderWindow` nesnesini WinForms `ControlRender.Handle` (`HWND`) adresine bağlar. Tüm 3B sahne, yollar, binalar, araziler ve kamera kontrolleri doğrudan GPU üzerinde Direct3D 9 ile render edilir.
+* **Yönetilen Test Kabuğu (`CityScape_Managed.exe` / `CityScape_x64.exe`)**: 64-bit veya saf C# ortamında 32-bit yerel C++ motoru bellek alanına yüklenemediği için `TheRenderWindow` nesnesi `null` kalır. Bu durumdaki GDI+ çizimi sadece pencere düzenini ve kontrolleri test etmek için kullanılan bir yedek görselleştirmedir.
+
+
