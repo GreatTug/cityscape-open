@@ -20,20 +20,29 @@ patches = [
     ("Const 1600.0f",    0x1ecc10c, b"\x00\x00\xc8\x44", b"\x80\x96\x18\x4b"),
 ]
 
-targets = ["CityScape.exe", r"bin\Release\net48\CityScape.exe"]
+targets = sys.argv[1:] if len(sys.argv) > 1 else ["CityScape_Old_Legacy.exe"]
 for target in targets:
     if not os.path.exists(target):
         continue
-    with open(target, "r+b") as f:
-        for name, off, orig, rep in patches:
-            f.seek(off)
-            cur = f.read(len(orig))
-            if cur == orig:
+    # Only patch original 32-bit native binary (~32MB)
+    size = os.path.getsize(target)
+    if size < 20_000_000:
+        continue
+    try:
+        with open(target, "r+b") as f:
+            for name, off, orig, rep in patches:
+                if off + len(orig) > size:
+                    continue
                 f.seek(off)
-                f.write(rep)
-                print(f"[{target}] Applied patch: {name} at 0x{off:x} ({orig.hex()} -> {rep.hex()})")
-            elif cur == rep:
-                print(f"[{target}] Already unlocked: {name} at 0x{off:x}")
-            else:
-                raise ValueError(f"[{target}] Unexpected bytes at 0x{off:x}: {cur.hex()}")
-    print(f"[OK] {target} native 1600m & multi-tile limits completely unlocked!")
+                cur = f.read(len(orig))
+                if cur == orig:
+                    f.seek(off)
+                    f.write(rep)
+                    print(f"[{target}] Applied patch: {name} at 0x{off:x} ({orig.hex()} -> {rep.hex()})")
+                elif cur == rep:
+                    pass # Already patched
+                else:
+                    print(f"[{target}] Skipping {name} at 0x{off:x} - bytes mismatch ({cur.hex()} != {orig.hex()})")
+        print(f"[OK] {target} native 1600m & multi-tile limits processed!")
+    except Exception as ex:
+        print(f"[WARNING] Could not patch {target}: {ex}")

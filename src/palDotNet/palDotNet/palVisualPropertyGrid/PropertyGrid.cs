@@ -427,10 +427,14 @@ public class PropertyGrid : VisualHint.SmartPropertyGrid.PropertyGrid
 
 	public void SaveComponentSettings(string settingsKey)
 	{
-		GetConfigSettings(settingsKey);
-		TheConfigSettings.LabelColumnWidthRatio = base.LabelColumnWidthRatio;
-		TheConfigSettings.CommentsHeight = base.CommentsHeight;
-		TheConfigSettings.Save();
+		try
+		{
+			GetConfigSettings(settingsKey);
+			TheConfigSettings.LabelColumnWidthRatio = base.LabelColumnWidthRatio;
+			TheConfigSettings.CommentsHeight = base.CommentsHeight;
+			TheConfigSettings.Save();
+		}
+		catch { }
 	}
 
 	public void ResetComponentSettings(string settingsKey)

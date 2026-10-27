@@ -172,12 +172,9 @@ public class TerrainSettingsDialog : DialogBoxBase
 		return mTerrainSettingsPanel;
 	}
 
-	public Button OkButton => okButton;
-
 	private void mTerrainSettingsPanel_TerrainValueChanged(object sender, EventArgs e)
 	{
 		ClearMessageInfo();
-		mTerrainSettingsPanel?.WriteValuesToNativeStorage();
 		SyncOkButton();
 	}
 
@@ -284,14 +281,7 @@ public class TerrainSettingsDialog : DialogBoxBase
 
 	private void okButton_Click(object sender, EventArgs e)
 	{
-		mTerrainSettingsPanel?.WriteValuesToNativeStorage();
 		base.DialogResult = DialogResult.OK;
-	}
-
-	protected override void OnFormClosing(FormClosingEventArgs e)
-	{
-		mTerrainSettingsPanel?.WriteValuesToNativeStorage();
-		base.OnFormClosing(e);
 	}
 
 	private void ProjectFilePath_KeyPress(object sender, KeyPressEventArgs e)

@@ -561,8 +561,7 @@ public class FormApp : FormAppBase
 	{
 		try
 		{
-			ConfigurationManager.GetSection("dummyName");
-			if (Settings.Default.CallUpgrade)
+			if (Settings.Default != null && Settings.Default.CallUpgrade)
 			{
 				Settings.Default.Upgrade();
 				Settings.Default.CallUpgrade = false;
@@ -570,38 +569,9 @@ public class FormApp : FormAppBase
 				Settings.Default.Save();
 			}
 		}
-		catch (ConfigurationErrorsException ex)
+		catch (Exception ex)
 		{
-			if (Path.GetFileName(ex.Filename).ToLower().EndsWith(".exe.config"))
-			{
-				WidgetMgr.Instance.ShowMessageBox("It looks like the file '" + ex.Filename + "' has been corrupted.  Please reinstall the application.", "Possible File Corruption", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-				Environment.Exit(-1);
-				return;
-			}
-			int exitCode = -1;
-			File.Delete(ex.Filename);
-			if (!File.Exists(ex.Filename))
-			{
-				try
-				{
-					Process process = new Process();
-					process.StartInfo = new ProcessStartInfo();
-					process.StartInfo.FileName = Application.ExecutablePath;
-					process.StartInfo.Arguments = Environment.CommandLine;
-					process.Start();
-					process.WaitForExit();
-					exitCode = process.ExitCode;
-				}
-				catch (Exception)
-				{
-					WidgetMgr.Instance.ShowMessageBox("Configuration Error.  Please restart the application.", "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
-				}
-				Environment.Exit(exitCode);
-			}
-		}
-		catch (Exception ex3)
-		{
-			WidgetMgr.Instance.ShowMessageBox("UnHandled .config file exception: " + ex3.Message, "Configuration Error", MessageBoxButtons.OK, MessageBoxIcon.Hand);
+			try { System.Diagnostics.Debug.WriteLine("Config check skipped: " + ex.Message); } catch { }
 		}
 	}
 

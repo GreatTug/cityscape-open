@@ -57,6 +57,10 @@ public class ListViewControl : ItemViewControl, IWidgetPanelControl
 
 	private IContainer components;
 
+	[Browsable(false)]
+	[ReadOnly(true)]
+	public System.Windows.Forms.ListView UnderlyingListView { get { return listView1; } }
+
 	private ListViewDerived listView1;
 
 	private ColumnHeader columnHeader1;

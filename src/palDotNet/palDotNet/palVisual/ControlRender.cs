@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Security.Permissions;
 using System.Windows.Forms;
 using palDotNet.palWidgets;
-using palDotNet.palModernEngine;
 
 namespace palDotNet.palVisual;
 
@@ -31,51 +29,6 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	private int LastYRes;
 
 	private static List<ControlRender> ControlRenders = new List<ControlRender>();
-
-	// Data models maintained for subsystem compatibility
-	public static TerrainSurfaceData ActiveTerrain { get; set; } = TerrainSurfaceData.CreateDefault();
-	public static List<GisBuildingInstance> ActiveBuildings { get; } = new List<GisBuildingInstance>();
-	public static SpatialQuadtree<GisBuildingInstance> BuildingSpatialIndex { get; private set; }
-	public static CdlodTerrainQuadtree TerrainCdlodTree { get; private set; }
-	public static CdlodAsyncMeshWorker AsyncMeshWorker { get; } = new CdlodAsyncMeshWorker();
-
-	public static void SetActiveBuildings(IEnumerable<GisBuildingInstance> buildings)
-	{
-		ActiveBuildings.Clear();
-		if (buildings != null)
-		{
-			ActiveBuildings.AddRange(buildings);
-		}
-
-		float halfX = Math.Max(1000f, (ActiveTerrain?.SizeX ?? 2000f) * 0.5f);
-		float halfZ = Math.Max(1000f, (ActiveTerrain?.SizeY ?? 2000f) * 0.5f);
-		var worldBounds = new BoundingBox3D(-halfX, -100f, -halfZ, halfX, 2000f, halfZ);
-		BuildingSpatialIndex = new SpatialQuadtree<GisBuildingInstance>(worldBounds, 6, 16);
-		if (buildings != null)
-		{
-			foreach (var b in buildings)
-			{
-				BuildingSpatialIndex.Insert(b);
-			}
-		}
-
-		foreach (ControlRender cr in ControlRenders)
-		{
-			cr.Invalidate();
-		}
-	}
-
-	public static void SetActiveTerrain(TerrainSurfaceData terrain, bool resetCamera = false)
-	{
-		if (terrain == null) return;
-		ActiveTerrain = terrain;
-		TerrainCdlodTree = new CdlodTerrainQuadtree(terrain, 4);
-		AsyncMeshWorker.ClearCache();
-		foreach (ControlRender cr in ControlRenders)
-		{
-			cr.Invalidate();
-		}
-	}
 
 	private MouseButtons CurrentMouseButtons;
 
@@ -293,6 +246,11 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 		}
 	}
 
+	protected override void OnPaint(PaintEventArgs pe)
+	{
+		base.OnPaint(pe);
+	}
+
 	[PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
 	protected override void WndProc(ref Message m)
 	{
@@ -412,29 +370,13 @@ public class ControlRender : DragDropControl, IRenderWindowVisual
 	protected override void OnKeyDown(KeyEventArgs e)
 	{
 		Focus();
-		if (WidgetMgr.Instance != null)
-		{
-			WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyPressed);
-		}
+		WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyPressed);
 		base.OnKeyDown(e);
-	}
-
-	public void ResetCamera()
-	{
-		// Camera reset handled via RenderWindow / WidgetMgr in native engine
-	}
-
-	public void FitCameraToExtents()
-	{
-		// Camera extents framing handled via RenderWindow / WidgetMgr in native engine
 	}
 
 	protected override void OnKeyUp(KeyEventArgs e)
 	{
-		if (WidgetMgr.Instance != null)
-		{
-			WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyReleased);
-		}
+		WidgetMgr.Instance.SendKeyInfo(e.KeyData & Keys.KeyCode, WidgetBase.CoreMessages.eKeyReleased);
 		base.OnKeyUp(e);
 	}
 

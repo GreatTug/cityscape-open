@@ -65,8 +65,8 @@ def test_all_ui():
     # 1. Test CityScape.exe (49 MB Full Native 3D Engine with Open-Source DLLs)
     verify_window("CityScape.exe", ["Worlds\\sample.csp"], wait_time=6)
 
-    # 2. Test CityScape_Managed.exe (Legacy x86 Managed Launcher)
-    verify_window("CityScape_Managed.exe", ["Worlds\\sample.csp"], wait_time=6)
+    # 2. Test CityScape_Managed.exe (Legacy x86 Managed Launcher in bin/Release/net48)
+    verify_window("bin\\Release\\net48\\CityScape_Managed.exe", ["Worlds\\sample.csp"], wait_time=6)
 
     # 3. Test CityScape_x64.exe (Modern 64-bit DX12/Vulkan Launcher)
     verify_window("bin\\Release\\net48\\CityScape_x64.exe", ["Worlds\\sample.csp"], wait_time=8)

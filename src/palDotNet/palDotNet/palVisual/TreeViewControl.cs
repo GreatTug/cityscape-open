@@ -32,6 +32,10 @@ public class TreeViewControl : ItemViewControl, IWidgetPanelControl
 
 	[Browsable(false)]
 	[ReadOnly(true)]
+	public System.Windows.Forms.TreeView UnderlyingTreeView { get { return treeView1; } }
+
+	[Browsable(false)]
+	[ReadOnly(true)]
 	public WidgetPanel WidgetPanel
 	{
 		get

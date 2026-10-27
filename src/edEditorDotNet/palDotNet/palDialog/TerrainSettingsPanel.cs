@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
-using System.Reflection;
 using System.Windows.Forms;
-using palDotNet.palVisual;
 
 namespace palDotNet.palDialog;
 
@@ -91,8 +88,6 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 	private bool ForceSingleTile;
 
 	private bool EnableComputeTileCountValues = true;
-
-	private bool mIsUpdatingTiles;
 
 	public DialogCheckGroupBox GeolocatedCheckGroupBox
 	{
@@ -202,42 +197,6 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		}
 	}
 
-	public DialogNumericUpDownFloat TileSizeX
-	{
-		get => TileSizeXInput;
-		set => TileSizeXInput = value;
-	}
-
-	public DialogNumericUpDownFloat TileSizeY
-	{
-		get => TileSizeYInput;
-		set => TileSizeYInput = value;
-	}
-
-	public DialogNumericUpDownInt TileCountX
-	{
-		get => TileCountXInput;
-		set => TileCountXInput = value;
-	}
-
-	public DialogNumericUpDownInt TileCountY
-	{
-		get => TileCountYInput;
-		set => TileCountYInput = value;
-	}
-
-	public DialogNumericUpDownFloat SamplingDistance
-	{
-		get => SamplingDistanceInput;
-		set => SamplingDistanceInput = value;
-	}
-
-	public DialogLabel MaxTerrainSizeInfoLabel
-	{
-		get => MaxTerrainSizeInfo;
-		set => MaxTerrainSizeInfo = value;
-	}
-
 	public Button SetRegionFromFileButton => SetRegionFromFileBtn;
 
 	public Button ClearGeolocationValuesButton => ClearRegionBtn;
@@ -342,22 +301,16 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.MaxTerrainSizeInfo.SaveToConfig = false;
 		this.MaxTerrainSizeInfo.Size = new System.Drawing.Size(70, 13);
 		this.MaxTerrainSizeInfo.TabIndex = 15;
-		this.MaxTerrainSizeInfo.Text = "Unlimited (Sınırsız)";
+		this.MaxTerrainSizeInfo.Text = "--- km x --- km";
 		this.SamplingDistanceInput.DecimalPlaces = 2;
 		this.SamplingDistanceInput.Increment = new decimal(new int[4] { 1, 0, 0, 65536 });
 		this.SamplingDistanceInput.Location = new System.Drawing.Point(185, 259);
-		this.SamplingDistanceInput.Maximum = new decimal(new int[4] { 100000, 0, 0, 0 });
-		this.SamplingDistanceInput.Minimum = new decimal(new int[4] { 1, 0, 0, 131072 });
 		this.SamplingDistanceInput.Name = "SamplingDistanceInput";
 		this.SamplingDistanceInput.SaveToConfig = true;
 		this.SamplingDistanceInput.Size = new System.Drawing.Size(100, 20);
 		this.SamplingDistanceInput.TabIndex = 13;
 		this.SamplingDistanceInput.Value = new decimal(new int[4] { 2, 0, 0, 0 });
-		this.SamplingDistanceInput.ForceEnabled = true;
-		this.SamplingDistanceInput.Enabled = true;
-		this.SamplingDistanceInput.ReadOnly = false;
 		this.SamplingDistanceLabel.AutoSize = true;
-		this.SamplingDistanceLabel.Enabled = true;
 		this.SamplingDistanceLabel.Location = new System.Drawing.Point(25, 261);
 		this.SamplingDistanceLabel.Name = "SamplingDistanceLabel";
 		this.SamplingDistanceLabel.SaveToConfig = false;
@@ -372,24 +325,20 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.MaxTerrainSizeLabel.Size = new System.Drawing.Size(83, 13);
 		this.MaxTerrainSizeLabel.TabIndex = 14;
 		this.MaxTerrainSizeLabel.Text = "Max terrain size:";
-		this.TileCountYInput.Enabled = true;
+		this.TileCountYInput.Enabled = false;
 		this.TileCountYInput.Location = new System.Drawing.Point(185, 192);
-		this.TileCountYInput.Maximum = new decimal(new int[4] { 100000, 0, 0, 0 });
-		this.TileCountYInput.Minimum = new decimal(new int[4] { 1, 0, 0, 0 });
+		this.TileCountYInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
 		this.TileCountYInput.Name = "TileCountYInput";
 		this.TileCountYInput.SaveToConfig = true;
 		this.TileCountYInput.Size = new System.Drawing.Size(100, 20);
 		this.TileCountYInput.TabIndex = 11;
-		this.TileCountYInput.Value = new decimal(new int[4] { 1, 0, 0, 0 });
-		this.TileCountXInput.Enabled = true;
+		this.TileCountXInput.Enabled = false;
 		this.TileCountXInput.Location = new System.Drawing.Point(185, 165);
-		this.TileCountXInput.Maximum = new decimal(new int[4] { 100000, 0, 0, 0 });
-		this.TileCountXInput.Minimum = new decimal(new int[4] { 1, 0, 0, 0 });
+		this.TileCountXInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
 		this.TileCountXInput.Name = "TileCountXInput";
 		this.TileCountXInput.SaveToConfig = true;
 		this.TileCountXInput.Size = new System.Drawing.Size(100, 20);
 		this.TileCountXInput.TabIndex = 9;
-		this.TileCountXInput.Value = new decimal(new int[4] { 1, 0, 0, 0 });
 		this.TerrainSizeYInput.DecimalPlaces = 2;
 		this.TerrainSizeYInput.Location = new System.Drawing.Point(185, 61);
 		this.TerrainSizeYInput.Maximum = new decimal(new int[4] { 10000000, 0, 0, 0 });
@@ -618,15 +567,14 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.TileResolutionXLabel.TabIndex = 8;
 		this.TileResolutionXLabel.Text = "Tile count X:";
 		this.TileSizeYInput.DecimalPlaces = 2;
-		this.TileSizeYInput.Enabled = true;
 		this.TileSizeYInput.Location = new System.Drawing.Point(185, 126);
-		this.TileSizeYInput.Maximum = new decimal(new int[4] { 10000000, 0, 0, 0 });
+		this.TileSizeYInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
 		this.TileSizeYInput.Minimum = new decimal(new int[4] { 10, 0, 0, 0 });
 		this.TileSizeYInput.Name = "TileSizeYInput";
 		this.TileSizeYInput.SaveToConfig = true;
 		this.TileSizeYInput.Size = new System.Drawing.Size(100, 20);
 		this.TileSizeYInput.TabIndex = 7;
-		this.TileSizeYInput.Value = new decimal(new int[4] { 1024, 0, 0, 0 });
+		this.TileSizeYInput.Value = new decimal(new int[4] { 5120, 0, 0, 65536 });
 		this.TileSizeYLabel.AutoSize = true;
 		this.TileSizeYLabel.Location = new System.Drawing.Point(25, 128);
 		this.TileSizeYLabel.Name = "TileSizeYLabel";
@@ -635,15 +583,14 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.TileSizeYLabel.TabIndex = 6;
 		this.TileSizeYLabel.Text = "Tile size Y (meters):";
 		this.TileSizeXInput.DecimalPlaces = 2;
-		this.TileSizeXInput.Enabled = true;
 		this.TileSizeXInput.Location = new System.Drawing.Point(185, 100);
-		this.TileSizeXInput.Maximum = new decimal(new int[4] { 10000000, 0, 0, 0 });
+		this.TileSizeXInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
 		this.TileSizeXInput.Minimum = new decimal(new int[4] { 10, 0, 0, 0 });
 		this.TileSizeXInput.Name = "TileSizeXInput";
 		this.TileSizeXInput.SaveToConfig = true;
 		this.TileSizeXInput.Size = new System.Drawing.Size(100, 20);
 		this.TileSizeXInput.TabIndex = 5;
-		this.TileSizeXInput.Value = new decimal(new int[4] { 1024, 0, 0, 0 });
+		this.TileSizeXInput.Value = new decimal(new int[4] { 5120, 0, 0, 65536 });
 		this.TileSizeXLabel.AutoSize = true;
 		this.TileSizeXLabel.Location = new System.Drawing.Point(25, 102);
 		this.TileSizeXLabel.Name = "TileSizeXLabel";
@@ -689,17 +636,10 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 	public void OnShown()
 	{
 		ClearMessageInfo();
-		SamplingDistanceInput.ForceEnabled = true;
-		SamplingDistanceInput.Enabled = true;
-		SamplingDistanceInput.ReadOnly = false;
-		SamplingDistanceLabel.Enabled = true;
 		TerrainSizeXInput.ValueChanged += TerrainSize_ValueChanged;
 		TerrainSizeYInput.ValueChanged += TerrainSize_ValueChanged;
 		TileSizeXInput.ValueChanged += TileSize_ValueChanged;
 		TileSizeYInput.ValueChanged += TileSize_ValueChanged;
-		TileCountXInput.ValueChanged += TileCount_ValueChanged;
-		TileCountYInput.ValueChanged += TileCount_ValueChanged;
-		SamplingDistanceInput.ValueChanged += SamplingDistance_ValueChanged;
 		if (GeolocatedTerrainCheckGroupBox.Checked)
 		{
 			GeolocatedTerrainCheckGroupBox.Checked = false;
@@ -707,74 +647,17 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		}
 		HandleForceSingleTile();
 		ComputeTileCountValues();
-		WriteValuesToNativeStorage();
-	}
-
-	private void SamplingDistance_ValueChanged(object sender, EventArgs e)
-	{
-		OnTerrainValueChanged(new EventArgs());
 	}
 
 	private void TerrainSize_ValueChanged(object sender, EventArgs e)
 	{
-		if (mIsUpdatingTiles) return;
-		mIsUpdatingTiles = true;
-		try
-		{
-			if (TileCountXInput.Value <= 1m)
-			{
-				TileSizeXInput.Value = Math.Max(TileSizeXInput.Minimum, Math.Min(TileSizeXInput.Maximum, TerrainSizeXInput.Value));
-			}
-			else if (TileSizeXInput.Value > TerrainSizeXInput.Value && TerrainSizeXInput.Value >= TileSizeXInput.Minimum)
-			{
-				TileSizeXInput.Value = TerrainSizeXInput.Value;
-			}
-
-			if (TileCountYInput.Value <= 1m)
-			{
-				TileSizeYInput.Value = Math.Max(TileSizeYInput.Minimum, Math.Min(TileSizeYInput.Maximum, TerrainSizeYInput.Value));
-			}
-			else if (TileSizeYInput.Value > TerrainSizeYInput.Value && TerrainSizeYInput.Value >= TileSizeYInput.Minimum)
-			{
-				TileSizeYInput.Value = TerrainSizeYInput.Value;
-			}
-		}
-		finally
-		{
-			mIsUpdatingTiles = false;
-		}
+		HandleForceSingleTile();
 		ComputeTileCountValues();
 	}
 
 	private void TileSize_ValueChanged(object sender, EventArgs e)
 	{
 		ComputeTileCountValues();
-	}
-
-	private void TileCount_ValueChanged(object sender, EventArgs e)
-	{
-		if (mIsUpdatingTiles) return;
-		mIsUpdatingTiles = true;
-		try
-		{
-			if (TileCountXInput.Value > 0m && TerrainSizeXInput.Value > 0m)
-			{
-				decimal calculatedSizeX = Math.Round(TerrainSizeXInput.Value / TileCountXInput.Value, 2);
-				calculatedSizeX = Math.Max(TileSizeXInput.Minimum, Math.Min(TileSizeXInput.Maximum, calculatedSizeX));
-				TileSizeXInput.Value = calculatedSizeX;
-			}
-			if (TileCountYInput.Value > 0m && TerrainSizeYInput.Value > 0m)
-			{
-				decimal calculatedSizeY = Math.Round(TerrainSizeYInput.Value / TileCountYInput.Value, 2);
-				calculatedSizeY = Math.Max(TileSizeYInput.Minimum, Math.Min(TileSizeYInput.Maximum, calculatedSizeY));
-				TileSizeYInput.Value = calculatedSizeY;
-			}
-			OnTerrainValueChanged(new EventArgs());
-		}
-		finally
-		{
-			mIsUpdatingTiles = false;
-		}
 	}
 
 	private void HandleForceSingleTile()
@@ -801,13 +684,11 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 
 	public void SetMaxTerrainSize(int maxSizeX, int maxSizeY)
 	{
-		int effectiveMaxX = Math.Max(maxSizeX, 10000000);
-		int effectiveMaxY = Math.Max(maxSizeY, 10000000);
-		TerrainSizeXInput.Maximum = effectiveMaxX;
-		TerrainSizeYInput.Maximum = effectiveMaxY;
-		TileSizeXInput.Maximum = effectiveMaxX;
-		TileSizeYInput.Maximum = effectiveMaxY;
-		MaxTerrainSizeInfo.Text = "Unlimited (Sınırsız)";
+		TerrainSizeXInput.Maximum = maxSizeX;
+		TerrainSizeYInput.Maximum = maxSizeY;
+		float num = (float)maxSizeX / 1000f;
+		float num2 = (float)maxSizeY / 1000f;
+		MaxTerrainSizeInfo.Text = num + " km × " + num2 + " km";
 	}
 
 	public float GetTerrainMaxSizeX()
@@ -834,37 +715,28 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 
 	public void SetTessellationSampleDist(float samplingDist)
 	{
-		if (samplingDist > 0f)
-		{
-			SamplingDistanceInput.Value = Math.Max(SamplingDistanceInput.Minimum, Math.Min(SamplingDistanceInput.Maximum, (decimal)samplingDist));
-		}
+		SamplingDistanceInput.Value = (decimal)samplingDist;
 	}
 
 	public void SetTessellationSampleDistRange(float minSampleDist, float maxSampleDist)
 	{
-		decimal min = (decimal)minSampleDist;
-		decimal max = (decimal)maxSampleDist;
-		if (min <= 0m) min = 0.01m;
-		if (max <= min || max < 100000m) max = 100000m;
-		SamplingDistanceInput.Minimum = min;
-		SamplingDistanceInput.Maximum = max;
+		SamplingDistanceInput.Minimum = (decimal)minSampleDist;
+		SamplingDistanceInput.Maximum = (decimal)maxSampleDist;
 	}
 
 	public void SetForceSingleTile(bool bForceSingleTile)
 	{
-		ForceSingleTile = false;
-		TileSizeXInput.Enabled = true;
-		TileSizeYInput.Enabled = true;
-		TileCountXInput.Enabled = true;
-		TileCountYInput.Enabled = true;
+		ForceSingleTile = bForceSingleTile;
+		if (ForceSingleTile)
+		{
+			TileSizeXInput.Enabled = false;
+			TileSizeYInput.Enabled = false;
+		}
 	}
 
 	public void SetEnableTessellationSampleDist(bool bEnabled)
 	{
-		SamplingDistanceInput.ForceEnabled = true;
-		SamplingDistanceInput.Enabled = true;
-		SamplingDistanceInput.ReadOnly = false;
-		SamplingDistanceLabel.Enabled = true;
+		SamplingDistanceInput.Enabled = bEnabled;
 	}
 
 	public void SetTerrainOrigin(double latitude, double longitude)
@@ -887,235 +759,9 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		RegionEastLongitudeInput.Value = 0m;
 	}
 
-	private unsafe void* mNativeDialogPointer = null;
-
-	public static unsafe void* GlobalNativeDialogPointer = null;
-
-	public unsafe void SetNativeDialogPointer(void* ptr)
-	{
-		mNativeDialogPointer = ptr;
-		GlobalNativeDialogPointer = ptr;
-	}
-
-	public unsafe void* GetNativeDialogPointer()
-	{
-		return FindNativeDialogPointer();
-	}
-
-	private unsafe static void* ExtractDialogPointerFromObject(object target)
-	{
-		if (target == null) return null;
-		FieldInfo fi = target.GetType().GetField("Dialog", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-		if (fi != null)
-		{
-			object val = fi.GetValue(target);
-			if (val != null)
-			{
-				try
-				{
-					return Pointer.Unbox(val);
-				}
-				catch
-				{
-				}
-			}
-		}
-		return null;
-	}
-
-	private unsafe static void* ExtractDialogPointerFromControl(Control c)
-	{
-		if (c == null) return null;
-
-		if (c is NumericUpDown)
-		{
-			FieldInfo fi = typeof(NumericUpDown).GetField("onValueChanged", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-			if (fi != null)
-			{
-				Delegate d = fi.GetValue(c) as Delegate;
-				if (d != null)
-				{
-					foreach (Delegate del in d.GetInvocationList())
-					{
-						void* ptr = ExtractDialogPointerFromObject(del.Target);
-						if (ptr != null) return ptr;
-					}
-				}
-			}
-		}
-
-		PropertyInfo prop = typeof(Control).GetProperty("Events", BindingFlags.Instance | BindingFlags.NonPublic);
-		if (prop != null)
-		{
-			object eventsObj = prop.GetValue(c, null);
-			EventHandlerList list = eventsObj as EventHandlerList;
-			if (list != null)
-			{
-				FieldInfo headField = typeof(EventHandlerList).GetField("head", BindingFlags.Instance | BindingFlags.NonPublic);
-				if (headField != null)
-				{
-					object entry = headField.GetValue(list);
-					while (entry != null)
-					{
-						FieldInfo handlerField = entry.GetType().GetField("handler", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-						if (handlerField != null)
-						{
-							Delegate d = handlerField.GetValue(entry) as Delegate;
-							if (d != null)
-							{
-								foreach (Delegate del in d.GetInvocationList())
-								{
-									void* ptr = ExtractDialogPointerFromObject(del.Target);
-									if (ptr != null) return ptr;
-								}
-							}
-						}
-						FieldInfo nextField = entry.GetType().GetField("next", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-						entry = (nextField != null) ? nextField.GetValue(entry) : null;
-					}
-				}
-			}
-		}
-		return null;
-	}
-
-	private unsafe static void* SearchControlTreeForDialogPointer(Control parent)
-	{
-		if (parent == null) return null;
-		foreach (Control child in parent.Controls)
-		{
-			void* ptr = ExtractDialogPointerFromControl(child);
-			if (ptr != null) return ptr;
-			ptr = SearchControlTreeForDialogPointer(child);
-			if (ptr != null) return ptr;
-		}
-		return null;
-	}
-
-	public unsafe void* FindNativeDialogPointer()
-	{
-		if (mNativeDialogPointer != null)
-		{
-			return mNativeDialogPointer;
-		}
-		if (GlobalNativeDialogPointer != null)
-		{
-			mNativeDialogPointer = GlobalNativeDialogPointer;
-			return mNativeDialogPointer;
-		}
-
-		Control[] candidates = new Control[]
-		{
-			TerrainSizeXInput,
-			TerrainSizeYInput,
-			TileSizeXInput,
-			TileSizeYInput,
-			SamplingDistanceInput,
-			TileCountXInput,
-			TileCountYInput,
-			TerrainOriginLatitudeInput,
-			TerrainOriginLongitudeInput,
-			RegionNorthLatitudeInput,
-			RegionSouthLatitudeInput,
-			RegionWestLongitudeInput,
-			RegionEastLongitudeInput,
-			SetRegionFromFileBtn,
-			ClearRegionBtn,
-			GeolocatedTerrainCheckGroupBox
-		};
-
-		foreach (Control c in candidates)
-		{
-			void* ptr = ExtractDialogPointerFromControl(c);
-			if (ptr != null)
-			{
-				mNativeDialogPointer = ptr;
-				GlobalNativeDialogPointer = ptr;
-				return ptr;
-			}
-		}
-
-		void* found = SearchControlTreeForDialogPointer(this);
-		if (found != null)
-		{
-			mNativeDialogPointer = found;
-			GlobalNativeDialogPointer = found;
-			return found;
-		}
-
-		return null;
-	}
-
-	public unsafe bool WriteValuesToNativeStorage()
-	{
-		try
-		{
-			float sizeX = (float)TerrainSizeXInput.Value;
-			float sizeY = (float)TerrainSizeYInput.Value;
-			float tileSizeX = (float)TileSizeXInput.Value;
-			float tileSizeY = (float)TileSizeYInput.Value;
-			float sampleDist = (float)SamplingDistanceInput.Value;
-			int tileCountX = (int)TileCountXInput.Value;
-			int tileCountY = (int)TileCountYInput.Value;
-
-			if (tileSizeX <= 0f) tileSizeX = sizeX;
-			if (tileSizeY <= 0f) tileSizeY = sizeY;
-			if (sampleDist <= 0f) sampleDist = 2.0f;
-			if (tileCountX <= 0) tileCountX = 1;
-			if (tileCountY <= 0) tileCountY = 1;
-
-			// Synchronize with modern 3D Viewport engine
-			var terrain = new TerrainSurfaceData(sizeX, sizeY, tileSizeX, tileSizeY, tileCountX, tileCountY, sampleDist);
-			if (IsGeolocatedTerrain())
-			{
-				terrain.IsGeolocated = true;
-				terrain.OriginLongitude = (double)TerrainOriginLongitudeInput.Value;
-				terrain.OriginLatitude = (double)TerrainOriginLatitudeInput.Value;
-			}
-			ControlRender.SetActiveTerrain(terrain);
-
-			void* p0 = FindNativeDialogPointer();
-			if (p0 != null)
-			{
-				// Write dimensions and sampling distance into edTerrainSettingsDialogManaged (224 bytes)
-				((float*)p0)[40] = sizeX;
-				((float*)p0)[41] = sizeY;
-				((float*)p0)[42] = tileSizeX;
-				((float*)p0)[43] = tileSizeY;
-				((float*)p0)[44] = sampleDist;
-				((float*)p0)[45] = 0.01f;
-				((float*)p0)[46] = 100000.0f;
-
-				// Max terrain sizes
-				((int*)p0)[54] = (int)Math.Max(sizeX, GetTerrainMaxSizeX());
-				((int*)p0)[55] = (int)Math.Max(sizeY, GetTerrainMaxSizeY());
-
-				// Flags
-				((bool*)p0)[156] = false;
-				((bool*)p0)[157] = true;
-				((bool*)p0)[158] = false;
-				((bool*)p0)[159] = true;
-				((bool*)p0)[188] = IsGeolocatedTerrain();
-
-				if (IsGeolocatedTerrain())
-				{
-					((double*)p0)[24] = (double)TerrainOriginLongitudeInput.Value;
-					((double*)p0)[25] = (double)TerrainOriginLatitudeInput.Value;
-				}
-			}
-
-			return true;
-		}
-		catch
-		{
-			return false;
-		}
-	}
-
 	protected virtual void OnTerrainValueChanged(EventArgs e)
 	{
-		WriteValuesToNativeStorage();
-		TerrainValueChanged?.Invoke(this, e);
+		TerrainValueChanged(this, e);
 	}
 
 	public void SetEnableComputeTileCountValues(bool bEnabled)
@@ -1125,32 +771,23 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 
 	public void ComputeTileCountValues()
 	{
-		if (mIsUpdatingTiles) return;
-		mIsUpdatingTiles = true;
-		try
+		if (EnableComputeTileCountValues)
 		{
-			if (EnableComputeTileCountValues)
+			decimal value = TerrainSizeXInput.Value;
+			decimal value2 = TerrainSizeYInput.Value;
+			decimal value3 = TileSizeXInput.Value;
+			decimal value4 = TileSizeYInput.Value;
+			if (value == 0m || value2 == 0m || value3 == 0m || value4 == 0m)
 			{
-				decimal value = TerrainSizeXInput.Value;
-				decimal value2 = TerrainSizeYInput.Value;
-				decimal value3 = TileSizeXInput.Value;
-				decimal value4 = TileSizeYInput.Value;
-				if (value == 0m || value2 == 0m || value3 == 0m || value4 == 0m)
-				{
-					TileCountXInput.Value = 0m;
-					TileCountYInput.Value = 0m;
-				}
-				else
-				{
-					TileCountXInput.Value = Math.Max(1, (int)Math.Ceiling(value / value3));
-					TileCountYInput.Value = Math.Max(1, (int)Math.Ceiling(value2 / value4));
-				}
-				OnTerrainValueChanged(new EventArgs());
+				TileCountXInput.Value = 0m;
+				TileCountYInput.Value = 0m;
 			}
-		}
-		finally
-		{
-			mIsUpdatingTiles = false;
+			else
+			{
+				TileCountXInput.Value = (int)Math.Ceiling(value / value3);
+				TileCountYInput.Value = (int)Math.Ceiling(value2 / value4);
+			}
+			OnTerrainValueChanged(new EventArgs());
 		}
 	}
 
