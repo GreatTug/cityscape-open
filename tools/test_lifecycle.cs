@@ -70,6 +70,10 @@ class Program {
             form.ShowLibraryTab(new Guid("05675B1B-B72D-4B56-9D16-F3E940BCFF90"));
             Console.WriteLine("  [PASS] ShowLibraryTab (Road Style) executed cleanly!");
 
+            Console.WriteLine("Step 11: Testing ShowLibraryTab (Material Browser)...");
+            form.ShowLibraryTab(new Guid("BBA17DEF-5C19-4B30-B908-DE547D5811B4"));
+            Console.WriteLine("  [PASS] ShowLibraryTab (Material Browser) executed cleanly!");
+
             form.Dispose();
             Console.WriteLine("SUCCESS: ALL LIFECYCLE & WINDOW RESTORE STEPS COMPLETED CLEANLY!");
         } catch (Exception ex) {

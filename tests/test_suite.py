@@ -30,7 +30,9 @@ def test_all():
         "ssleay32.dll",
         "SmartPropertyGrid.dll",
         "WeifenLuo.WinFormsUI.Docking.dll",
-        "test_lifecycle.exe"
+        "test_lifecycle.exe",
+        "test_terrain_resolution.exe",
+        "test_water_materials.exe"
     ]
     for f in expected_binaries:
         path = os.path.join(dist_dir, f)
@@ -118,6 +120,13 @@ def test_all():
         assert res_tt.returncode == 0, f"test_terrain_resolution.exe failed: {res_tt.stdout}\n{res_tt.stderr}"
         assert "SUCCESS: ALL TERRAIN RESOLUTION TESTS PASSED!" in res_tt.stdout
         print("  [PASS] High resolution default (1.00m), road seating presets & bidirectional tile controls verified")
+
+    water_mat_exe = os.path.join(dist_dir, "test_water_materials.exe")
+    if os.path.exists(water_mat_exe):
+        res_wm = subprocess.run([water_mat_exe], capture_output=True, text=True)
+        assert res_wm.returncode == 0, f"test_water_materials.exe failed: {res_wm.stdout}\n{res_wm.stderr}"
+        assert "SUCCESS: ALL WATER & MATERIAL AUDIT CHECKS PASSED!" in res_wm.stdout
+        print("  [PASS] Global Water & Material Assignment systems (Browser, GIS, Shaders, Layout) verified")
 
     # 7. Authentic 3D Asset & Simulation Catalog Verification
     print("\n[TEST 7] Verifying Authentic 3D Asset (.gob) & Dynamics (.gox) Catalog...")

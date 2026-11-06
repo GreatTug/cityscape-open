@@ -109,12 +109,15 @@ foreach ($proj in $projects) {
     }
 }
 
-# Copy main application configuration and response file
+# Copy main application configuration, layout and response file
 if (Test-Path "CityScape.exe.config") {
     Copy-Item "CityScape.exe.config" -Destination "$binDist\CityScape.exe.config" -Force
 }
 if (Test-Path "CityScape.exe.response.txt") {
     Copy-Item "CityScape.exe.response.txt" -Destination "$binDist\CityScape.exe.response.txt" -Force
+}
+if (Test-Path "CityScape.DefaultLayout.xml") {
+    Copy-Item "CityScape.DefaultLayout.xml" -Destination "$binDist\CityScape.DefaultLayout.xml" -Force
 }
 
 # Preserve authentic 49MB CityScape executable as the primary CityScape.exe
@@ -134,6 +137,9 @@ if (Test-Path $promoDir) {
     }
     if (Test-Path "CityScape.exe.config") {
         Copy-Item "CityScape.exe.config" -Destination "$promoDir\CityScape.exe.config" -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path "CityScape.DefaultLayout.xml") {
+        Copy-Item "CityScape.DefaultLayout.xml" -Destination "$promoDir\CityScape.DefaultLayout.xml" -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -164,6 +170,22 @@ if (Test-Path "tools\test_terrain_resolution.cs") {
             /reference:System.Drawing.dll `
             /reference:System.dll `
             "tools\test_terrain_resolution.cs"
+    }
+}
+
+if (Test-Path "tools\test_water_materials.cs") {
+    $csc = "$env:SystemRoot\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+    if (Test-Path $csc) {
+        Write-Host "`n---> Compiling test_water_materials.exe..." -ForegroundColor Yellow
+        & $csc /target:exe /nologo /out:"$binDist\test_water_materials.exe" `
+            /reference:"$binDist\palDotNet.dll" `
+            /reference:"$binDist\edEditorDotNet.dll" `
+            /reference:"$binDist\SmartPropertyGrid.dll" `
+            /reference:"$binDist\WeifenLuo.WinFormsUI.Docking.dll" `
+            /reference:System.Windows.Forms.dll `
+            /reference:System.Drawing.dll `
+            /reference:System.dll `
+            "tools\test_water_materials.cs"
     }
 }
 

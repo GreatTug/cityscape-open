@@ -210,12 +210,26 @@ public class PalTabbedView : PalDockContent
 		}
 		Show();
 		Activate();
+		bool found = false;
 		foreach (IWidgetPanelControl widgetPanelControl in WidgetPanelControls)
 		{
 			if (widgetPanelControl.WidgetPanel != null && widgetPanelControl.WidgetPanel.Guid == guid)
 			{
 				WidgetPanel_ShowPanel(widgetPanelControl.WidgetPanel, EventArgs.Empty);
+				found = true;
 				break;
+			}
+		}
+		if (!found)
+		{
+			WidgetMgr.Instance.SendLayoutCreatePanel(guid);
+			foreach (IWidgetPanelControl widgetPanelControl in WidgetPanelControls)
+			{
+				if (widgetPanelControl.WidgetPanel != null && widgetPanelControl.WidgetPanel.Guid == guid)
+				{
+					WidgetPanel_ShowPanel(widgetPanelControl.WidgetPanel, EventArgs.Empty);
+					break;
+				}
 			}
 		}
 	}

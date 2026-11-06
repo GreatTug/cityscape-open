@@ -126,10 +126,7 @@ public class GisImportWaterDialog : DialogBoxBase
 	protected override void OnShown(EventArgs e)
 	{
 		base.OnShown(e);
-		if (WaterDialogOnShown != null)
-		{
-			WaterDialogOnShown(this, e);
-		}
+		WaterDialogOnShown?.Invoke(this, e);
 		SyncOkButton();
 	}
 

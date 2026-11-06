@@ -6,7 +6,7 @@
     <Content ID="0" PersistString="Guid=9aac009e-f759-44c1-a6b1-8637a180760d" AutoHidePortion="0.25" IsHidden="False" IsFloat="False" />
     <Content ID="1" PersistString="Guid=8dc9afdb-4354-45e6-b7d3-4769a6196f90" AutoHidePortion="0.25" IsHidden="False" IsFloat="False" />
     <Content ID="2" PersistString="Guid=e370bd07-d338-4a08-b49e-d62d3d41e736" AutoHidePortion="0.25" IsHidden="False" IsFloat="False" />
-    <Content ID="3" PersistString="Guid=05675B1B-B72D-4b56-9D16-F3E940BCFF90;Guid=c9cfc57b-f9a0-4025-b884-fa10a4f9628a;Guid=DE0A0C0E-DC18-48c5-8320-8F4E1990C0AE;" AutoHidePortion="0.25" IsHidden="False" IsFloat="False" />
+    <Content ID="3" PersistString="Guid=05675B1B-B72D-4b56-9D16-F3E940BCFF90;Guid=c9cfc57b-f9a0-4025-b884-fa10a4f9628a;Guid=DE0A0C0E-DC18-48c5-8320-8F4E1990C0AE;Guid=BBA17DEF-5C19-4b30-B908-DE547D5811B4;Guid=FA693083-A805-40b0-953E-B1C74AF4CE74;" AutoHidePortion="0.25" IsHidden="False" IsFloat="False" />
   </Contents>
   <Panes Count="6">
     <Pane ID="0" DockState="Document" ActiveContent="0">

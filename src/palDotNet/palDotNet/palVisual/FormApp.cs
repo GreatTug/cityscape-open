@@ -1011,18 +1011,30 @@ public class FormApp : FormAppBase
 				ShowLibraryTab(new Guid("DE0A0C0E-DC18-48c5-8320-8F4E1990C0AE"));
 			});
 			propItem.ShortcutKeys = Keys.Control | Keys.D3;
+
+			ToolStripMenuItem matItem = new ToolStripMenuItem("&Material Browser", null, delegate
+			{
+				ShowLibraryTab(new Guid("BBA17DEF-5C19-4b30-B908-DE547D5811B4"));
+			});
+			matItem.ShortcutKeys = Keys.Control | Keys.D4;
+
+			ToolStripMenuItem fenceItem = new ToolStripMenuItem("&Fence Style Browser", null, delegate
+			{
+				ShowLibraryTab(new Guid("FA693083-A805-40b0-953E-B1C74AF4CE74"));
+			});
+			fenceItem.ShortcutKeys = Keys.Control | Keys.D5;
 			
 			ToolStripMenuItem propGridItem = new ToolStripMenuItem("Properties &Inspector", null, delegate
 			{
 				ShowPropertiesInspector();
 			});
-			propGridItem.ShortcutKeys = Keys.Control | Keys.D4;
+			propGridItem.ShortcutKeys = Keys.Control | Keys.D6;
 			
 			ToolStripMenuItem outputWinItem = new ToolStripMenuItem("&Output Log Window", null, delegate
 			{
 				ShowOutputWindow();
 			});
-			outputWinItem.ShortcutKeys = Keys.Control | Keys.D5;
+			outputWinItem.ShortcutKeys = Keys.Control | Keys.D7;
 			
 			windowMenuItem.DropDownItems.Add(resetItem);
 			windowMenuItem.DropDownItems.Add(saveItem);
@@ -1030,6 +1042,8 @@ public class FormApp : FormAppBase
 			windowMenuItem.DropDownItems.Add(roadItem);
 			windowMenuItem.DropDownItems.Add(bldItem);
 			windowMenuItem.DropDownItems.Add(propItem);
+			windowMenuItem.DropDownItems.Add(matItem);
+			windowMenuItem.DropDownItems.Add(fenceItem);
 			windowMenuItem.DropDownItems.Add(propGridItem);
 			windowMenuItem.DropDownItems.Add(outputWinItem);
 		}
@@ -1081,6 +1095,11 @@ public class FormApp : FormAppBase
 				tv.Show(dockPanel1, DockState.DockBottom);
 				tv.Activate();
 				tv.SwitchToPanel(guid);
+			}
+			else if (dcNew != null)
+			{
+				dcNew.Show(dockPanel1, DockState.DockBottom);
+				dcNew.Activate();
 			}
 		}
 	}
@@ -1218,7 +1237,6 @@ public class FormApp : FormAppBase
 		}
 		dockPanel1.ResumeLayout(performLayout: true, allWindows: true);
 		TheViewDocument?.Focus();
-		SaveCurrentLayout();
 	}
 
 	public void SaveCurrentLayout()
@@ -1247,13 +1265,17 @@ public class FormApp : FormAppBase
 			catch
 			{
 			}
-			try
+			if (layoutStr.IndexOf("BBA17DEF", StringComparison.OrdinalIgnoreCase) >= 0 ||
+			    !File.Exists(Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "CityScape.DefaultLayout.xml")))
 			{
-				string text = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "CityScape.DefaultLayout.xml");
-				File.WriteAllText(text, layoutStr, Encoding.ASCII);
-			}
-			catch
-			{
+				try
+				{
+					string text = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "CityScape.DefaultLayout.xml");
+					File.WriteAllText(text, layoutStr, Encoding.ASCII);
+				}
+				catch
+				{
+				}
 			}
 		}
 		catch
