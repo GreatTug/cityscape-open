@@ -108,7 +108,8 @@ public class TerrainSettingsDialog : DialogBoxBase
 		this.CreateNewProjectCheckBox.AutoSize = true;
 		this.CreateNewProjectCheckBox.Location = new System.Drawing.Point(23, 28);
 		this.CreateNewProjectCheckBox.Name = "CreateNewProjectCheckBox";
-		this.CreateNewProjectCheckBox.SaveToConfig = true;
+		this.CreateNewProjectCheckBox.SaveToConfig = false;
+		this.CreateNewProjectCheckBox.Checked = false;
 		this.CreateNewProjectCheckBox.Size = new System.Drawing.Size(115, 17);
 		this.CreateNewProjectCheckBox.TabIndex = 0;
 		this.CreateNewProjectCheckBox.Text = "Create new project";
@@ -151,7 +152,8 @@ public class TerrainSettingsDialog : DialogBoxBase
 		mTerrainSettingsPanel.TerrainValueChanged += mTerrainSettingsPanel_TerrainValueChanged;
 		DialogDefaultSize = base.Size;
 		EnableProjectPanel(bEnabled: false);
-		ProjectFilePath.LoadedFromSettings = true;
+		ProjectFilePath.LoadedFromSettings = false;
+		CreateNewProjectCheckBox.Checked = false;
 	}
 
 	protected override void OnShown(EventArgs e)
@@ -159,6 +161,7 @@ public class TerrainSettingsDialog : DialogBoxBase
 		base.OnShown(e);
 		mTerrainSettingsPanel.OnShown();
 		ClearMessageInfo();
+		if (ProjectPanelEnabled) { CreateNewProjectCheckBox.Checked = string.IsNullOrEmpty(DefaultProjectPath); }
 		if (string.IsNullOrEmpty(ProjectFilePath.Path))
 		{
 			ProjectFilePath.Path = DefaultProjectPath;
@@ -183,6 +186,7 @@ public class TerrainSettingsDialog : DialogBoxBase
 		ProjectPanelEnabled = bEnabled;
 		if (ProjectPanelEnabled)
 		{
+			CreateNewProjectCheckBox.Checked = false;
 			ProjectGroupBox.Show();
 			base.Height = DialogDefaultSize.Height;
 		}

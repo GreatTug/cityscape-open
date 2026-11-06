@@ -72,7 +72,9 @@ public class SplashInfoPanel : UserControl, IDialogContainer
 		this.LegalProtectionLabel.Name = "LegalProtectionLabel";
 		this.LegalProtectionLabel.Size = new System.Drawing.Size(357, 65);
 		this.LegalProtectionLabel.TabIndex = 14;
-		this.LegalProtectionLabel.Text = "This is a promotional version of CityScape.\r\nSome of the tools and features have been limited or disabled.\r\n\r\nTo learn more about CityScape please visit our website.";
+		this.LegalProtectionLabel.Text = "";
+		this.LegalProtectionLabel.Visible = false;
+		this.AutodeskChart.Visible = false;
 		this.CopyrightLabel.AutoSize = true;
 		this.CopyrightLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25f, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, 0);
 		this.CopyrightLabel.Location = new System.Drawing.Point(3, 95);

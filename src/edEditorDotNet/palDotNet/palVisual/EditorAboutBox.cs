@@ -262,6 +262,9 @@ public class EditorAboutBox : Form
 		this.ThirdPartyInfoLabel.Size = new System.Drawing.Size(374, 38);
 		this.ThirdPartyInfoLabel.TabIndex = 27;
 		this.ThirdPartyInfoLabel.Text = "This computer program includes certain third party software components subject to licenses and notices as set forth in the End User License Agreement. ";
+		this.EulaTitleLabel.Visible = false;
+		this.LegalInfoLabel.Visible = false;
+		this.ThirdPartyInfoLabel.Visible = false;
 		this.BackColor = System.Drawing.Color.White;
 		this.BackgroundImage = edEditorDotNet.Properties.Resources.backgroundgradient;
 		this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;

@@ -10,7 +10,7 @@ on:
 jobs:
   build-and-test:
     runs-on: windows-latest
-    name: Build Multi-Architecture Targets & Verify 9 Suites
+    name: Build Authentic Assemblies, Package & Verify Suites
 
     steps:
       - name: Checkout Codebase

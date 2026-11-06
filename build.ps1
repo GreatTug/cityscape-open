@@ -77,7 +77,11 @@ Write-Host "`n---> Staging distribution to $binDist..." -ForegroundColor Yellow
 if (Test-Path "lib") {
     Get-ChildItem "lib\*" | ForEach-Object {
         try {
-            Copy-Item $_.FullName -Destination $binDist -Force -ErrorAction Stop
+            Copy-Item $_.FullName -Destination $binDist -Recurse -Force -ErrorAction Stop
+            # Also mirror Microsoft.VC90.CRT to root if it is directory
+            if ($_.PSIsContainer) {
+                Copy-Item $_.FullName -Destination "." -Recurse -Force -ErrorAction SilentlyContinue
+            }
         } catch {
             Write-Warning "Could not overwrite $($_.Name) in $binDist (file in use), continuing."
         }
@@ -133,15 +137,35 @@ if (Test-Path $promoDir) {
     }
 }
 
+# Compile test_lifecycle verification executable
+if (Test-Path "tools\test_lifecycle.cs") {
+    $csc = "$env:SystemRoot\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+    if (Test-Path $csc) {
+        Write-Host "`n---> Compiling test_lifecycle.exe..." -ForegroundColor Yellow
+        & $csc /target:exe /nologo /out:"$binDist\test_lifecycle.exe" `
+            /reference:"$binDist\palDotNet.dll" `
+            /reference:"$binDist\SmartPropertyGrid.dll" `
+            /reference:"$binDist\WeifenLuo.WinFormsUI.Docking.dll" `
+            /reference:System.Windows.Forms.dll `
+            /reference:System.Drawing.dll `
+            /reference:System.dll `
+            "tools\test_lifecycle.cs"
+    }
+}
+
 # Apply surgical native in-place unlock patch to CityScape.exe
 if (Test-Path "tools\apply_native_patch.py") {
     Write-Host "`n---> Applying native terrain unlock patch to CityScape.exe..." -ForegroundColor Yellow
-    $pyCmd = if (Test-Path ".venv\Scripts\python.exe") { ".venv\Scripts\python.exe" } else { "python" }
+    $pyCandidate = "$env:LOCALAPPDATA\Programs\Python\Python310\python.exe"
+    $pyCmd = if (Test-Path ".venv\Scripts\python.exe") { ".venv\Scripts\python.exe" } elseif (Test-Path $pyCandidate) { $pyCandidate } else { "python" }
     if (Test-Path "CityScape.exe") {
         & $pyCmd tools\apply_native_patch.py "CityScape.exe"
     }
     if (Test-Path "$binDist\CityScape.exe") {
         & $pyCmd tools\apply_native_patch.py "$binDist\CityScape.exe"
+    }
+    if (Test-Path "$promoDir\CityScape.exe") {
+        & $pyCmd tools\apply_native_patch.py "$promoDir\CityScape.exe"
     }
 }
 

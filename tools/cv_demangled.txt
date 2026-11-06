@@ -1,0 +1,8 @@
+?AVcvExporter@@
+   ->  ?? AVcvExporter
+?AVcvGeometryNode@@
+   ->  ?? AVcvGeometryNode
+?AVcvMeshGeometryNode@@
+   ->  ?? AVcvMeshGeometryNode
+?AVcvStandardExporter@@
+   ->  ?? AVcvStandardExporter

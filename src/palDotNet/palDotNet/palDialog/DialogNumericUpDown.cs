@@ -24,6 +24,7 @@ public class DialogNumericUpDown : NumericUpDown
 	{
 		if (e.KeyChar == '\r')
 		{
+			ValidateEditText();
 			e.Handled = true;
 		}
 		else

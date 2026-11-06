@@ -1,12 +1,10 @@
 <#
 .SYNOPSIS
-    CityScape 1.8 Decompiled Edition - Cross-Platform Distribution Packaging Automation
+    CityScape 1.8 Open Source Edition - Automated Portable Distribution Packager
 .DESCRIPTION
-    Packages portable, self-contained standalone ZIP archives for:
-    - x64 Modern Engine (DirectX 12 / Vulkan 1.3 / PBR / CDLOD / glTF 2.0)
-    - ARM64 Modern Engine (DirectX 12 / Vulkan 1.3 / PBR / CDLOD / glTF 2.0)
-    - x86 Legacy Engine (DirectX 9 / 10,000m+ Unlocked Terrain / Native 49MB)
-    - Complete Decompiled Edition (Multi-Architecture, Tests, Parsers & Assets)
+    Packages standalone, zero-installation portable distribution ZIP archives for:
+    1. CityScape_1.8_OpenSource_Portable.zip (Full 3D Engine, Vulkan 1.3 / DX12 / D3D9, 123 3D models, assets & runtimes)
+    2. CityScape_1.8_Full_Source_And_Tools.zip (Complete decompiled C# source, MSBuild solution, RE tools, tests, docs)
 #>
 
 [CmdletBinding()]
@@ -26,10 +24,10 @@ Write-Host "  CityScape 1.8 Automated Portable Distribution Packager  " -Foregro
 Write-Host "==========================================================" -ForegroundColor Cyan
 
 if (-not $SkipBuild) {
-    Write-Host "[1/5] Building all targets via build.ps1..." -ForegroundColor Yellow
+    Write-Host "[1/4] Building all managed assemblies via build.ps1..." -ForegroundColor Yellow
     & "$RootDir\build.ps1"
 } else {
-    Write-Host "[1/5] Skipping build (--SkipBuild specified)..." -ForegroundColor Yellow
+    Write-Host "[1/4] Skipping build (--SkipBuild specified)..." -ForegroundColor Yellow
 }
 
 if (-not (Test-Path $DistDir)) {
@@ -41,23 +39,7 @@ if (Test-Path $StagingDir) {
 }
 New-Item -ItemType Directory -Path $StagingDir -Force | Out-Null
 
-# Common managed assemblies & dependencies
-$CommonManagedDlls = @(
-    "palDotNet.dll",
-    "edEditorDotNet.dll",
-    "ktKitDotNet.dll",
-    "gisImageryDotNet.dll",
-    "BugReporter.exe",
-    "SmartPropertyGrid.dll",
-    "WeifenLuo.WinFormsUI.Docking.dll"
-)
-
-$CommonNativeDlls = @(
-    "FreeImage.dll",
-    "libcollada14dom21.dll"
-)
-
-# Helper function to stage files
+# Helper functions
 function Copy-PackageFile {
     param([string]$SourcePath, [string]$DestDir)
     if (Test-Path $SourcePath) {
@@ -85,147 +67,124 @@ function Create-PackageZip {
 }
 
 # -------------------------------------------------------------
-# PACKAGE 1: Modern x64 Portable
+# PACKAGE 1: Standalone Portable Edition (Zero-Installation)
 # -------------------------------------------------------------
-Write-Host "`n[2/5] Assembling CityScape 1.8 Modern x64 Portable..." -ForegroundColor Yellow
-$Pkg1Name = "CityScape_1.8_Modern_x64_Portable"
+Write-Host "`n[2/4] Assembling CityScape 1.8 Open Source Portable Release..." -ForegroundColor Yellow
+$Pkg1Name = "CityScape_1.8_OpenSource_Portable"
 $Pkg1Dir = Join-Path $StagingDir $Pkg1Name
 New-Item -ItemType Directory -Path $Pkg1Dir -Force | Out-Null
 
-Copy-PackageFile (Join-Path $BinDir "CityScape_x64.exe") $Pkg1Dir
-Copy-PackageFile (Join-Path $BinDir "CityScape_x64.exe.config") $Pkg1Dir
-# Copy convenience launcher
-Copy-Item (Join-Path $BinDir "CityScape_x64.exe") (Join-Path $Pkg1Dir "CityScape.exe") -Force
-Copy-Item (Join-Path $BinDir "CityScape_x64.exe.config") (Join-Path $Pkg1Dir "CityScape.exe.config") -Force
+# Core Executable & Configuration
+Copy-PackageFile (Join-Path $BinDir "CityScape.exe") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.exe.config") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.exe.response.txt") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.DefaultLayout.xml") $Pkg1Dir
 
-foreach ($dll in $CommonManagedDlls) {
+# Managed Assemblies
+$ManagedDlls = @(
+    "palDotNet.dll",
+    "edEditorDotNet.dll",
+    "ktKitDotNet.dll",
+    "gisImageryDotNet.dll",
+    "BugReporter.exe",
+    "BugReporter.exe.config",
+    "SmartPropertyGrid.dll",
+    "WeifenLuo.WinFormsUI.Docking.dll"
+)
+foreach ($dll in $ManagedDlls) {
     Copy-PackageFile (Join-Path $BinDir $dll) $Pkg1Dir
 }
-foreach ($dll in $CommonNativeDlls) {
-    Copy-PackageFile (Join-Path $BinDir $dll) $Pkg1Dir
+
+# Native Third-Party DLLs
+$NativeDlls = @(
+    "D3DX9_42.DLL",
+    "FreeImage.dll",
+    "FreeImageNET.dll",
+    "libcollada14dom21.dll",
+    "libeay32.dll",
+    "ssleay32.dll",
+    "DevIL.NET2.dll",
+    "xinput1_3.dll"
+)
+foreach ($dll in $NativeDlls) {
+    if (Test-Path (Join-Path $RootDir "lib\$dll")) {
+        Copy-PackageFile (Join-Path $RootDir "lib\$dll") $Pkg1Dir
+    } elseif (Test-Path (Join-Path $RootDir $dll)) {
+        Copy-PackageFile (Join-Path $RootDir $dll) $Pkg1Dir
+    }
 }
 
-# Config
-$cfgContent = @"
-# PixelActive CityScape 1.8 Modern Engine Configuration
-Backend=DirectX12_Modern
-Architecture=x64_Modern
-VSync=True
-MSAA=4
-PBRQuality=Ultra
-CDLODLevels=6
-"@
-Set-Content -Path (Join-Path $Pkg1Dir "graphics_backend.cfg") -Value $cfgContent -Encoding UTF8
+# Private SxS Microsoft.VC90.CRT runtime for computers without VC++ 2008 redist
+if (Test-Path (Join-Path $RootDir "lib\Microsoft.VC90.CRT")) {
+    Copy-PackageDirectory (Join-Path $RootDir "lib\Microsoft.VC90.CRT") $Pkg1Dir
+}
+
+# Graphics Backends & Switcher
+Copy-PackageFile (Join-Path $RootDir "d3d9.dll") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "d3d9_dxvk.dll") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "d3d9_dgvoodoo.dll") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "dgVoodoo.conf") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "switch_graphics.bat") $Pkg1Dir
+
+# Copy 1-click launcher batch file
+Copy-PackageFile (Join-Path $RootDir "Run_CityScape.bat") $Pkg1Dir
 
 # Assets & Worlds
 Copy-PackageDirectory (Join-Path $RootDir "assets") $Pkg1Dir
 Copy-PackageDirectory (Join-Path $RootDir "Worlds") $Pkg1Dir
 Copy-PackageFile (Join-Path $RootDir "README.md") $Pkg1Dir
+Copy-PackageFile (Join-Path $RootDir "LICENSE") $Pkg1Dir
 
 $Pkg1Zip = Join-Path $DistDir "$Pkg1Name.zip"
 Create-PackageZip $Pkg1Dir $Pkg1Zip
 Write-Host "  -> Created $Pkg1Zip ($([math]::Round((Get-Item $Pkg1Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
 
 # -------------------------------------------------------------
-# PACKAGE 2: Modern ARM64 Portable
+# PACKAGE 2: Full Source & Tools Edition
 # -------------------------------------------------------------
-Write-Host "`n[3/5] Assembling CityScape 1.8 Modern ARM64 Portable..." -ForegroundColor Yellow
-$Pkg2Name = "CityScape_1.8_Modern_ARM64_Portable"
+Write-Host "`n[3/4] Assembling CityScape 1.8 Full Source & Tools Archive..." -ForegroundColor Yellow
+$Pkg2Name = "CityScape_1.8_Full_Source_And_Tools"
 $Pkg2Dir = Join-Path $StagingDir $Pkg2Name
 New-Item -ItemType Directory -Path $Pkg2Dir -Force | Out-Null
 
-Copy-PackageFile (Join-Path $BinDir "CityScape_ARM64.exe") $Pkg2Dir
-Copy-PackageFile (Join-Path $BinDir "CityScape_ARM64.exe.config") $Pkg2Dir
-Copy-Item (Join-Path $BinDir "CityScape_ARM64.exe") (Join-Path $Pkg2Dir "CityScape.exe") -Force
-Copy-Item (Join-Path $BinDir "CityScape_ARM64.exe.config") (Join-Path $Pkg2Dir "CityScape.exe.config") -Force
-
-foreach ($dll in $CommonManagedDlls) {
-    Copy-PackageFile (Join-Path $BinDir $dll) $Pkg2Dir
-}
-foreach ($dll in $CommonNativeDlls) {
-    Copy-PackageFile (Join-Path $BinDir $dll) $Pkg2Dir
-}
-
-$cfgArm = @"
-# PixelActive CityScape 1.8 Modern ARM64 Engine Configuration
-Backend=DirectX12_Modern
-Architecture=ARM64_Modern
-VSync=True
-MSAA=2
-PBRQuality=High
-CDLODLevels=5
-"@
-Set-Content -Path (Join-Path $Pkg2Dir "graphics_backend.cfg") -Value $cfgArm -Encoding UTF8
-
+# Source Trees
+Copy-PackageDirectory (Join-Path $RootDir "src") $Pkg2Dir
+Copy-PackageDirectory (Join-Path $RootDir "lib") $Pkg2Dir
+Copy-PackageDirectory (Join-Path $RootDir "tools") $Pkg2Dir
+Copy-PackageDirectory (Join-Path $RootDir "docs") $Pkg2Dir
+Copy-PackageDirectory (Join-Path $RootDir "tests") $Pkg2Dir
 Copy-PackageDirectory (Join-Path $RootDir "assets") $Pkg2Dir
 Copy-PackageDirectory (Join-Path $RootDir "Worlds") $Pkg2Dir
+
+# Root Scripts & Metadata
+Copy-PackageFile (Join-Path $RootDir "CityScape.sln") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.slnx") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "Directory.Build.props") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "build.bat") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "build.ps1") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "package.bat") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "test.bat") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "switch_graphics.bat") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.exe") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.exe.config") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.exe.response.txt") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "CityScape.DefaultLayout.xml") $Pkg2Dir
 Copy-PackageFile (Join-Path $RootDir "README.md") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "CONTRIBUTING.md") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "LICENSE") $Pkg2Dir
+Copy-PackageFile (Join-Path $RootDir "agent.md") $Pkg2Dir
+
+# Remove any obj/bin from inside staged src
+Get-ChildItem -Path (Join-Path $Pkg2Dir "src") -Include "bin","obj" -Recurse -Directory | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 $Pkg2Zip = Join-Path $DistDir "$Pkg2Name.zip"
 Create-PackageZip $Pkg2Dir $Pkg2Zip
 Write-Host "  -> Created $Pkg2Zip ($([math]::Round((Get-Item $Pkg2Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
 
 # -------------------------------------------------------------
-# PACKAGE 3: Legacy x86 Portable
+# Generate SHA-256 Checksums
 # -------------------------------------------------------------
-Write-Host "`n[4/5] Assembling CityScape 1.8 Legacy x86 Portable..." -ForegroundColor Yellow
-$Pkg3Name = "CityScape_1.8_Legacy_x86_Portable"
-$Pkg3Dir = Join-Path $StagingDir $Pkg3Name
-New-Item -ItemType Directory -Path $Pkg3Dir -Force | Out-Null
-
-Copy-PackageFile (Join-Path $BinDir "CityScape.exe") $Pkg3Dir
-Copy-PackageFile (Join-Path $BinDir "CityScape_Managed.exe") $Pkg3Dir
-Copy-PackageFile (Join-Path $BinDir "CityScape.exe.config") $Pkg3Dir
-Copy-PackageFile (Join-Path $BinDir "D3DX9_42.DLL") $Pkg3Dir
-
-foreach ($dll in $CommonManagedDlls) {
-    Copy-PackageFile (Join-Path $BinDir $dll) $Pkg3Dir
-}
-foreach ($dll in $CommonNativeDlls) {
-    Copy-PackageFile (Join-Path $BinDir $dll) $Pkg3Dir
-}
-
-$cfgX86 = @"
-# PixelActive CityScape 1.8 Legacy x86 Engine Configuration
-Backend=DirectX9_Legacy
-Architecture=x86_Legacy
-MaxTerrainSamplingDistance=10000
-UnlockedLimits=True
-"@
-Set-Content -Path (Join-Path $Pkg3Dir "graphics_backend.cfg") -Value $cfgX86 -Encoding UTF8
-
-Copy-PackageDirectory (Join-Path $RootDir "assets") $Pkg3Dir
-Copy-PackageDirectory (Join-Path $RootDir "Worlds") $Pkg3Dir
-Copy-PackageFile (Join-Path $RootDir "README.md") $Pkg3Dir
-
-$Pkg3Zip = Join-Path $DistDir "$Pkg3Name.zip"
-Create-PackageZip $Pkg3Dir $Pkg3Zip
-Write-Host "  -> Created $Pkg3Zip ($([math]::Round((Get-Item $Pkg3Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
-
-# -------------------------------------------------------------
-# PACKAGE 4: Complete Decompiled Edition (Multi-Target + Tools)
-# -------------------------------------------------------------
-Write-Host "`n[5/5] Assembling CityScape 1.8 Complete Decompiled Edition..." -ForegroundColor Yellow
-$Pkg4Name = "CityScape_1.8_Decompiled_Edition_Complete"
-$Pkg4Dir = Join-Path $StagingDir $Pkg4Name
-New-Item -ItemType Directory -Path $Pkg4Dir -Force | Out-Null
-
-# All Binaries
-Get-ChildItem -Path $BinDir -Filter "*.exe" | ForEach-Object { Copy-PackageFile $_.FullName $Pkg4Dir }
-Get-ChildItem -Path $BinDir -Filter "*.dll" | ForEach-Object { Copy-PackageFile $_.FullName $Pkg4Dir }
-Get-ChildItem -Path $BinDir -Filter "*.config" | ForEach-Object { Copy-PackageFile $_.FullName $Pkg4Dir }
-
-Copy-PackageDirectory (Join-Path $RootDir "assets") $Pkg4Dir
-Copy-PackageDirectory (Join-Path $RootDir "Worlds") $Pkg4Dir
-Copy-PackageDirectory (Join-Path $RootDir "tools") $Pkg4Dir
-Copy-PackageDirectory (Join-Path $RootDir "docs") $Pkg4Dir
-Copy-PackageFile (Join-Path $RootDir "README.md") $Pkg4Dir
-Copy-PackageFile (Join-Path $RootDir "CONTRIBUTING.md") $Pkg4Dir
-Copy-PackageFile (Join-Path $RootDir "test.bat") $Pkg4Dir
-
-$Pkg4Zip = Join-Path $DistDir "$Pkg4Name.zip"
-Create-PackageZip $Pkg4Dir $Pkg4Zip
-Write-Host "  -> Created $Pkg4Zip ($([math]::Round((Get-Item $Pkg4Zip).Length / 1MB, 2)) MB)" -ForegroundColor Green
+Write-Host "`n[4/4] Generating SHA-256 Checksum Ledger (SHA256SUMS.txt)..." -ForegroundColor Yellow
 
 function Get-Sha256Checksum {
     param([string]$FilePath)
@@ -241,10 +200,6 @@ function Get-Sha256Checksum {
     }
 }
 
-# -------------------------------------------------------------
-# Generate SHA256 Checksums
-# -------------------------------------------------------------
-Write-Host "`nGenerating SHA-256 Checksum Ledger (SHA256SUMS.txt)..." -ForegroundColor Yellow
 $ChecksumFile = Join-Path $DistDir "SHA256SUMS.txt"
 $ChecksumLines = @()
 Get-ChildItem -Path $DistDir -Filter "*.zip" | ForEach-Object {
@@ -259,5 +214,5 @@ Set-Content -Path $ChecksumFile -Value $ChecksumLines -Encoding UTF8
 Remove-Item -Path $StagingDir -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host "`n==========================================================" -ForegroundColor Green
-Write-Host "  All 4 Distribution Packages Built & Verified Cleanly!   " -ForegroundColor Green
+Write-Host "  Distribution Packages Built & Verified Cleanly!         " -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green

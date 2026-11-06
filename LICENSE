@@ -1,7 +1,17 @@
-MIT License
+# Licensing & Legal Notice
+## PixelActive CityScape 1.8 — Open-Source Preservation Project
 
-Copyright (c) 2010 PixelActive Inc. / Autodesk Inc.
-Copyright (c) 2026 CityScape Open Source Contributors & Reverse Engineering Project
+This repository operates under a dual-tier licensing and digital preservation framework to balance open-source freedom with respect for historical intellectual property:
+
+---
+
+### Part 1: Open Source Preservation License (MIT License)
+
+**Applies to**:
+- All decompiled, syntax-repaired, and modernized C# source code (`src/palDotNet/`, `src/edEditorDotNet/`, `src/ktKitDotNet/`, `src/gisImageryDotNet/`, `src/BugReporter/`).
+- All reverse engineering tools, format parsers (`tools/csp_reader.py`, `tools/parc_tool.py`), test suites (`tests/test_suite.py`), build automation scripts (`build.ps1`, `package.ps1`), launchers, and documentation.
+
+Copyright (c) 2026 CityScape Open Source Contributors & Digital Preservation Project
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +32,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ---
-Disclaimer:
-This repository contains reverse-engineered materials for educational, research,
-and digital preservation purposes. All original trademarks and product names
-belong to their respective owners.
+
+### Part 2: Historical Digital Preservation & Proprietary Rights Reservation
+
+**Applies to**:
+- Original trademarks ("PixelActive", "CityScape", "Autodesk") and company marks.
+- Original 2010 vendor binary assets, shader bytecodes, and sample models.
+
+1. **Ownership**: All original product names, trademarks, registered trademarks, and copyrighted assets originating from the 2008–2010 PixelActive software remain the intellectual property of **Autodesk, Inc.** and the original creators at **PixelActive Inc.**
+2. **Preservation Purpose**: These assets are preserved and referenced strictly for non-commercial educational, historical software preservation, and interoperability research purposes under the **Fair Use** doctrine (17 U.S.C. § 107) and international digital software preservation principles.
+3. **Good-Faith Cooperation**: The maintainers of this repository are committed to constructive, respectful cooperation with intellectual property holders. Please refer to [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md) for our notice and takedown policy.
+
+For complete background on our digital heritage mission, please consult:
+- [PRESERVATION_STATEMENT.md](PRESERVATION_STATEMENT.md)
+- [LEGAL_DISCLAIMER.md](LEGAL_DISCLAIMER.md)
+- [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md)

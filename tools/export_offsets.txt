@@ -1,0 +1,45 @@
+
+=== trTerrainExporter ===
+Offset 0x020E3E3E | VA 0x024E563E | Sec .rdata | Snippet: b'serDataMapTypeToTypeFlag<arGuid> prTile trTerrainExporter ExportOptions EnumLodExport EnumAxis En'
+Offset 0x020E546F | VA 0x024E6C6F | Sec .rdata | Snippet: b'HashMap<arBasicString<char,arAllocator>,trTerrainExporter *,arHash<arBasicString<char,arAllocator'
+Offset 0x020E5524 | VA 0x024E6D24 | Sec .rdata | Snippet: b'<arBasicString<char,arAllocator> const ,trTerrainExporter *>,char const *,arStringPairKey<arAlloc'
+Offset 0x020E5562 | VA 0x024E6D62 | Sec .rdata | Snippet: b'har const *,arStringPairKey<arAllocator,trTerrainExporter *>,arHash<arBasicString<char,arAllocato'
+Offset 0x020E55F6 | VA 0x024E6DF6 | Sec .rdata | Snippet: b' >,arAllocator> arInstanceTableRefCount<trTerrainExporter,arAllocator> arVector<gmObjectInstance '
+Offset 0x020E95B7 | VA 0x024EADB7 | Sec .rdata | Snippet: b',arEventUnusedStruct> > arInstanceTable<trTerrainExporter,arAllocator> arTrackedEvent<arEvent<gmO'
+Offset 0x020F07B7 | VA 0x024F1FB7 | Sec .rdata | Snippet: b'ntUnusedStruct> arMap<type_info const *,trTerrainExporter *,arInstanceTable<trTerrainExporter,arA'
+Offset 0x020F07DB | VA 0x024F1FDB | Sec .rdata | Snippet: b't *,trTerrainExporter *,arInstanceTable<trTerrainExporter,arAllocator>::TypeInfoCompare,arAllocat'
+Offset 0x020F083E | VA 0x024F203E | Sec .rdata | Snippet: b'> arTree<arPair<type_info const * const,trTerrainExporter *>,type_info const * const,arPairKey<ty'
+Offset 0x020F088D | VA 0x024F208D | Sec .rdata | Snippet: b'const,arPairKey<type_info const * const,trTerrainExporter *>,arInstanceTable<trTerrainExporter,ar'
+Offset 0x020F08B2 | VA 0x024F20B2 | Sec .rdata | Snippet: b'st,trTerrainExporter *>,arInstanceTable<trTerrainExporter,arAllocator>::TypeInfoCompare,arAllocat'
+Offset 0x020F20FA | VA 0x024F38FA | Sec .rdata | Snippet: b'locator> arPair<type_info const * const,trTerrainExporter *> arType<edEditorComponent *> arValueG'
+Offset 0x020FB493 | VA 0x024FCC93 | Sec .rdata | Snippet: b'alue> arPairKey<type_info const * const,trTerrainExporter *> arValueStorage<edEditorComponent *,v'
+Offset 0x020FFDA5 | VA 0x025015A5 | Sec .rdata | Snippet: b'<arBasicString<char,arAllocator> const ,trTerrainExporter *> > arFlagHelper<enum trTerrainExporte'
+Offset 0x020FFDCE | VA 0x025015CE | Sec .rdata | Snippet: b'rTerrainExporter *> > arFlagHelper<enum trTerrainExporter::EnumExporterAttributes,5> arVector<arV'
+Offset 0x02B65123 | VA 0x02F67323 | Sec .data | Snippet: b'\x02pv0\x02Xv0\x02\xa4\xb7?\x02    .?AVExtraExportOptions@trTerrainExporter@@  \xa4\xb7?\x02    .?AVprCurveRotate@@ \xa4\xb7?\x02    '
+
+=== rdGeometryGenerator ===
+Offset 0x01F2E6E8 | VA 0x0232FEE8 | Sec .rdata | Snippet: b'ity In  Speed Limit \x04\xf7q\x02\x80\xb5\xd4 \xc0\xb5\xd3   \xf0B    rdGeometryGenerator::RoadNetwork_Modified()-Segment Cache M'
+Offset 0x01F2E748 | VA 0x0232FF48 | Sec .rdata | Snippet: b'e Missing. Events out of order.\n        rdGeometryGenerator::RoadNetwork_Modified()-Node Cache Miss'
+Offset 0x02B9638B | VA 0x02F9858B | Sec .data | Snippet: b'ox2Impl@M@@V?$arBinder@XV?$arMemFunc2@XVrdGeometryGenerator@@AAV?$prMeshImpl@M@@ABV?$mtAlignedBox2I'
+Offset 0x02B963F0 | VA 0x02F985F0 | Sec .data | Snippet: b'l@M@@@@V?$arBindList3@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@V?$arBindArg@$01@@'
+Offset 0x02BF8A2A | VA 0x02FFAC2A | Sec .data | Snippet: b'gment@@@@@@V?$arBinder@XV?$arMemFunc1@XVrdGeometryGenerator@@ABV?$prNetworkArgs@V?$prNetworkImp@Vtr'
+Offset 0x02BF8AA6 | VA 0x02FFACA6 | Sec .data | Snippet: b'@@@@@@@V?$arBindList2@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@@@@@@@   \xa4\xb7?\x02    .'
+Offset 0x02BF8B1C | VA 0x02FFAD1C | Sec .data | Snippet: b'trRoadLod@@V?$arBinder@XV?$arMemFunc1@XVrdGeometryGenerator@@ABVtrRoadLod@@@@V?$arBindList2@V?$arBi'
+Offset 0x02BF8B62 | VA 0x02FFAD62 | Sec .data | Snippet: b'Lod@@@@V?$arBindList2@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@@@@@@@       \xa4\xb7?\x02 '
+
+=== StandardExportDialog ===
+Offset 0x02AE18AF | VA 0x02EE3AAF | Sec .data | Snippet: b'rafficExportProducer@@   \xa4\xb7?\x02    .?AVpalStandardExportDialog@@   \xa4\xb7?\x02    .?AVifEditPolicy@@  \xa4\xb7?\x02   '
+
+=== AutodeskExportDialog ===
+Offset 0x01EC858C | VA 0x022C9D8C | Sec .rdata | Snippet: b'Label1  exportOpenFlightFlipTexCoords   AutodeskExportDialog    C314E031-2FB5-4e4b-9240-8A7B7B12ABF4'
+Offset 0x02AE159F | VA 0x02EE379F | Sec .data | Snippet: b'VpalFindBuildingDialog@@ \xa4\xb7?\x02    .?AVpalAutodeskExportDialog@@   \xa4\xb7?\x02    .?AVadIManager@@    \xa4\xb7?\x02   '
+
+=== DefaultExportDialog ===
+Offset 0x01ED1698 | VA 0x022D2E98 | Sec .rdata | Snippet: b'\x90\xac\xe3 \x90\xad\xe3 \xe0;\xe1 PixelActive Export Options  DefaultExportDialog 6F33EA0D-E89A-4e69-BBC0-EA1CBD75A053   '
+Offset 0x02AE16B7 | VA 0x02EE38B7 | Sec .data | Snippet: b'VcvTextureConverter@@    \xa4\xb7?\x02    .?AVpalDefaultExportDialog@@    \xa4\xb7?\x02    .?AVifVisitable@@   \xa4\xb7?\x02  '
+
+=== cvMeshGeometryNode ===
+Offset 0x02C4CD1C | VA 0x0304EF1C | Sec .data | Snippet: b'\xa4\xb7?\x02    .?AVcvModelNode@@   \xa4\xb7?\x02    .?AVcvMeshGeometryNode@@    \xa4\xb7?\x02    .?AVcvPolyhedronGeometryNo'
+
+=== coColladaExport ===
+Offset 0x02C5F628 | VA 0x03061828 | Sec .data | Snippet: b'ygons@@ \xa4\xb7?\x02    .?AVDAE@@   \xa4\xb7?\x02    .?AVcoColladaExport@@   \xa4\xb7?\x02    .?AVcoColladaImporter@@ \xa4\xb7?'

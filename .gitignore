@@ -25,7 +25,7 @@ assets/extracted/
 /CityScape_Managed.exe.config
 /CityScape_Managed.exe.response.txt
 /CityScape_Native.exe*
-/CityScape_Old_Legacy.exe
+/CityScape_Old_Legacy.exe*
 /CityScape_x64.exe
 /CityScape_x64.exe.config
 /CityScape_ARM64.exe
@@ -101,6 +101,15 @@ test_x64_*.exe
 ps_trace.txt
 startup_trace.txt
 *.log
+*.dxvk-cache
+scratch/
+testsaves/
+kayitlisahne/
+graphify-out/
+save1_decompressed.bin
 /lib/d3d9*.dll
+/Microsoft.VC90.CRT/
+
+
 
 

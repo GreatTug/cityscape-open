@@ -125,6 +125,66 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		}
 	}
 
+	public DialogNumericUpDownFloat TileSizeX
+	{
+		get
+		{
+			return TileSizeXInput;
+		}
+		set
+		{
+			TileSizeXInput = value;
+		}
+	}
+
+	public DialogNumericUpDownFloat TileSizeY
+	{
+		get
+		{
+			return TileSizeYInput;
+		}
+		set
+		{
+			TileSizeYInput = value;
+		}
+	}
+
+	public DialogNumericUpDownFloat SamplingDistance
+	{
+		get
+		{
+			return SamplingDistanceInput;
+		}
+		set
+		{
+			SamplingDistanceInput = value;
+		}
+	}
+
+	public DialogNumericUpDownInt TileCountX
+	{
+		get
+		{
+			return TileCountXInput;
+		}
+		set
+		{
+			TileCountXInput = value;
+		}
+	}
+
+	public DialogNumericUpDownInt TileCountY
+	{
+		get
+		{
+			return TileCountYInput;
+		}
+		set
+		{
+			TileCountYInput = value;
+		}
+	}
+
 	public DialogNumericUpDownFloat TerrainOriginLongitude
 	{
 		get
@@ -568,13 +628,13 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.TileResolutionXLabel.Text = "Tile count X:";
 		this.TileSizeYInput.DecimalPlaces = 2;
 		this.TileSizeYInput.Location = new System.Drawing.Point(185, 126);
-		this.TileSizeYInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
+		this.TileSizeYInput.Maximum = new decimal(new int[4] { 10000000, 0, 0, 0 });
 		this.TileSizeYInput.Minimum = new decimal(new int[4] { 10, 0, 0, 0 });
 		this.TileSizeYInput.Name = "TileSizeYInput";
 		this.TileSizeYInput.SaveToConfig = true;
 		this.TileSizeYInput.Size = new System.Drawing.Size(100, 20);
 		this.TileSizeYInput.TabIndex = 7;
-		this.TileSizeYInput.Value = new decimal(new int[4] { 5120, 0, 0, 65536 });
+		this.TileSizeYInput.Value = new decimal(new int[4] { 1024, 0, 0, 0 });
 		this.TileSizeYLabel.AutoSize = true;
 		this.TileSizeYLabel.Location = new System.Drawing.Point(25, 128);
 		this.TileSizeYLabel.Name = "TileSizeYLabel";
@@ -584,13 +644,13 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.TileSizeYLabel.Text = "Tile size Y (meters):";
 		this.TileSizeXInput.DecimalPlaces = 2;
 		this.TileSizeXInput.Location = new System.Drawing.Point(185, 100);
-		this.TileSizeXInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
+		this.TileSizeXInput.Maximum = new decimal(new int[4] { 10000000, 0, 0, 0 });
 		this.TileSizeXInput.Minimum = new decimal(new int[4] { 10, 0, 0, 0 });
 		this.TileSizeXInput.Name = "TileSizeXInput";
 		this.TileSizeXInput.SaveToConfig = true;
 		this.TileSizeXInput.Size = new System.Drawing.Size(100, 20);
 		this.TileSizeXInput.TabIndex = 5;
-		this.TileSizeXInput.Value = new decimal(new int[4] { 5120, 0, 0, 65536 });
+		this.TileSizeXInput.Value = new decimal(new int[4] { 1024, 0, 0, 0 });
 		this.TileSizeXLabel.AutoSize = true;
 		this.TileSizeXLabel.Location = new System.Drawing.Point(25, 102);
 		this.TileSizeXLabel.Name = "TileSizeXLabel";
@@ -633,13 +693,21 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		ClearMessageInfo();
 	}
 
+	private bool mIsUpdatingTileSize;
+
 	public void OnShown()
 	{
 		ClearMessageInfo();
+		TerrainSizeXInput.ValueChanged -= TerrainSize_ValueChanged;
+		TerrainSizeYInput.ValueChanged -= TerrainSize_ValueChanged;
+		TileSizeXInput.ValueChanged -= TileSizeX_ValueChanged;
+		TileSizeYInput.ValueChanged -= TileSizeY_ValueChanged;
+
 		TerrainSizeXInput.ValueChanged += TerrainSize_ValueChanged;
 		TerrainSizeYInput.ValueChanged += TerrainSize_ValueChanged;
-		TileSizeXInput.ValueChanged += TileSize_ValueChanged;
-		TileSizeYInput.ValueChanged += TileSize_ValueChanged;
+		TileSizeXInput.ValueChanged += TileSizeX_ValueChanged;
+		TileSizeYInput.ValueChanged += TileSizeY_ValueChanged;
+
 		if (GeolocatedTerrainCheckGroupBox.Checked)
 		{
 			GeolocatedTerrainCheckGroupBox.Checked = false;
@@ -655,8 +723,35 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		ComputeTileCountValues();
 	}
 
-	private void TileSize_ValueChanged(object sender, EventArgs e)
+	private void TileSizeX_ValueChanged(object sender, EventArgs e)
 	{
+		if (mIsUpdatingTileSize) return;
+		try
+		{
+			mIsUpdatingTileSize = true;
+			// Keep tiles strictly square (TileSizeY == TileSizeX) to guarantee DeltaX == DeltaY and circular brush strokes
+			TileSizeYInput.Value = TileSizeXInput.Value;
+		}
+		finally
+		{
+			mIsUpdatingTileSize = false;
+		}
+		ComputeTileCountValues();
+	}
+
+	private void TileSizeY_ValueChanged(object sender, EventArgs e)
+	{
+		if (mIsUpdatingTileSize) return;
+		try
+		{
+			mIsUpdatingTileSize = true;
+			// Keep tiles strictly square (TileSizeX == TileSizeY) to guarantee DeltaX == DeltaY and circular brush strokes
+			TileSizeXInput.Value = TileSizeYInput.Value;
+		}
+		finally
+		{
+			mIsUpdatingTileSize = false;
+		}
 		ComputeTileCountValues();
 	}
 
@@ -666,9 +761,35 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		{
 			bool enableComputeTileCountValues = EnableComputeTileCountValues;
 			SetEnableComputeTileCountValues(bEnabled: false);
-			TileSizeXInput.Value = Math.Max(TerrainSizeXInput.Value, TileSizeXInput.Minimum);
-			TileSizeYInput.Value = Math.Max(TerrainSizeYInput.Value, TileSizeYInput.Minimum);
+
+			decimal maxDim = Math.Max(TerrainSizeXInput.Value, TerrainSizeYInput.Value);
+			maxDim = Math.Max(maxDim, TileSizeXInput.Minimum);
+
+			if (TileSizeXInput.Maximum < maxDim)
+			{
+				TileSizeXInput.Maximum = Math.Max(maxDim, UnlockedMaxTerrainSize);
+			}
+			if (TileSizeYInput.Maximum < maxDim)
+			{
+				TileSizeYInput.Maximum = Math.Max(maxDim, UnlockedMaxTerrainSize);
+			}
+
+			// Single tile must be square (maxDim x maxDim) to prevent quad stretching
+			TileSizeXInput.Value = maxDim;
+			TileSizeYInput.Value = maxDim;
 			SetEnableComputeTileCountValues(enableComputeTileCountValues);
+		}
+		else
+		{
+			// Multi-tile mode: TileSize must be square (TileSizeX == TileSizeY)
+			if (TileSizeXInput.Value <= 0m)
+			{
+				TileSizeXInput.Value = 1600m;
+			}
+			if (TileSizeYInput.Value != TileSizeXInput.Value)
+			{
+				TileSizeYInput.Value = TileSizeXInput.Value;
+			}
 		}
 	}
 
@@ -682,10 +803,17 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		return GeolocatedTerrainCheckGroupBox.Checked;
 	}
 
+	public const int UnlockedMaxTerrainSize = 10000000;
+
 	public void SetMaxTerrainSize(int maxSizeX, int maxSizeY)
 	{
+		// The native dialog passes the original 1600 m cap; lift it so terrain and tile areas can grow freely.
+		maxSizeX = Math.Max(maxSizeX, UnlockedMaxTerrainSize);
+		maxSizeY = Math.Max(maxSizeY, UnlockedMaxTerrainSize);
 		TerrainSizeXInput.Maximum = maxSizeX;
 		TerrainSizeYInput.Maximum = maxSizeY;
+		TileSizeXInput.Maximum = maxSizeX;
+		TileSizeYInput.Maximum = maxSizeY;
 		float num = (float)maxSizeX / 1000f;
 		float num2 = (float)maxSizeY / 1000f;
 		MaxTerrainSizeInfo.Text = num + " km × " + num2 + " km";
@@ -703,14 +831,26 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 
 	public void SetTerrainSize(float sizeX, float sizeY)
 	{
+		if (TerrainSizeXInput.Maximum < (decimal)sizeX)
+		{
+			TerrainSizeXInput.Maximum = Math.Max((decimal)sizeX, UnlockedMaxTerrainSize);
+		}
+		if (TerrainSizeYInput.Maximum < (decimal)sizeY)
+		{
+			TerrainSizeYInput.Maximum = Math.Max((decimal)sizeY, UnlockedMaxTerrainSize);
+		}
 		TerrainSizeXInput.Value = Math.Min((decimal)sizeX, TerrainSizeXInput.Maximum);
 		TerrainSizeYInput.Value = Math.Min((decimal)sizeY, TerrainSizeYInput.Maximum);
+		HandleForceSingleTile();
+		ComputeTileCountValues();
 	}
 
 	public void SetTileSize(float tileSizeX, float tileSizeY)
 	{
-		TileSizeXInput.Value = (decimal)tileSizeX;
-		TileSizeYInput.Value = (decimal)tileSizeY;
+		float squareSize = Math.Max(tileSizeX, tileSizeY);
+		if (squareSize <= 0f) squareSize = 1600f;
+		TileSizeXInput.Value = (decimal)squareSize;
+		TileSizeYInput.Value = (decimal)squareSize;
 	}
 
 	public void SetTessellationSampleDist(float samplingDist)
@@ -731,6 +871,11 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		{
 			TileSizeXInput.Enabled = false;
 			TileSizeYInput.Enabled = false;
+		}
+		else
+		{
+			TileSizeXInput.Enabled = true;
+			TileSizeYInput.Enabled = true;
 		}
 	}
 
@@ -784,8 +929,8 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 			}
 			else
 			{
-				TileCountXInput.Value = (int)Math.Ceiling(value / value3);
-				TileCountYInput.Value = (int)Math.Ceiling(value2 / value4);
+				TileCountXInput.Value = Math.Max(1, (int)Math.Ceiling(value / value3));
+				TileCountYInput.Value = Math.Max(1, (int)Math.Ceiling(value2 / value4));
 			}
 			OnTerrainValueChanged(new EventArgs());
 		}

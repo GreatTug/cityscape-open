@@ -1,0 +1,337 @@
+
+========================================
+=== cvMeshGeometryNode::VFunc0 (VA: 0x0101F550) ===
+========================================
+0x0101F550:  push    esi
+0x0101F551:  mov     esi, ecx
+0x0101F553:  call    0x10176a0
+0x0101F558:  test    byte ptr [esp + 8], 1
+0x0101F55D:  je      0x101f568
+0x0101F55F:  push    esi
+0x0101F560:  call    0x1963b4c
+0x0101F565:  add     esp, 4
+0x0101F568:  mov     eax, esi
+0x0101F56A:  pop     esi
+0x0101F56B:  ret     4
+
+========================================
+=== cvMeshGeometryNode::VFunc4 (VA: 0x01007BF0) ===
+========================================
+0x01007BF0:  mov     eax, 1
+0x01007BF5:  test    byte ptr [0x3107ed8], al
+0x01007BFB:  jne     0x1007c03
+0x01007BFD:  or      dword ptr [0x3107ed8], eax
+0x01007C03:  mov     eax, dword ptr [esp + 4]
+0x01007C07:  mov     edx, dword ptr [ecx + 0x24]
+0x01007C0A:  imul    eax, eax, 0x34
+0x01007C0D:  movq    xmm0, qword ptr [eax + edx + 0x10]
+0x01007C13:  lea     eax, [eax + edx + 0x10]
+0x01007C17:  movq    qword ptr [0x3107ecc], xmm0
+0x01007C1F:  mov     eax, dword ptr [eax + 8]
+0x01007C22:  push    esi
+0x01007C23:  mov     dword ptr [0x3107ed4], eax
+0x01007C28:  mov     esi, dword ptr [ecx + 8]
+0x01007C2B:  add     esi, 0x3c
+0x01007C2E:  push    0x3107ecc
+0x01007C33:  lea     ecx, [esi + 8]
+0x01007C36:  call    0x1475bf0
+0x01007C3B:  movss   xmm0, dword ptr [esi + 0x68]
+0x01007C40:  movss   xmm1, dword ptr [0x3107ecc]
+0x01007C48:  mulss   xmm1, xmm0
+0x01007C4C:  movss   dword ptr [0x3107ecc], xmm1
+0x01007C54:  movss   xmm1, dword ptr [0x3107ed0]
+0x01007C5C:  mulss   xmm1, xmm0
+0x01007C60:  movss   dword ptr [0x3107ed0], xmm1
+0x01007C68:  movss   xmm1, dword ptr [0x3107ed4]
+0x01007C70:  mulss   xmm1, xmm0
+0x01007C74:  movss   dword ptr [0x3107ed4], xmm1
+0x01007C7C:  mov     eax, 0x3107ecc
+0x01007C81:  pop     esi
+0x01007C82:  ret     4
+
+========================================
+=== cvMeshGeometryNode::VFunc5 (VA: 0x01007B80) ===
+========================================
+0x01007B80:  mov     eax, dword ptr [ecx + 0x28]
+0x01007B83:  ret     
+
+========================================
+=== cvMeshGeometryNode::VFunc6 (VA: 0x01007B90) ===
+========================================
+0x01007B90:  mov     eax, dword ptr [ecx + 0x48]
+0x01007B93:  ret     
+
+========================================
+=== cvMeshGeometryNode::VFunc7 (VA: 0x01007BA0) ===
+========================================
+0x01007BA0:  mov     eax, 1
+0x01007BA5:  test    byte ptr [0x3107ec8], al
+0x01007BAB:  jne     0x1007bc4
+0x01007BAD:  or      dword ptr [0x3107ec8], eax
+0x01007BB3:  xor     eax, eax
+0x01007BB5:  mov     dword ptr [0x3107ebc], eax
+0x01007BBA:  mov     dword ptr [0x3107ec0], eax
+0x01007BBF:  mov     dword ptr [0x3107ec4], eax
+0x01007BC4:  mov     eax, dword ptr [esp + 4]
+0x01007BC8:  shl     eax, 4
+0x01007BCB:  add     eax, dword ptr [ecx + 0x44]
+0x01007BCE:  mov     ecx, dword ptr [eax + 8]
+0x01007BD1:  mov     edx, dword ptr [eax + 4]
+0x01007BD4:  mov     eax, dword ptr [eax]
+0x01007BD6:  mov     dword ptr [0x3107ebc], eax
+0x01007BDB:  mov     dword ptr [0x3107ec0], edx
+0x01007BE1:  mov     dword ptr [0x3107ec4], ecx
+0x01007BE7:  mov     eax, 0x3107ebc
+0x01007BEC:  ret     4
+
+========================================
+=== cvStandardExporter::ExportMesh_Collada (VA: 0x0119BE10) ===
+========================================
+0x0119BE10:  push    ebp
+0x0119BE11:  mov     ebp, esp
+0x0119BE13:  and     esp, 0xffffffc0
+0x0119BE16:  sub     esp, 0x74
+0x0119BE19:  push    ebx
+0x0119BE1A:  mov     ebx, dword ptr [ebp + 8]
+0x0119BE1D:  push    esi
+0x0119BE1E:  push    edi
+0x0119BE1F:  push    ebx
+0x0119BE20:  mov     esi, ecx
+0x0119BE22:  call    0x119bd10
+0x0119BE27:  add     esi, 0x1e8
+0x0119BE2D:  push    4
+0x0119BE2F:  mov     ecx, esi
+0x0119BE31:  call    0x1196760
+0x0119BE36:  test    al, al
+0x0119BE38:  je      0x119be4b
+0x0119BE3A:  mov     eax, dword ptr [0x304e578]
+0x0119BE3F:  push    1
+0x0119BE41:  push    eax
+0x0119BE42:  push    4
+0x0119BE44:  mov     ecx, esi
+0x0119BE46:  call    0x11968a0
+0x0119BE4B:  lea     ecx, [ebx + 0xa0]
+0x0119BE51:  push    ecx
+0x0119BE52:  push    0xd
+0x0119BE54:  mov     ecx, esi
+0x0119BE56:  call    0x1199530
+0x0119BE5B:  mov     edx, dword ptr [ebx]
+0x0119BE5D:  mov     eax, dword ptr [edx + 0x14]
+0x0119BE60:  xor     edi, edi
+0x0119BE62:  mov     ecx, ebx
+0x0119BE64:  mov     dword ptr [esp + 0x34], edi
+0x0119BE68:  call    eax
+0x0119BE6A:  test    eax, eax
+0x0119BE6C:  jbe     0x119bf65
+0x0119BE72:  mov     ecx, dword ptr [ebx + 0xac]
+0x0119BE78:  movss   xmm0, dword ptr [ecx + edi*4]
+0x0119BE7D:  push    5
+0x0119BE7F:  mov     ecx, esi
+0x0119BE81:  movss   dword ptr [esp + 0x3c], xmm0
+0x0119BE87:  call    0x1196760
+0x0119BE8C:  test    al, al
+0x0119BE8E:  je      0x119bf4f
+0x0119BE94:  cvtss2sd xmm0, dword ptr [esp + 0x38]
+0x0119BE9A:  sub     esp, 8
+0x0119BE9D:  movsd   qword ptr [esp], xmm0
+0x0119BEA2:  push    0x22c6b18
+0x0119BEA7:  lea     edx, [esp + 0x4c]
+0x0119BEAB:  push    0x40
+0x0119BEAD:  push    edx
+0x0119BEAE:  call    dword ptr [0x1cbc6e0]
+0x0119BEB4:  mov     eax, dword ptr [esi]
+0x0119BEB6:  mov     eax, dword ptr [eax + 0x1894]
+0x0119BEBC:  add     esp, 0x14
+0x0119BEBF:  sub     eax, 2
+0x0119BEC2:  je      0x119bef5
+0x0119BEC4:  sub     eax, 2
+0x0119BEC7:  jne     0x119bf4f
+0x0119BECD:  lea     ecx, [esp + 0x40]
+0x0119BED1:  push    ecx
+0x0119BED2:  mov     ecx, dword ptr [esi + 0x1c]
+0x0119BED5:  add     ecx, 0x54
+0x0119BED8:  call    dword ptr [0x1cbccb0]
+0x0119BEDE:  mov     ecx, dword ptr [esi + 0x1c]
+0x0119BEE1:  mov     eax, dword ptr [0x3061580]
+0x0119BEE6:  mov     edx, dword ptr [ecx]
+0x0119BEE8:  mov     edx, dword ptr [edx + 0xc]
+0x0119BEEB:  push    eax
+0x0119BEEC:  push    0x235a028
+0x0119BEF1:  call    edx
+0x0119BEF3:  jmp     0x119bf4f
+0x0119BEF5:  cmp     dword ptr [esi + 0x1024], 0
+0x0119BEFC:  mov     al, byte ptr [0x234a4e2]
+0x0119BF01:  lea     edi, [esi + 0x1024]
+0x0119BF07:  mov     byte ptr [esp + 0x3c], al
+0x0119BF0B:  je      0x119bf23
+0x0119BF0D:  push    0
+0x0119BF0F:  mov     ecx, edi
+0x0119BF11:  call    0x5ec9c0
+0x0119BF16:  mov     eax, dword ptr [edi]
+0x0119BF18:  mov     ecx, dword ptr [eax + 4]
+0x0119BF1B:  mov     edx, dword ptr [eax]
+0x0119BF1D:  lea     eax, [ecx + edx - 1]
+0x0119BF21:  jmp     0x119bf25
+0x0119BF23:  xor     eax, eax
+0x0119BF25:  mov     ecx, dword ptr [esp + 0x3c]
+0x0119BF29:  push    ecx
+0x0119BF2A:  push    eax
+0x0119BF2B:  mov     ecx, edi
+0x0119BF2D:  call    0x64c6e0
+0x0119BF32:  lea     edx, [esp + 0x40]
+0x0119BF36:  push    edx
+0x0119BF37:  push    edi
+
+========================================
+=== cvStandardExporter::ExportMesh_FBX (VA: 0x0115FB40) ===
+========================================
+0x0115FB40:  push    -1
+0x0115FB42:  mov     eax, dword ptr fs:[0]
+0x0115FB48:  push    0x1b85fd8
+0x0115FB4D:  push    eax
+0x0115FB4E:  mov     dword ptr fs:[0], esp
+0x0115FB55:  sub     esp, 0x18
+0x0115FB58:  cmp     byte ptr [0x3109d88], 0
+0x0115FB5F:  push    ebx
+0x0115FB60:  push    ebp
+0x0115FB61:  push    esi
+0x0115FB62:  push    edi
+0x0115FB63:  mov     edi, ecx
+0x0115FB65:  je      0x115fbae
+0x0115FB67:  mov     ebx, dword ptr [esp + 0x38]
+0x0115FB6B:  lea     esi, [ebx + 0x28]
+0x0115FB6E:  push    0x3089388
+0x0115FB73:  mov     ecx, esi
+0x0115FB75:  call    0x461ad0
+0x0115FB7A:  test    al, al
+0x0115FB7C:  jne     0x115fc98
+0x0115FB82:  push    ebx
+0x0115FB83:  mov     ecx, edi
+0x0115FB85:  call    0x115e490
+0x0115FB8A:  push    0x3089388
+0x0115FB8F:  mov     ecx, esi
+0x0115FB91:  mov     ebx, eax
+0x0115FB93:  call    0x461ad0
+0x0115FB98:  test    al, al
+0x0115FB9A:  jne     0x115fc98
+0x0115FBA0:  push    esi
+0x0115FBA1:  push    ebx
+0x0115FBA2:  mov     ecx, edi
+0x0115FBA4:  call    0x115d150
+0x0115FBA9:  jmp     0x115fc98
+0x0115FBAE:  mov     esi, dword ptr [esp + 0x38]
+0x0115FBB2:  push    esi
+0x0115FBB3:  lea     ebp, [esi + 0x28]
+0x0115FBB6:  call    0x115e490
+0x0115FBBB:  push    0x3089388
+0x0115FBC0:  mov     ecx, ebp
+0x0115FBC2:  mov     ebx, eax
+0x0115FBC4:  call    0x461ad0
+0x0115FBC9:  test    al, al
+0x0115FBCB:  jne     0x115fbd6
+0x0115FBCD:  push    ebp
+0x0115FBCE:  push    ebx
+0x0115FBCF:  mov     ecx, edi
+0x0115FBD1:  call    0x115d150
+0x0115FBD6:  mov     eax, dword ptr [0x3109d80]
+0x0115FBDB:  push    0x22c656c
+0x0115FBE0:  push    eax
+0x0115FBE1:  call    0x16ac340
+0x0115FBE6:  add     esp, 8
+0x0115FBE9:  mov     ebp, eax
+0x0115FBEB:  push    ebp
+0x0115FBEC:  mov     ecx, ebx
+0x0115FBEE:  call    0x1658a10
+0x0115FBF3:  mov     edx, dword ptr [esi]
+0x0115FBF5:  mov     eax, dword ptr [edx + 0x14]
+0x0115FBF8:  mov     ecx, esi
+0x0115FBFA:  xor     ebx, ebx
+0x0115FBFC:  xor     edi, edi
+0x0115FBFE:  call    eax
+0x0115FC00:  test    eax, eax
+0x0115FC02:  jbe     0x115fc98
+0x0115FC08:  push    ebx
+0x0115FC09:  mov     ecx, ebp
+0x0115FC0B:  call    0x16acd60
+0x0115FC10:  cmp     edi, ebx
+0x0115FC12:  je      0x115fc86
+0x0115FC14:  mov     ecx, dword ptr [esi + 0xac]
+0x0115FC1A:  movq    xmm0, qword ptr [0x30c7010]
+0x0115FC22:  fld     dword ptr [ecx + edi*4 - 4]
+0x0115FC26:  sub     esp, 0x10
+0x0115FC29:  mov     eax, esp
+0x0115FC2B:  movq    qword ptr [eax], xmm0
+0x0115FC2F:  movq    xmm0, qword ptr [0x30c7018]
+0x0115FC37:  push    ecx
+0x0115FC38:  movq    qword ptr [eax + 8], xmm0
+0x0115FC3D:  fstp    dword ptr [esp]
+0x0115FC40:  lea     ecx, [esp + 0x24]
+0x0115FC44:  call    0x1156e70
+0x0115FC49:  movq    xmm0, qword ptr [eax]
+0x0115FC4D:  sub     esp, 0x18
+0x0115FC50:  mov     ecx, esp
+0x0115FC52:  movq    qword ptr [ecx], xmm0
+0x0115FC56:  movq    xmm0, qword ptr [eax + 8]
+0x0115FC5B:  movq    qword ptr [ecx + 8], xmm0
+0x0115FC60:  movq    xmm0, qword ptr [eax + 0x10]
+0x0115FC65:  movq    qword ptr [ecx + 0x10], xmm0
+0x0115FC6A:  mov     ecx, ebp
+
+========================================
+=== cvStandardExporter::ExportPolyhedron_Collada (VA: 0x0119C6A0) ===
+========================================
+0x0119C6A0:  push    esi
+0x0119C6A1:  mov     esi, dword ptr [esp + 8]
+0x0119C6A5:  cmp     byte ptr [esi + 0x26], 0
+0x0119C6A9:  push    edi
+0x0119C6AA:  mov     edi, ecx
+0x0119C6AC:  jne     0x119c6b4
+0x0119C6AE:  cmp     byte ptr [esi + 0x25], 0
+0x0119C6B2:  je      0x119c6c2
+0x0119C6B4:  mov     eax, dword ptr [edi]
+0x0119C6B6:  mov     edx, dword ptr [eax + 0x13c]
+0x0119C6BC:  call    edx
+0x0119C6BE:  test    al, al
+0x0119C6C0:  je      0x119c707
+0x0119C6C2:  cmp     byte ptr [esi + 0x24], 0
+0x0119C6C6:  je      0x119c70e
+0x0119C6C8:  mov     eax, dword ptr [edi]
+0x0119C6CA:  mov     edx, dword ptr [eax + 0x140]
+0x0119C6D0:  mov     ecx, edi
+0x0119C6D2:  call    edx
+0x0119C6D4:  test    al, al
+0x0119C6D6:  jne     0x119c70e
+0x0119C6D8:  push    0x3089388
+0x0119C6DD:  lea     ecx, [esi + 0x28]
+0x0119C6E0:  call    0x461ad0
+0x0119C6E5:  test    al, al
+0x0119C6E7:  jne     0x119c707
+0x0119C6E9:  mov     esi, dword ptr [esi + 0xc]
+0x0119C6EC:  test    esi, esi
+0x0119C6EE:  je      0x119c6f4
+0x0119C6F0:  mov     esi, dword ptr [esi]
+0x0119C6F2:  jmp     0x119c6f9
+0x0119C6F4:  mov     esi, 0x30d74b0
+0x0119C6F9:  push    esi
+0x0119C6FA:  push    0x235c700
+0x0119C6FF:  call    0x15227c0
+0x0119C704:  add     esp, 8
+0x0119C707:  pop     edi
+0x0119C708:  mov     al, 1
+0x0119C70A:  pop     esi
+0x0119C70B:  ret     4
+
+========================================
+=== edExportRoadAccessor::VFunc0 (VA: 0x008BFF70) ===
+========================================
+0x008BFF70:  test    byte ptr [esp + 4], 1
+0x008BFF75:  push    esi
+0x008BFF76:  mov     esi, ecx
+0x008BFF78:  mov     dword ptr [esi], 0x2307848
+0x008BFF7E:  je      0x8bff89
+0x008BFF80:  push    esi
+0x008BFF81:  call    0x1963b4c
+0x008BFF86:  add     esp, 4
+0x008BFF89:  mov     eax, esi
+0x008BFF8B:  pop     esi
+0x008BFF8C:  ret     4

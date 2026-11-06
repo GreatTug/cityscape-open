@@ -1,0 +1,349 @@
+================================================================================
+  PIXELACTIVE CITYSCAPE 1.8 NATIVE VTABLE & METHOD RECOVERY REPORT
+================================================================================
+
+Class: .?AVrdIntersection@@
+  TypeDescriptor: 0x02FF7600
+  COL:            0x0271A6B0
+  VTable:         0x0232CD00 (2 methods)
+    [ 0] 0x00CB1C00
+    [ 1] 0x00CB2390
+
+Class: .?AVrdIntersectionTessellator@@
+  TypeDescriptor: 0x02FF436C
+  COL:            0x02712194
+  VTable:         0x0232A894 (2 methods)
+    [ 0] 0x00C752B0
+    [ 1] 0x00CCBC70
+
+Class: .?AVrdCornerCurveBorder@@
+  TypeDescriptor: 0x02FF4348
+  COL:            0x0271214C
+  VTable:         0x0232A884 (3 methods)
+    [ 0] 0x00C74230
+    [ 1] 0x01963B08
+    [ 2] 0x01963B08
+
+Class: .?AVrdIntersectionCurve@@
+  TypeDescriptor: 0x02FF4B9C
+  COL:            0x0271A61C
+  VTable:         0x0232CCEC (2 methods)
+    [ 0] 0x00CB1750
+    [ 1] 0x00CB1690
+
+Class: .?AVrdCuldesacInfo@@
+  TypeDescriptor: 0x02FF4434
+  COL:            0x02712394
+  VTable:         0x0232AA18 (10 methods)
+    [ 0] 0x00C75440
+    [ 1] 0x00C75580
+    [ 2] 0x00C755A0
+    [ 3] 0x00C936C0
+    [ 4] 0x00C755C0
+    [ 5] 0x00C93720
+    [ 6] 0x00C932A0
+    [ 7] 0x00CB3270
+    [ 8] 0x00C75420
+    [ 9] 0x00C75430
+
+Class: .?AVrdLaneTessellator@@
+  TypeDescriptor: 0x02FF44E0
+  COL:            0x02712510
+  VTable:         0x0232AAD8 (3 methods)
+    [ 0] 0x00C94280
+    [ 1] 0x00CFC0F0
+    [ 2] 0x00CE7A60
+
+Class: .?AVrdSidewalkTessellator@@
+  TypeDescriptor: 0x02FF846C
+  COL:            0x02715908
+  VTable:         0x0232B8E8 (3 methods)
+    [ 0] 0x00C8EDA0
+    [ 1] 0x00D10030
+    [ 2] 0x00CE89C0
+
+Class: .?AVrdRegionTessellator@@
+  TypeDescriptor: 0x02FF4164
+  COL:            0x02711E28
+  VTable:         0x0232A7A8 (3 methods)
+    [ 0] 0x00C73AA0
+    [ 1] 0x01963B08
+    [ 2] 0x01963B08
+
+Class: .?AVrdPolygonRegionTessellator@@
+  TypeDescriptor: 0x02FF42DC
+  COL:            0x02712070
+  VTable:         0x0232A84C (3 methods)
+    [ 0] 0x00C8EEE0
+    [ 1] 0x00D0FED0
+    [ 2] 0x00D0FFA0
+
+Class: .?AVrdNodeExtruder@@
+  TypeDescriptor: 0x03000090
+  COL:            0x0271B88C
+  VTable:         0x0232D2EC (2 methods)
+    [ 0] 0x00CC89B0
+    [ 1] 0x00CAFD30
+
+Class: .?AVrdSegmentExtruder@@
+  TypeDescriptor: 0x02FFEFB4
+  COL:            0x0271A36C
+  VTable:         0x0232CC10 (2 methods)
+    [ 0] 0x00CA9BF0
+    [ 1] 0x00CAD910
+
+Class: .?AVrdMergeSplitRegionBuilder@@
+  TypeDescriptor: 0x03004FCC
+  COL:            0x0271E45C
+  VTable:         0x0232EBD8 (2 methods)
+    [ 0] 0x00D0F070
+    [ 1] 0x00D6FF80
+
+Class: .?AVtrRoadSegment@@
+  TypeDescriptor: 0x02F0F4FC
+  COL:            0x0268C5C4
+  VTable:         0x022F6BF4 (45 methods)
+    [ 0] 0x0075FB10
+    [ 1] 0x004A2D30
+    [ 2] 0x004A2D40
+    [ 3] 0x004A2D50
+    [ 4] 0x00774910
+    [ 5] 0x007416D0
+    [ 6] 0x0075F5B0
+    [ 7] 0x00EBE700
+    [ 8] 0x00CD0000
+    [ 9] 0x0075F5C0
+    [10] 0x00EE4C40
+    [11] 0x00E8A160
+    [12] 0x00C76A80
+    [13] 0x0075F570
+    [14] 0x0075F710
+    [15] 0x0075F580
+    [16] 0x0075F740
+    [17] 0x0075F590
+    [18] 0x0075F780
+    [19] 0x0075F5A0
+    [20] 0x0075F7B0
+    [21] 0x0075FA10
+    [22] 0x0075FA40
+    [23] 0x0075F620
+    [24] 0x0075F7E0
+    [25] 0x0075F640
+    [26] 0x0075F830
+    [27] 0x0075F650
+    [28] 0x0075F860
+    [29] 0x0075F660
+    [30] 0x0075F890
+    [31] 0x0075F670
+    [32] 0x0075F8C0
+    [33] 0x0075F680
+    [34] 0x0075F8F0
+    [35] 0x0075F690
+    [36] 0x0075F920
+    [37] 0x0075F6A0
+    [38] 0x0075F950
+    [39] 0x0075F6B0
+    [40] 0x0075F980
+    [41] 0x0075F6C0
+    [42] 0x0075F9B0
+    [43] 0x0075F6D0
+    [44] 0x0075F9E0
+
+Class: .?AVtrRoadNode@@
+  TypeDescriptor: 0x02F0EDE0
+  COL:            0x0271E4F8
+  VTable:         0x0232ED5C (47 methods)
+    [ 0] 0x00D23B00
+    [ 1] 0x004A2D30
+    [ 2] 0x004A2D40
+    [ 3] 0x004A2D50
+    [ 4] 0x00D3FAB0
+    [ 5] 0x007416C0
+    [ 6] 0x00D11A80
+    [ 7] 0x00CB63C0
+    [ 8] 0x00CEADA0
+    [ 9] 0x00C09850
+    [10] 0x00EA4FB0
+    [11] 0x00E8A230
+    [12] 0x00C768A0
+    [13] 0x0075AC40
+    [14] 0x00CB6360
+    [15] 0x00C097D0
+    [16] 0x00C09810
+    [17] 0x00D11EC0
+    [18] 0x00D11EF0
+    [19] 0x00D11A90
+    [20] 0x00D11BB0
+    [21] 0x00D11AB0
+    [22] 0x00D11C00
+    [23] 0x00D11AC0
+    [24] 0x00D11C40
+    [25] 0x00D11AD0
+    [26] 0x00D11C70
+    [27] 0x00D11AE0
+    [28] 0x00D11CA0
+    [29] 0x00D11AF0
+    [30] 0x00D11CE0
+    [31] 0x00D11B00
+    [32] 0x00D11D10
+    [33] 0x00D11B10
+    [34] 0x00D11D50
+    [35] 0x00D11B20
+    [36] 0x00D11D80
+    [37] 0x00D11B30
+    [38] 0x00D11DC0
+    [39] 0x00D11B40
+    [40] 0x00D11E00
+    [41] 0x00D11B50
+    [42] 0x00D11E30
+    [43] 0x00D11B60
+    [44] 0x00D11E60
+    [45] 0x00D11B70
+    [46] 0x00D11E90
+
+Class: .?AVtrRoadNetwork@@
+  TypeDescriptor: 0x02F0FA3C
+  COL:            0x0271D8A8
+  VTable:         0x0232E40C (24 methods)
+    [ 0] 0x00D11640
+    [ 1] 0x00D26440
+    [ 2] 0x00CFECD0
+    [ 3] 0x00D118F0
+    [ 4] 0x00CEE6D0
+    [ 5] 0x00CD5FA0
+    [ 6] 0x00CD5D60
+    [ 7] 0x00CD5DB0
+    [ 8] 0x00CEE7F0
+    [ 9] 0x00CEE980
+    [10] 0x00CEEB80
+    [11] 0x00D00720
+    [12] 0x00D184D0
+    [13] 0x00CD5DC0
+    [14] 0x00D00990
+    [15] 0x00D18500
+    [16] 0x00D00A30
+    [17] 0x00D7BDA0
+    [18] 0x00CFF220
+    [19] 0x00D4F6A0
+    [20] 0x00CFEF20
+    [21] 0x00D18530
+    [22] 0x00D01230
+    [23] 0x00D11670
+
+Class: .?AVtrRoadStyle@@
+  TypeDescriptor: 0x02F0EA48
+  COL:            0x0271E588
+  VTable:         0x0232EE3C (12 methods)
+    [ 0] 0x00D23FA0
+    [ 1] 0x004A2D30
+    [ 2] 0x004A2D40
+    [ 3] 0x004A2D50
+    [ 4] 0x00D49680
+    [ 5] 0x00D12D20
+    [ 6] 0x00D12D10
+    [ 7] 0x00C76B40
+    [ 8] 0x01503BF0
+    [ 9] 0x00C76B20
+    [10] 0x00CD0700
+    [11] 0x00D462F0
+
+Class: .?AVtrRoadBlock@@
+  TypeDescriptor: 0x02FF4638
+  COL:            0x0271A790
+  VTable:         0x0232CE00 (11 methods)
+    [ 0] 0x00CCF4C0
+    [ 1] 0x0096C030
+    [ 2] 0x00C762E0
+    [ 3] 0x00CEF9F0
+    [ 4] 0x00EA2F10
+    [ 5] 0x00EF8BA0
+    [ 6] 0x00D1A220
+    [ 7] 0x00D5B340
+    [ 8] 0x00D5B360
+    [ 9] 0x00D629C0
+    [10] 0x00D5B380
+
+Class: .?AVtrTerrain@@
+  TypeDescriptor: 0x02F0ACA0
+  VTable:         [Not Found / Abstract / Inherited]
+
+Class: .?AVtrTerrainSettings@@
+  TypeDescriptor: 0x02F0C39C
+  COL:            0x026EE058
+  VTable:         0x0231BCC4 (9 methods)
+    [ 0] 0x00A2CD10
+    [ 1] 0x004A2D30
+    [ 2] 0x004A2D40
+    [ 3] 0x004A2D50
+    [ 4] 0x00AC71D0
+    [ 5] 0x00741790
+    [ 6] 0x00A09140
+    [ 7] 0x008FDFC0
+    [ 8] 0x009D7820
+
+Class: .?AVtrBuilding@@
+  TypeDescriptor: 0x02F0BC1C
+  COL:            0x026FD7F4
+  VTable:         0x02322B88 (1 methods)
+    [ 0] 0x00B4F220
+
+Class: .?AVtrBuildingRoofStyle@@
+  TypeDescriptor: 0x02EFEC30
+  COL:            0x026FC5E4
+  VTable:         0x02321868 (14 methods)
+    [ 0] 0x00A6C4D0
+    [ 1] 0x00A6C4E0
+    [ 2] 0x00448A90
+    [ 3] 0x00A96330
+    [ 4] 0x00B7B330
+    [ 5] 0x00AC0B00
+    [ 6] 0x00A6C510
+    [ 7] 0x00A6C520
+    [ 8] 0x01273BA0
+    [ 9] 0x01229300
+    [10] 0x00AD94E0
+    [11] 0x009CCB00
+    [12] 0x01228AB0
+    [13] 0x01228AC0
+
+Class: .?AVtrBuildingStyle@@
+  TypeDescriptor: 0x02EE36C8
+  COL:            0x026FC638
+  VTable:         0x023218A4 (14 methods)
+    [ 0] 0x00A6C600
+    [ 1] 0x00A6C610
+    [ 2] 0x00448A90
+    [ 3] 0x00A96350
+    [ 4] 0x00B7B350
+    [ 5] 0x00A93B90
+    [ 6] 0x00A6C640
+    [ 7] 0x00A6C650
+    [ 8] 0x01273BA0
+    [ 9] 0x01229300
+    [10] 0x00AD95A0
+    [11] 0x009CCC90
+    [12] 0x01228AB0
+    [13] 0x01228AC0
+
+Class: .?AVcvMeshGeometryNode@@
+  TypeDescriptor: 0x0304EF10
+  COL:            0x02751E14
+  VTable:         0x0234B7A0 (8 methods)
+    [ 0] 0x0101F550
+    [ 1] 0x00FF91E0
+    [ 2] 0x010161A0
+    [ 3] 0x00FF91D0
+    [ 4] 0x01007BF0
+    [ 5] 0x01007B80
+    [ 6] 0x01007B90
+    [ 7] 0x01007BA0
+
+Class: .?AVcvPolygonDataNode@@
+  TypeDescriptor: 0x0304ED58
+  COL:            0x027519A0
+  VTable:         0x0234B55C (5 methods)
+    [ 0] 0x01017800
+    [ 1] 0x00FF91E0
+    [ 2] 0x01012D00
+    [ 3] 0x00FF91D0
+    [ 4] 0x0073253C

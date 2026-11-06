@@ -1,0 +1,1423 @@
+================================================================================
+  PIXELACTIVE CITYSCAPE 1.8 NATIVE x86 DECOMPILED MATHEMATICS & GEOMETRY ENGINE
+  Reverse Engineered from Machine Code with Capstone Disassembler
+================================================================================
+
+================================================================================
+FUNCTION: rdIntersection::SolveOrganicJunction
+VIRTUAL ADDRESS: 0x00CB1C00 | FILE OFFSET: 0x008B1000
+ALGORITHMIC ROLE: Solves radial branches, angle sorting, and boundary fillet allocation
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 62
+
+Disassembly:
+  0x00CB1C00:  push     esi
+  0x00CB1C01:  mov      esi, ecx
+  0x00CB1C03:  call     0xcb1ae0
+  0x00CB1C08:  test     byte ptr [esp + 8], 1
+  0x00CB1C0D:  je       0xcb1c18
+  0x00CB1C0F:  push     esi
+  0x00CB1C10:  call     0x1963b4c
+  0x00CB1C15:  add      esp, 4
+  0x00CB1C18:  mov      eax, esi
+  0x00CB1C1A:  pop      esi
+  0x00CB1C1B:  ret      4
+  0x00CB1C1E:  int3     
+  0x00CB1C1F:  int3     
+  0x00CB1C20:  push     -1
+  0x00CB1C22:  push     0x1b47469
+  0x00CB1C27:  mov      eax, dword ptr fs:[0]
+  0x00CB1C2D:  push     eax
+  0x00CB1C2E:  mov      dword ptr fs:[0], esp
+  0x00CB1C35:  push     ecx
+  0x00CB1C36:  push     ebx
+  0x00CB1C37:  push     ebp
+  0x00CB1C38:  xor      ebp, ebp
+  0x00CB1C3A:  mov      dword ptr [esp + 8], ebp
+  0x00CB1C3E:  mov      ebx, dword ptr [esp + 0x1c]
+  0x00CB1C42:  push     esi
+  0x00CB1C43:  push     edi
+  0x00CB1C44:  mov      edi, ecx
+  0x00CB1C46:  mov      dword ptr [ebx], ebp
+  0x00CB1C48:  mov      dword ptr [ebx + 4], ebp
+  0x00CB1C4B:  mov      dword ptr [ebx + 8], ebp
+  0x00CB1C4E:  xor      esi, esi
+  0x00CB1C50:  mov      dword ptr [esp + 0x1c], ebp
+  0x00CB1C54:  mov      dword ptr [esp + 0x10], 1
+  0x00CB1C5C:  cmp      dword ptr [edi + 0x38], ebp
+  0x00CB1C5F:  jbe      0xcb1c92
+  0x00CB1C61:  mov      eax, dword ptr [edi + 0x34]
+  0x00CB1C64:  mov      ecx, dword ptr [eax + esi*4]
+  0x00CB1C67:  push     ebp
+  0x00CB1C68:  push     0x2ff55d8
+  0x00CB1C6D:  lea      eax, [eax + esi*4]
+  0x00CB1C70:  push     0x2ff55b0
+  0x00CB1C75:  push     ebp
+  0x00CB1C76:  push     ecx
+  0x00CB1C77:  call     0x1963b70
+  0x00CB1C7C:  add      esp, 0x14
+  0x00CB1C7F:  cmp      dword ptr [eax + 0x3c], ebp
+  0x00CB1C82:  jne      0xcb1c8c
+  0x00CB1C84:  push     eax
+  0x00CB1C85:  mov      ecx, ebx
+  0x00CB1C87:  call     0xc9ba60
+  0x00CB1C8C:  inc      esi
+  0x00CB1C8D:  cmp      esi, dword ptr [edi + 0x38]
+  0x00CB1C90:  jb       0xcb1c61
+  0x00CB1C92:  mov      ecx, dword ptr [esp + 0x14]
+  0x00CB1C96:  pop      edi
+  0x00CB1C97:  pop      esi
+  0x00CB1C98:  pop      ebp
+  0x00CB1C99:  mov      eax, ebx
+  0x00CB1C9B:  pop      ebx
+  0x00CB1C9C:  mov      dword ptr fs:[0], ecx
+  0x00CB1CA3:  add      esp, 0x10
+  0x00CB1CA6:  ret      4
+
+
+================================================================================
+FUNCTION: rdIntersection::BuildBranchConnections
+VIRTUAL ADDRESS: 0x00CB2390 | FILE OFFSET: 0x008B1790
+ALGORITHMIC ROLE: Builds branch connection chords and curb fillets between adjacent arms
+================================================================================
+Stack Frame Size: 0x8 (8 bytes)
+Total Instructions Analyzed: 66
+
+Disassembly:
+  0x00CB2390:  push     ecx
+  0x00CB2391:  push     ebx
+  0x00CB2392:  push     ebp
+  0x00CB2393:  push     esi
+  0x00CB2394:  mov      esi, ecx
+  0x00CB2396:  mov      eax, dword ptr [esi + 0x38]
+  0x00CB2399:  push     edi
+  0x00CB239A:  xor      ebp, ebp
+  0x00CB239C:  xor      edi, edi
+  0x00CB239E:  cmp      eax, ebp
+  0x00CB23A0:  jbe      0xcb23db
+  0x00CB23A2:  mov      eax, dword ptr [esi + 0x34]
+  0x00CB23A5:  mov      ebx, dword ptr [eax + edi*4]
+  0x00CB23A8:  sub      esp, 8
+  0x00CB23AB:  mov      eax, esp
+  0x00CB23AD:  mov      dword ptr [eax], ebp
+  0x00CB23AF:  mov      dword ptr [eax + 4], ebp
+  0x00CB23B2:  mov      ecx, dword ptr [esi + 0x54]
+  0x00CB23B5:  mov      dword ptr [eax], ecx
+  0x00CB23B7:  mov      ecx, dword ptr [esi + 0x58]
+  0x00CB23BA:  mov      dword ptr [esp + 0x18], esp
+  0x00CB23BE:  cmp      ecx, ebp
+  0x00CB23C0:  je       0xcb23cc
+  0x00CB23C2:  mov      dword ptr [eax + 4], ecx
+  0x00CB23C5:  mov      edx, dword ptr [ecx]
+  0x00CB23C7:  mov      eax, dword ptr [edx + 8]
+  0x00CB23CA:  call     eax
+  0x00CB23CC:  mov      edx, dword ptr [ebx]
+  0x00CB23CE:  mov      eax, dword ptr [edx + 4]
+  0x00CB23D1:  mov      ecx, ebx
+  0x00CB23D3:  call     eax
+  0x00CB23D5:  inc      edi
+  0x00CB23D6:  cmp      edi, dword ptr [esi + 0x38]
+  0x00CB23D9:  jb       0xcb23a2
+  0x00CB23DB:  xor      edi, edi
+  0x00CB23DD:  cmp      dword ptr [esi + 0x48], ebp
+  0x00CB23E0:  jbe      0xcb241b
+  0x00CB23E2:  mov      ecx, dword ptr [esi + 0x44]
+  0x00CB23E5:  mov      ebx, dword ptr [ecx + edi*4]
+  0x00CB23E8:  sub      esp, 8
+  0x00CB23EB:  mov      eax, esp
+  0x00CB23ED:  mov      dword ptr [eax], ebp
+  0x00CB23EF:  mov      dword ptr [eax + 4], ebp
+  0x00CB23F2:  mov      edx, dword ptr [esi + 0x5c]
+  0x00CB23F5:  mov      dword ptr [eax], edx
+  0x00CB23F7:  mov      ecx, dword ptr [esi + 0x60]
+  0x00CB23FA:  mov      dword ptr [esp + 0x18], esp
+  0x00CB23FE:  cmp      ecx, ebp
+  0x00CB2400:  je       0xcb240c
+  0x00CB2402:  mov      dword ptr [eax + 4], ecx
+  0x00CB2405:  mov      eax, dword ptr [ecx]
+  0x00CB2407:  mov      edx, dword ptr [eax + 8]
+  0x00CB240A:  call     edx
+  0x00CB240C:  mov      eax, dword ptr [ebx]
+  0x00CB240E:  mov      edx, dword ptr [eax + 4]
+  0x00CB2411:  mov      ecx, ebx
+  0x00CB2413:  call     edx
+  0x00CB2415:  inc      edi
+  0x00CB2416:  cmp      edi, dword ptr [esi + 0x48]
+  0x00CB2419:  jb       0xcb23e2
+  0x00CB241B:  pop      edi
+  0x00CB241C:  pop      esi
+  0x00CB241D:  pop      ebp
+  0x00CB241E:  pop      ebx
+  0x00CB241F:  pop      ecx
+  0x00CB2420:  ret      
+
+
+================================================================================
+FUNCTION: rdIntersectionTessellator::TessellateHubPolygon
+VIRTUAL ADDRESS: 0x00C752B0 | FILE OFFSET: 0x008746B0
+ALGORITHMIC ROLE: Fan triangulation of the interior junction hub polygon
+================================================================================
+Stack Frame Size: 0x8 (8 bytes)
+Total Instructions Analyzed: 53
+
+Disassembly:
+  0x00C752B0:  mov      edx, dword ptr [esp + 0xc]
+  0x00C752B4:  fldz     
+  0x00C752B6:  mov      eax, dword ptr [ecx]
+  0x00C752B8:  mov      eax, dword ptr [eax + 4]
+  0x00C752BB:  push     edx
+  0x00C752BC:  mov      edx, dword ptr [esp + 0xc]
+  0x00C752C0:  sub      esp, 8
+  0x00C752C3:  fst      dword ptr [esp + 4]
+  0x00C752C7:  fstp     dword ptr [esp]
+  0x00C752CA:  push     edx
+  0x00C752CB:  mov      edx, dword ptr [esp + 0x14]
+  0x00C752CF:  push     edx
+  0x00C752D0:  call     eax
+  0x00C752D2:  ret      0xc
+  0x00C752D5:  int3     
+  0x00C752D6:  int3     
+  0x00C752D7:  int3     
+  0x00C752D8:  int3     
+  0x00C752D9:  int3     
+  0x00C752DA:  int3     
+  0x00C752DB:  int3     
+  0x00C752DC:  int3     
+  0x00C752DD:  int3     
+  0x00C752DE:  int3     
+  0x00C752DF:  int3     
+  0x00C752E0:  mov      edx, dword ptr [esp + 4]
+  0x00C752E4:  fld      dword ptr [edx + 0x6c]
+  0x00C752E7:  mov      eax, dword ptr [ecx + 0x18]
+  0x00C752EA:  movss    xmm0, dword ptr [0x22cdb2c]
+  0x00C752F2:  fstp     dword ptr [ecx + 0x30]
+  0x00C752F5:  fld      dword ptr [edx + 0x70]
+  0x00C752F8:  push     esi
+  0x00C752F9:  fstp     dword ptr [ecx + 0x34]
+  0x00C752FC:  cvtsi2ss xmm1, dword ptr [edx + 0x74]
+  0x00C75301:  lea      esi, [edx + 0x74]
+  0x00C75304:  add      eax, 0x1c
+  0x00C75307:  movaps   xmm2, xmm0
+  0x00C7530A:  divss    xmm2, xmm1
+  0x00C7530E:  movss    dword ptr [eax], xmm2
+  0x00C75312:  cvtsi2ss xmm1, dword ptr [edx + 0x78]
+  0x00C75317:  movaps   xmm2, xmm0
+  0x00C7531A:  divss    xmm2, xmm1
+  0x00C7531E:  movss    dword ptr [eax + 4], xmm2
+  0x00C75323:  cvtsi2ss xmm1, dword ptr [esi]
+  0x00C75327:  mov      eax, dword ptr [ecx + 0x18]
+  0x00C7532A:  divss    xmm0, xmm1
+  0x00C7532E:  movss    dword ptr [eax + 0x40], xmm0
+  0x00C75333:  mov      ecx, dword ptr [ecx + 0x18]
+  0x00C75336:  mov      eax, 1
+  0x00C7533B:  mov      dword ptr [ecx + 0x38], eax
+  0x00C7533E:  mov      dword ptr [ecx + 0x3c], eax
+  0x00C75341:  pop      esi
+  0x00C75342:  ret      4
+
+
+================================================================================
+FUNCTION: rdIntersectionTessellator::GenerateCrosswalkAndPavement
+VIRTUAL ADDRESS: 0x00CCBC70 | FILE OFFSET: 0x008CB070
+ALGORITHMIC ROLE: Generates 52-byte stride crosswalk striping and asphalt UVs
+================================================================================
+Stack Frame Size: 0xC4 (196 bytes)
+Total Instructions Analyzed: 150
+
+Disassembly:
+  0x00CCBC70:  push     -1
+  0x00CCBC72:  push     0x1b48881
+  0x00CCBC77:  mov      eax, dword ptr fs:[0]
+  0x00CCBC7D:  push     eax
+  0x00CCBC7E:  mov      dword ptr fs:[0], esp
+  0x00CCBC85:  sub      esp, 0xc4
+  0x00CCBC8B:  push     ebx
+  0x00CCBC8C:  push     ebp
+  0x00CCBC8D:  push     esi
+  0x00CCBC8E:  mov      dword ptr [esp + 0x2c], ecx
+  0x00CCBC92:  push     edi
+  0x00CCBC93:  lea      ecx, [esp + 0x58]
+  0x00CCBC97:  call     0xe4efd0
+  0x00CCBC9C:  fld1     
+  0x00CCBC9E:  mov      edi, dword ptr [esp + 0xf4]
+  0x00CCBCA5:  mov      esi, dword ptr [esp + 0xe8]
+  0x00CCBCAC:  push     1
+  0x00CCBCAE:  sub      esp, 8
+  0x00CCBCB1:  fst      dword ptr [esp + 4]
+  0x00CCBCB5:  lea      eax, [esp + 0x64]
+  0x00CCBCB9:  fstp     dword ptr [esp]
+  0x00CCBCBC:  push     edi
+  0x00CCBCBD:  fld      dword ptr [esp + 0x100]
+  0x00CCBCC4:  sub      esp, 8
+  0x00CCBCC7:  fstp     dword ptr [esp + 4]
+  0x00CCBCCB:  xor      ebx, ebx
+  0x00CCBCCD:  fld      dword ptr [esp + 0x104]
+  0x00CCBCD4:  mov      ecx, esi
+  0x00CCBCD6:  fstp     dword ptr [esp]
+  0x00CCBCD9:  push     0x3089388
+  0x00CCBCDE:  push     eax
+  0x00CCBCDF:  mov      dword ptr [esp + 0xfc], ebx
+  0x00CCBCE6:  call     0xe43d50
+  0x00CCBCEB:  fld1     
+  0x00CCBCED:  push     ecx
+  0x00CCBCEE:  fstp     dword ptr [esp]
+  0x00CCBCF1:  push     ebx
+  0x00CCBCF2:  push     edi
+  0x00CCBCF3:  push     0x3089388
+  0x00CCBCF8:  lea      ecx, [esp + 0x68]
+  0x00CCBCFC:  push     esi
+  0x00CCBCFD:  push     ecx
+  0x00CCBCFE:  call     0xefdfc0
+  0x00CCBD03:  xor      edi, edi
+  0x00CCBD05:  xor      ecx, ecx
+  0x00CCBD07:  add      esp, 0x18
+  0x00CCBD0A:  mov      dword ptr [esp + 0x1c], edi
+  0x00CCBD0E:  mov      dword ptr [esp + 0x20], ecx
+  0x00CCBD12:  mov      dword ptr [esp + 0x24], ebx
+  0x00CCBD16:  xor      esi, esi
+  0x00CCBD18:  mov      byte ptr [esp + 0xdc], 1
+  0x00CCBD20:  cmp      dword ptr [esp + 0x7c], ebx
+  0x00CCBD24:  jbe      0xccbddf
+  0x00CCBD2A:  xorps    xmm0, xmm0
+  0x00CCBD2D:  lea      ecx, [ecx]
+  0x00CCBD30:  movss    xmm1, dword ptr [esp + 0xf0]
+  0x00CCBD39:  ucomiss  xmm1, xmm0
+  0x00CCBD3C:  lahf     
+  0x00CCBD3D:  test     ah, 0x44
+  0x00CCBD40:  jnp      0xccbd8b
+  0x00CCBD42:  mov      ebp, dword ptr [esp + 0x78]
+  0x00CCBD46:  mov      eax, dword ptr [ebx + ebp]
+  0x00CCBD49:  mov      edx, dword ptr [esp + 0x58]
+  0x00CCBD4D:  imul     eax, eax, 0x34
+  0x00CCBD50:  movss    xmm1, dword ptr [eax + edx + 0x18]
+  0x00CCBD56:  ucomiss  xmm1, xmm0
+  0x00CCBD59:  lahf     
+  0x00CCBD5A:  test     ah, 0x44
+  0x00CCBD5D:  jnp      0xccbdd1
+  0x00CCBD5F:  mov      eax, dword ptr [ebx + ebp + 4]
+  0x00CCBD63:  imul     eax, eax, 0x34
+  0x00CCBD66:  movss    xmm1, dword ptr [eax + edx + 0x18]
+  0x00CCBD6C:  ucomiss  xmm1, xmm0
+  0x00CCBD6F:  lahf     
+  0x00CCBD70:  test     ah, 0x44
+  0x00CCBD73:  jnp      0xccbdd1
+  0x00CCBD75:  mov      eax, dword ptr [ebx + ebp + 8]
+  0x00CCBD79:  imul     eax, eax, 0x34
+  0x00CCBD7C:  movss    xmm1, dword ptr [eax + edx + 0x18]
+  0x00CCBD82:  ucomiss  xmm1, xmm0
+  0x00CCBD85:  lahf     
+  0x00CCBD86:  test     ah, 0x44
+  0x00CCBD89:  jnp      0xccbdd1
+  0x00CCBD8B:  mov      eax, dword ptr [esp + 0x24]
+  0x00CCBD8F:  cmp      ecx, eax
+  0x00CCBD91:  jb       0xccc0ba
+  0x00CCBD97:  add      eax, eax
+  0x00CCBD99:  cmp      eax, 8
+  0x00CCBD9C:  ja       0xccbda3
+  0x00CCBD9E:  mov      eax, 8
+  0x00CCBDA3:  lea      edx, [esp + 0x18]
+  0x00CCBDA7:  cmp      edx, edi
+  0x00CCBDA9:  jb       0xccbdae
+  0x00CCBDAB:  lea      ecx, [edi + ecx*4]
+  0x00CCBDAE:  push     eax
+  0x00CCBDAF:  lea      ecx, [esp + 0x20]
+  0x00CCBDB3:  call     0x487440
+  0x00CCBDB8:  mov      edi, dword ptr [esp + 0x1c]
+  0x00CCBDBC:  mov      ecx, dword ptr [esp + 0x20]
+  0x00CCBDC0:  lea      eax, [edi + ecx*4]
+  0x00CCBDC3:  test     eax, eax
+  0x00CCBDC5:  je       0xccbdc9
+  0x00CCBDC7:  mov      dword ptr [eax], esi
+  0x00CCBDC9:  xorps    xmm0, xmm0
+  0x00CCBDCC:  inc      ecx
+  0x00CCBDCD:  mov      dword ptr [esp + 0x20], ecx
+  0x00CCBDD1:  inc      esi
+  0x00CCBDD2:  add      ebx, 0x10
+  0x00CCBDD5:  cmp      esi, dword ptr [esp + 0x7c]
+  0x00CCBDD9:  jb       0xccbd30
+  0x00CCBDDF:  xor      ebx, ebx
+  0x00CCBDE1:  cmp      dword ptr [esp + 0x5c], ebx
+  0x00CCBDE5:  jbe      0xccbe26
+  0x00CCBDE7:  xor      ebp, ebp
+  0x00CCBDE9:  lea      esp, [esp]
+  0x00CCBDF0:  mov      eax, dword ptr [esp + 0x58]
+  0x00CCBDF4:  mov      ecx, dword ptr [esp + 0x30]
+  0x00CCBDF8:  fld      dword ptr [eax + ebp + 0x14]
+  0x00CCBDFC:  mov      ecx, dword ptr [ecx + 4]
+  0x00CCBDFF:  mov      edx, dword ptr [ecx]
+  0x00CCBE01:  lea      esi, [eax + ebp]
+  0x00CCBE04:  mov      eax, dword ptr [edx + 8]
+  0x00CCBE07:  sub      esp, 8
+  0x00CCBE0A:  fstp     dword ptr [esp + 4]
+  0x00CCBE0E:  fld      dword ptr [esi + 0x10]
+  0x00CCBE11:  fstp     dword ptr [esp]
+  0x00CCBE14:  call     eax
+  0x00CCBE16:  fadd     dword ptr [esi + 0x18]
+  0x00CCBE19:  inc      ebx
+  0x00CCBE1A:  add      ebp, 0x34
+  0x00CCBE1D:  fstp     dword ptr [esi + 0x18]
+  0x00CCBE20:  cmp      ebx, dword ptr [esp + 0x5c]
+  0x00CCBE24:  jb       0xccbdf0
+  0x00CCBE26:  lea      ecx, [esp + 0x2c]
+  0x00CCBE2A:  call     0xe6ab90
+  0x00CCBE2F:  lea      ecx, [esp + 0x58]
+  0x00CCBE33:  push     ecx
+  0x00CCBE34:  lea      ecx, [esp + 0x30]
+  0x00CCBE38:  call     0xe6aba0
+  0x00CCBE3D:  lea      ecx, [esp + 0x34]
+  0x00CCBE41:  call     0xeb73d0
+  0x00CCBE46:  lea      edx, [esp + 0x34]
+  0x00CCBE4A:  push     edx
+  0x00CCBE4B:  lea      ecx, [esp + 0x30]
+  0x00CCBE4F:  mov      byte ptr [esp + 0xe0], 2
+  0x00CCBE57:  call     0xf0d620
+  0x00CCBE5C:  lea      ecx, [esp + 0x34]
+  0x00CCBE60:  xor      esi, esi
+  0x00CCBE62:  call     0xe9fba0
+  0x00CCBE67:  test     eax, eax
+  ... [Listing truncated for length; full binary preserved in executable] ...
+
+
+================================================================================
+FUNCTION: rdCornerCurveBorder::TessellateCornerCurbs
+VIRTUAL ADDRESS: 0x00C74230 | FILE OFFSET: 0x00873630
+ALGORITHMIC ROLE: Circular corner curb fillet evaluation between road mouth chords
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 17
+
+Disassembly:
+  0x00C74230:  test     byte ptr [esp + 4], 1
+  0x00C74235:  push     esi
+  0x00C74236:  mov      esi, ecx
+  0x00C74238:  mov      dword ptr [esi], 0x232a884
+  0x00C7423E:  je       0xc74249
+  0x00C74240:  push     esi
+  0x00C74241:  call     0x1963b4c
+  0x00C74246:  add      esp, 4
+  0x00C74249:  mov      eax, esi
+  0x00C7424B:  pop      esi
+  0x00C7424C:  ret      4
+  0x00C7424F:  int3     
+  0x00C74250:  mov      eax, dword ptr [esp + 4]
+  0x00C74254:  mov      edx, dword ptr [esp + 8]
+  0x00C74258:  mov      dword ptr [ecx + 4], eax
+  0x00C7425B:  mov      dword ptr [ecx + 8], edx
+  0x00C7425E:  ret      8
+
+
+================================================================================
+FUNCTION: rdIntersectionCurve::EvaluateFilletArc
+VIRTUAL ADDRESS: 0x00CB1750 | FILE OFFSET: 0x008B0B50
+ALGORITHMIC ROLE: Trigonometric arc evaluation for corner transition tangents
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 25
+
+Disassembly:
+  0x00CB1750:  push     esi
+  0x00CB1751:  mov      esi, ecx
+  0x00CB1753:  call     0xcb16a0
+  0x00CB1758:  test     byte ptr [esp + 8], 1
+  0x00CB175D:  je       0xcb1768
+  0x00CB175F:  push     esi
+  0x00CB1760:  call     0x1963b4c
+  0x00CB1765:  add      esp, 4
+  0x00CB1768:  mov      eax, esi
+  0x00CB176A:  pop      esi
+  0x00CB176B:  ret      4
+  0x00CB176E:  int3     
+  0x00CB176F:  int3     
+  0x00CB1770:  movss    xmm0, dword ptr [0x22cde60]
+  0x00CB1778:  mov      eax, ecx
+  0x00CB177A:  movss    dword ptr [eax + 8], xmm0
+  0x00CB177F:  movss    dword ptr [eax + 0xc], xmm0
+  0x00CB1784:  movss    xmm0, dword ptr [0x22cdb2c]
+  0x00CB178C:  movss    dword ptr [eax + 0x10], xmm0
+  0x00CB1791:  movss    xmm0, dword ptr [0x22d2de4]
+  0x00CB1799:  mov      dword ptr [eax], 0x232ccf8
+  0x00CB179F:  mov      dword ptr [eax + 4], 2
+  0x00CB17A6:  movss    dword ptr [eax + 0x14], xmm0
+  0x00CB17AB:  mov      dword ptr [eax + 0x18], 0xffffffff
+  0x00CB17B2:  ret      
+
+
+================================================================================
+FUNCTION: rdCuldesacInfo::GenerateCuldesacBulb
+VIRTUAL ADDRESS: 0x00C75440 | FILE OFFSET: 0x00874840
+ALGORITHMIC ROLE: Calculates circular cul-de-sac turnaround bulb geometry
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 20
+
+Disassembly:
+  0x00C75440:  test     byte ptr [esp + 4], 1
+  0x00C75445:  push     esi
+  0x00C75446:  mov      esi, ecx
+  0x00C75448:  mov      dword ptr [esi], 0x232a708
+  0x00C7544E:  je       0xc75459
+  0x00C75450:  push     esi
+  0x00C75451:  call     0x1963b4c
+  0x00C75456:  add      esp, 4
+  0x00C75459:  mov      eax, esi
+  0x00C7545B:  pop      esi
+  0x00C7545C:  ret      4
+  0x00C7545F:  int3     
+  0x00C75460:  mov      ecx, dword ptr [ecx + 4]
+  0x00C75463:  test     ecx, ecx
+  0x00C75465:  je       0xc7546f
+  0x00C75467:  mov      eax, dword ptr [ecx]
+  0x00C75469:  mov      edx, dword ptr [eax]
+  0x00C7546B:  push     1
+  0x00C7546D:  call     edx
+  0x00C7546F:  ret      
+
+
+================================================================================
+FUNCTION: rdLaneTessellator::TessellateLaneStrip
+VIRTUAL ADDRESS: 0x00C94280 | FILE OFFSET: 0x00893680
+ALGORITHMIC ROLE: Tessellates asphalt roadway lane strips along spine curve
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 66
+
+Disassembly:
+  0x00C94280:  test     byte ptr [esp + 4], 1
+  0x00C94285:  push     esi
+  0x00C94286:  mov      esi, ecx
+  0x00C94288:  mov      dword ptr [esi], 0x232a7a8
+  0x00C9428E:  je       0xc94299
+  0x00C94290:  push     esi
+  0x00C94291:  call     0x1963b4c
+  0x00C94296:  add      esp, 4
+  0x00C94299:  mov      eax, esi
+  0x00C9429B:  pop      esi
+  0x00C9429C:  ret      4
+  0x00C9429F:  int3     
+  0x00C942A0:  push     -1
+  0x00C942A2:  push     0x1b467a8
+  0x00C942A7:  mov      eax, dword ptr fs:[0]
+  0x00C942AD:  push     eax
+  0x00C942AE:  mov      dword ptr fs:[0], esp
+  0x00C942B5:  push     ecx
+  0x00C942B6:  push     esi
+  0x00C942B7:  mov      esi, ecx
+  0x00C942B9:  mov      dword ptr [esp + 4], esi
+  0x00C942BD:  cmp      dword ptr [esi + 0xc], 0
+  0x00C942C1:  mov      dword ptr [esp + 0x10], 0
+  0x00C942C9:  je       0xc942f2
+  0x00C942CB:  mov      ecx, dword ptr [esi + 0xc]
+  0x00C942CE:  mov      eax, dword ptr [ecx]
+  0x00C942D0:  mov      edx, dword ptr [eax + 4]
+  0x00C942D3:  call     edx
+  0x00C942D5:  mov      ecx, dword ptr [esi + 0xc]
+  0x00C942D8:  mov      eax, dword ptr [ecx]
+  0x00C942DA:  mov      edx, dword ptr [eax + 0xc]
+  0x00C942DD:  call     edx
+  0x00C942DF:  test     eax, eax
+  0x00C942E1:  jne      0xc942f2
+  0x00C942E3:  mov      ecx, dword ptr [esi + 0xc]
+  0x00C942E6:  test     ecx, ecx
+  0x00C942E8:  je       0xc942f2
+  0x00C942EA:  mov      eax, dword ptr [ecx]
+  0x00C942EC:  mov      edx, dword ptr [eax]
+  0x00C942EE:  push     1
+  0x00C942F0:  call     edx
+  0x00C942F2:  cmp      dword ptr [esi + 4], 0
+  0x00C942F6:  mov      dword ptr [esp + 0x10], 0xffffffff
+  0x00C942FE:  je       0xc94327
+  0x00C94300:  mov      ecx, dword ptr [esi + 4]
+  0x00C94303:  mov      eax, dword ptr [ecx]
+  0x00C94305:  mov      edx, dword ptr [eax + 4]
+  0x00C94308:  call     edx
+  0x00C9430A:  mov      ecx, dword ptr [esi + 4]
+  0x00C9430D:  mov      eax, dword ptr [ecx]
+  0x00C9430F:  mov      edx, dword ptr [eax + 0xc]
+  0x00C94312:  call     edx
+  0x00C94314:  test     eax, eax
+  0x00C94316:  jne      0xc94327
+  0x00C94318:  mov      ecx, dword ptr [esi + 4]
+  0x00C9431B:  test     ecx, ecx
+  0x00C9431D:  je       0xc94327
+  0x00C9431F:  mov      eax, dword ptr [ecx]
+  0x00C94321:  mov      edx, dword ptr [eax]
+  0x00C94323:  push     1
+  0x00C94325:  call     edx
+  0x00C94327:  mov      ecx, dword ptr [esp + 8]
+  0x00C9432B:  pop      esi
+  0x00C9432C:  mov      dword ptr fs:[0], ecx
+  0x00C94333:  add      esp, 0x10
+  0x00C94336:  ret      
+
+
+================================================================================
+FUNCTION: rdSidewalkTessellator::TessellateSidewalkMesh
+VIRTUAL ADDRESS: 0x00C8EDA0 | FILE OFFSET: 0x0088E1A0
+ALGORITHMIC ROLE: Generates sidewalk elevated slab and curb drops (0.15m height)
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 17
+
+Disassembly:
+  0x00C8EDA0:  test     byte ptr [esp + 4], 1
+  0x00C8EDA5:  push     esi
+  0x00C8EDA6:  mov      esi, ecx
+  0x00C8EDA8:  mov      dword ptr [esi], 0x232a7a8
+  0x00C8EDAE:  je       0xc8edb9
+  0x00C8EDB0:  push     esi
+  0x00C8EDB1:  call     0x1963b4c
+  0x00C8EDB6:  add      esp, 4
+  0x00C8EDB9:  mov      eax, esi
+  0x00C8EDBB:  pop      esi
+  0x00C8EDBC:  ret      4
+  0x00C8EDBF:  int3     
+  0x00C8EDC0:  movss    xmm0, dword ptr [esp + 4]
+  0x00C8EDC6:  mov      eax, ecx
+  0x00C8EDC8:  mov      dword ptr [eax], 0x232b8f8
+  0x00C8EDCE:  movss    dword ptr [eax + 4], xmm0
+  0x00C8EDD3:  ret      4
+
+
+================================================================================
+FUNCTION: rdPolygonRegionTessellator::TriangulateNonConvexPolygon
+VIRTUAL ADDRESS: 0x00C8EEE0 | FILE OFFSET: 0x0088E2E0
+ALGORITHMIC ROLE: Ear-clipping triangulation for arbitrary non-convex 2D polygons
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 18
+
+Disassembly:
+  0x00C8EEE0:  test     byte ptr [esp + 4], 1
+  0x00C8EEE5:  push     esi
+  0x00C8EEE6:  mov      esi, ecx
+  0x00C8EEE8:  mov      dword ptr [esi], 0x232a7a8
+  0x00C8EEEE:  je       0xc8eef9
+  0x00C8EEF0:  push     esi
+  0x00C8EEF1:  call     0x1963b4c
+  0x00C8EEF6:  add      esp, 4
+  0x00C8EEF9:  mov      eax, esi
+  0x00C8EEFB:  pop      esi
+  0x00C8EEFC:  ret      4
+  0x00C8EEFF:  int3     
+  0x00C8EF00:  push     0xc77880
+  0x00C8EF05:  push     2
+  0x00C8EF07:  push     8
+  0x00C8EF09:  push     ecx
+  0x00C8EF0A:  call     0x1963d25
+  0x00C8EF0F:  ret      
+
+
+================================================================================
+FUNCTION: trRoadSegment::GenerateCatmullRomRibbon
+VIRTUAL ADDRESS: 0x00774910 | FILE OFFSET: 0x00373D10
+ALGORITHMIC ROLE: Cubic polynomial Catmull-Rom spline evaluation with tension
+================================================================================
+Stack Frame Size: 0x14 (20 bytes)
+Total Instructions Analyzed: 48
+
+Disassembly:
+  0x00774910:  push     -1
+  0x00774912:  push     0x1ae865b
+  0x00774917:  mov      eax, dword ptr fs:[0]
+  0x0077491D:  push     eax
+  0x0077491E:  mov      dword ptr fs:[0], esp
+  0x00774925:  sub      esp, 0x14
+  0x00774928:  push     esi
+  0x00774929:  push     edi
+  0x0077492A:  push     0x110
+  0x0077492F:  mov      edi, ecx
+  0x00774931:  call     0x1963b46
+  0x00774936:  mov      esi, eax
+  0x00774938:  add      esp, 4
+  0x0077493B:  mov      dword ptr [esp + 8], esi
+  0x0077493F:  mov      dword ptr [esp + 0x24], 0
+  0x00774947:  test     esi, esi
+  0x00774949:  je       0x774962
+  0x0077494B:  push     0
+  0x0077494D:  lea      ecx, [esp + 0x10]
+  0x00774951:  call     0x1522750
+  0x00774956:  push     eax
+  0x00774957:  mov      ecx, esi
+  0x00774959:  call     0xd12830
+  0x0077495E:  mov      esi, eax
+  0x00774960:  jmp      0x774964
+  0x00774962:  xor      esi, esi
+  0x00774964:  mov      dword ptr [esp + 0x24], 0xffffffff
+  0x0077496C:  test     edi, edi
+  0x0077496E:  je       0x774975
+  0x00774970:  lea      ecx, [edi + 0x1c]
+  0x00774973:  jmp      0x774977
+  0x00774975:  xor      ecx, ecx
+  0x00774977:  test     esi, esi
+  0x00774979:  je       0x774980
+  0x0077497B:  lea      eax, [esi + 0x1c]
+  0x0077497E:  jmp      0x774982
+  0x00774980:  xor      eax, eax
+  0x00774982:  push     ecx
+  0x00774983:  push     eax
+  0x00774984:  call     0x6a8f30
+  0x00774989:  mov      ecx, dword ptr [esp + 0x24]
+  0x0077498D:  add      esp, 8
+  0x00774990:  pop      edi
+  0x00774991:  mov      eax, esi
+  0x00774993:  pop      esi
+  0x00774994:  mov      dword ptr fs:[0], ecx
+  0x0077499B:  add      esp, 0x20
+  0x0077499E:  ret      
+
+
+================================================================================
+FUNCTION: trRoadSegment::EvaluateCrossSectionElevations
+VIRTUAL ADDRESS: 0x0075F5B0 | FILE OFFSET: 0x0035E9B0
+ALGORITHMIC ROLE: Computes 2% crown slope, camber, and lateral elevation offsets
+================================================================================
+Stack Frame Size: 0x14 (20 bytes)
+Total Instructions Analyzed: 39
+
+Disassembly:
+  0x0075F5B0:  mov      eax, 0x2f39510
+  0x0075F5B5:  ret      
+  0x0075F5B6:  int3     
+  0x0075F5B7:  int3     
+  0x0075F5B8:  int3     
+  0x0075F5B9:  int3     
+  0x0075F5BA:  int3     
+  0x0075F5BB:  int3     
+  0x0075F5BC:  int3     
+  0x0075F5BD:  int3     
+  0x0075F5BE:  int3     
+  0x0075F5BF:  int3     
+  0x0075F5C0:  push     -1
+  0x0075F5C2:  push     0x1ae57db
+  0x0075F5C7:  mov      eax, dword ptr fs:[0]
+  0x0075F5CD:  push     eax
+  0x0075F5CE:  mov      dword ptr fs:[0], esp
+  0x0075F5D5:  sub      esp, 0x14
+  0x0075F5D8:  push     esi
+  0x0075F5D9:  push     0x110
+  0x0075F5DE:  call     0x1963b46
+  0x0075F5E3:  mov      esi, eax
+  0x0075F5E5:  add      esp, 4
+  0x0075F5E8:  mov      dword ptr [esp + 4], esi
+  0x0075F5EC:  xor      eax, eax
+  0x0075F5EE:  mov      dword ptr [esp + 0x20], eax
+  0x0075F5F2:  cmp      esi, eax
+  0x0075F5F4:  je       0x75f608
+  0x0075F5F6:  push     eax
+  0x0075F5F7:  lea      ecx, [esp + 0xc]
+  0x0075F5FB:  call     0x1522750
+  0x0075F600:  push     eax
+  0x0075F601:  mov      ecx, esi
+  0x0075F603:  call     0xd12830
+  0x0075F608:  mov      ecx, dword ptr [esp + 0x18]
+  0x0075F60C:  pop      esi
+  0x0075F60D:  mov      dword ptr fs:[0], ecx
+  0x0075F614:  add      esp, 0x20
+  0x0075F617:  ret      
+
+
+================================================================================
+FUNCTION: trRoadSegment::SampleSplineAtParameter
+VIRTUAL ADDRESS: 0x00CD0000 | FILE OFFSET: 0x008CF400
+ALGORITHMIC ROLE: Evaluates position, tangent, normal, and bank angle at parameter t in [0,1]
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 150
+
+Disassembly:
+  0x00CD0000:  push     ebx
+  0x00CD0001:  push     esi
+  0x00CD0002:  mov      esi, dword ptr [esp + 0xc]
+  0x00CD0006:  push     edi
+  0x00CD0007:  push     esi
+  0x00CD0008:  mov      edi, ecx
+  0x00CD000A:  call     0xee4970
+  0x00CD000F:  add      esi, 0x20
+  0x00CD0012:  mov      ecx, esi
+  0x00CD0014:  call     0x53b9d0
+  0x00CD0019:  mov      eax, dword ptr [esi + 4]
+  0x00CD001C:  mov      ecx, dword ptr [esi]
+  0x00CD001E:  imul     eax, eax, 0x34
+  0x00CD0021:  lea      ebx, [eax + ecx - 0x34]
+  0x00CD0025:  push     0x22e7534
+  0x00CD002A:  mov      ecx, ebx
+  0x00CD002C:  call     0x1500a50
+  0x00CD0031:  lea      edx, [edi + 0xdc]
+  0x00CD0037:  mov      eax, 0x13
+  0x00CD003C:  mov      ecx, esi
+  0x00CD003E:  mov      dword ptr [ebx + 0x24], edx
+  0x00CD0041:  mov      word ptr [ebx], ax
+  0x00CD0044:  call     0x53b9d0
+  0x00CD0049:  mov      ecx, dword ptr [esi + 4]
+  0x00CD004C:  mov      edx, dword ptr [esi]
+  0x00CD004E:  imul     ecx, ecx, 0x34
+  0x00CD0051:  lea      ebx, [ecx + edx - 0x34]
+  0x00CD0055:  push     0x22e845c
+  0x00CD005A:  mov      ecx, ebx
+  0x00CD005C:  call     0x1500a50
+  0x00CD0061:  mov      ecx, 0x12
+  0x00CD0066:  lea      eax, [edi + 0xe4]
+  0x00CD006C:  mov      word ptr [ebx], cx
+  0x00CD006F:  mov      ecx, esi
+  0x00CD0071:  mov      dword ptr [ebx + 0x24], eax
+  0x00CD0074:  call     0x53b9d0
+  0x00CD0079:  mov      edx, dword ptr [esi + 4]
+  0x00CD007C:  mov      eax, dword ptr [esi]
+  0x00CD007E:  imul     edx, edx, 0x34
+  0x00CD0081:  lea      ebx, [edx + eax - 0x34]
+  0x00CD0085:  push     0x232d5fc
+  0x00CD008A:  mov      ecx, ebx
+  0x00CD008C:  call     0x1500a50
+  0x00CD0091:  lea      ecx, [edi + 0xf4]
+  0x00CD0097:  mov      dword ptr [ebx + 0x24], ecx
+  0x00CD009A:  mov      edx, 6
+  0x00CD009F:  mov      ecx, esi
+  0x00CD00A1:  mov      word ptr [ebx], dx
+  0x00CD00A4:  call     0x53b9d0
+  0x00CD00A9:  mov      eax, dword ptr [esi + 4]
+  0x00CD00AC:  mov      ecx, dword ptr [esi]
+  0x00CD00AE:  imul     eax, eax, 0x34
+  0x00CD00B1:  lea      ebx, [eax + ecx - 0x34]
+  0x00CD00B5:  push     0x232d5ec
+  0x00CD00BA:  mov      ecx, ebx
+  0x00CD00BC:  call     0x1500a50
+  0x00CD00C1:  lea      edx, [edi + 0xf8]
+  0x00CD00C7:  mov      eax, 6
+  0x00CD00CC:  mov      ecx, esi
+  0x00CD00CE:  mov      dword ptr [ebx + 0x24], edx
+  0x00CD00D1:  mov      word ptr [ebx], ax
+  0x00CD00D4:  call     0x53b9d0
+  0x00CD00D9:  mov      ecx, dword ptr [esi + 4]
+  0x00CD00DC:  mov      edx, dword ptr [esi]
+  0x00CD00DE:  imul     ecx, ecx, 0x34
+  0x00CD00E1:  lea      ebx, [ecx + edx - 0x34]
+  0x00CD00E5:  push     0x22e8434
+  0x00CD00EA:  mov      ecx, ebx
+  0x00CD00EC:  call     0x1500a50
+  0x00CD00F1:  mov      ecx, 5
+  0x00CD00F6:  lea      eax, [edi + 0xfc]
+  0x00CD00FC:  mov      word ptr [ebx], cx
+  0x00CD00FF:  mov      ecx, esi
+  0x00CD0101:  mov      dword ptr [ebx + 0x24], eax
+  0x00CD0104:  call     0x53b9d0
+  0x00CD0109:  mov      edx, dword ptr [esi + 4]
+  0x00CD010C:  mov      eax, dword ptr [esi]
+  0x00CD010E:  imul     edx, edx, 0x34
+  0x00CD0111:  lea      ebx, [edx + eax - 0x34]
+  0x00CD0115:  push     0x232d5d8
+  0x00CD011A:  mov      ecx, ebx
+  0x00CD011C:  call     0x1500a50
+  0x00CD0121:  lea      ecx, [edi + 0xfd]
+  0x00CD0127:  mov      dword ptr [ebx + 0x24], ecx
+  0x00CD012A:  mov      edx, 5
+  0x00CD012F:  mov      ecx, esi
+  0x00CD0131:  mov      word ptr [ebx], dx
+  0x00CD0134:  call     0x53b9d0
+  0x00CD0139:  mov      eax, dword ptr [esi + 4]
+  0x00CD013C:  mov      ecx, dword ptr [esi]
+  0x00CD013E:  imul     eax, eax, 0x34
+  0x00CD0141:  lea      ebx, [eax + ecx - 0x34]
+  0x00CD0145:  push     0x232d5c4
+  0x00CD014A:  mov      ecx, ebx
+  0x00CD014C:  call     0x1500a50
+  0x00CD0151:  lea      edx, [edi + 0xfe]
+  0x00CD0157:  mov      eax, 5
+  0x00CD015C:  mov      ecx, esi
+  0x00CD015E:  mov      dword ptr [ebx + 0x24], edx
+  0x00CD0161:  mov      word ptr [ebx], ax
+  0x00CD0164:  call     0x53b9d0
+  0x00CD0169:  mov      ecx, dword ptr [esi + 4]
+  0x00CD016C:  mov      edx, dword ptr [esi]
+  0x00CD016E:  imul     ecx, ecx, 0x34
+  0x00CD0171:  lea      ebx, [ecx + edx - 0x34]
+  0x00CD0175:  push     0x22e840c
+  0x00CD017A:  mov      ecx, ebx
+  0x00CD017C:  call     0x1500a50
+  0x00CD0181:  mov      ecx, 5
+  0x00CD0186:  lea      eax, [edi + 0xff]
+  0x00CD018C:  mov      word ptr [ebx], cx
+  0x00CD018F:  mov      ecx, esi
+  0x00CD0191:  mov      dword ptr [ebx + 0x24], eax
+  0x00CD0194:  call     0x53b9d0
+  0x00CD0199:  mov      edx, dword ptr [esi + 4]
+  0x00CD019C:  mov      eax, dword ptr [esi]
+  0x00CD019E:  imul     edx, edx, 0x34
+  0x00CD01A1:  lea      ebx, [edx + eax - 0x34]
+  0x00CD01A5:  push     0x22e8344
+  0x00CD01AA:  mov      ecx, ebx
+  0x00CD01AC:  call     0x1500a50
+  0x00CD01B1:  lea      ecx, [edi + 0x100]
+  0x00CD01B7:  mov      dword ptr [ebx + 0x24], ecx
+  0x00CD01BA:  mov      edx, 6
+  0x00CD01BF:  mov      ecx, esi
+  0x00CD01C1:  mov      word ptr [ebx], dx
+  0x00CD01C4:  call     0x53b9d0
+  0x00CD01C9:  mov      eax, dword ptr [esi + 4]
+  0x00CD01CC:  mov      ecx, dword ptr [esi]
+  0x00CD01CE:  imul     eax, eax, 0x34
+  0x00CD01D1:  lea      ebx, [eax + ecx - 0x34]
+  0x00CD01D5:  push     0x22e8330
+  0x00CD01DA:  mov      ecx, ebx
+  0x00CD01DC:  call     0x1500a50
+  0x00CD01E1:  lea      edx, [edi + 0x104]
+  0x00CD01E7:  mov      eax, 6
+  0x00CD01EC:  mov      ecx, esi
+  0x00CD01EE:  mov      dword ptr [ebx + 0x24], edx
+  0x00CD01F1:  mov      word ptr [ebx], ax
+  0x00CD01F4:  call     0x53b9d0
+  0x00CD01F9:  mov      ecx, dword ptr [esi + 4]
+  0x00CD01FC:  mov      edx, dword ptr [esi]
+  0x00CD01FE:  imul     ecx, ecx, 0x34
+  0x00CD0201:  lea      ebx, [ecx + edx - 0x34]
+  0x00CD0205:  push     0x22e7db4
+  0x00CD020A:  mov      ecx, ebx
+  0x00CD020C:  call     0x1500a50
+  0x00CD0211:  mov      ecx, 6
+  0x00CD0216:  lea      eax, [edi + 0x108]
+  0x00CD021C:  mov      word ptr [ebx], cx
+  ... [Listing truncated for length; full binary preserved in executable] ...
+
+
+================================================================================
+FUNCTION: trRoadNode::SolveTangentsAndBank
+VIRTUAL ADDRESS: 0x00D3FAB0 | FILE OFFSET: 0x0093EEB0
+ALGORITHMIC ROLE: Computes Hermite continuous tangents and superelevation banking
+================================================================================
+Stack Frame Size: 0x14 (20 bytes)
+Total Instructions Analyzed: 49
+
+Disassembly:
+  0x00D3FAB0:  push     -1
+  0x00D3FAB2:  push     0x1b505fb
+  0x00D3FAB7:  mov      eax, dword ptr fs:[0]
+  0x00D3FABD:  push     eax
+  0x00D3FABE:  mov      dword ptr fs:[0], esp
+  0x00D3FAC5:  sub      esp, 0x14
+  0x00D3FAC8:  push     esi
+  0x00D3FAC9:  push     edi
+  0x00D3FACA:  push     0xe0
+  0x00D3FACF:  mov      edi, ecx
+  0x00D3FAD1:  call     0x1963b46
+  0x00D3FAD6:  mov      esi, eax
+  0x00D3FAD8:  add      esp, 4
+  0x00D3FADB:  mov      dword ptr [esp + 8], esi
+  0x00D3FADF:  mov      dword ptr [esp + 0x24], 0
+  0x00D3FAE7:  test     esi, esi
+  0x00D3FAE9:  je       0xd3fb07
+  0x00D3FAEB:  push     0
+  0x00D3FAED:  lea      ecx, [esp + 0x10]
+  0x00D3FAF1:  call     0x1522750
+  0x00D3FAF6:  push     eax
+  0x00D3FAF7:  push     0x30ba79c
+  0x00D3FAFC:  mov      ecx, esi
+  0x00D3FAFE:  call     0xd11940
+  0x00D3FB03:  mov      esi, eax
+  0x00D3FB05:  jmp      0xd3fb09
+  0x00D3FB07:  xor      esi, esi
+  0x00D3FB09:  mov      dword ptr [esp + 0x24], 0xffffffff
+  0x00D3FB11:  test     edi, edi
+  0x00D3FB13:  je       0xd3fb1a
+  0x00D3FB15:  lea      ecx, [edi + 0x1c]
+  0x00D3FB18:  jmp      0xd3fb1c
+  0x00D3FB1A:  xor      ecx, ecx
+  0x00D3FB1C:  test     esi, esi
+  0x00D3FB1E:  je       0xd3fb25
+  0x00D3FB20:  lea      eax, [esi + 0x1c]
+  0x00D3FB23:  jmp      0xd3fb27
+  0x00D3FB25:  xor      eax, eax
+  0x00D3FB27:  push     ecx
+  0x00D3FB28:  push     eax
+  0x00D3FB29:  call     0x6a8f30
+  0x00D3FB2E:  mov      ecx, dword ptr [esp + 0x24]
+  0x00D3FB32:  add      esp, 8
+  0x00D3FB35:  pop      edi
+  0x00D3FB36:  mov      eax, esi
+  0x00D3FB38:  pop      esi
+  0x00D3FB39:  mov      dword ptr fs:[0], ecx
+  0x00D3FB40:  add      esp, 0x20
+  0x00D3FB43:  ret      
+
+
+================================================================================
+FUNCTION: trRoadNode::ComputeBranchAngles
+VIRTUAL ADDRESS: 0x00CB63C0 | FILE OFFSET: 0x008B57C0
+ALGORITHMIC ROLE: Computes counter-clockwise radial azimuth angles (atan2) for incident roads
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 23
+
+Disassembly:
+  0x00CB63C0:  push     ecx
+  0x00CB63C1:  push     esi
+  0x00CB63C2:  mov      esi, ecx
+  0x00CB63C4:  call     0xea5040
+  0x00CB63C9:  mov      ecx, esi
+  0x00CB63CB:  call     0xc960f0
+  0x00CB63D0:  mov      eax, dword ptr [esi]
+  0x00CB63D2:  mov      edx, dword ptr [eax + 0x34]
+  0x00CB63D5:  mov      ecx, esi
+  0x00CB63D7:  call     edx
+  0x00CB63D9:  movss    xmm0, dword ptr [eax]
+  0x00CB63DD:  mov      eax, dword ptr [esi]
+  0x00CB63DF:  mov      edx, dword ptr [eax + 0x34]
+  0x00CB63E2:  mov      ecx, esi
+  0x00CB63E4:  movss    dword ptr [esp + 4], xmm0
+  0x00CB63EA:  call     edx
+  0x00CB63EC:  movss    xmm0, dword ptr [eax + 4]
+  0x00CB63F1:  movss    xmm1, dword ptr [esp + 4]
+  0x00CB63F7:  movss    dword ptr [esi + 0xd8], xmm1
+  0x00CB63FF:  movss    dword ptr [esi + 0xdc], xmm0
+  0x00CB6407:  pop      esi
+  0x00CB6408:  pop      ecx
+  0x00CB6409:  ret      
+
+
+================================================================================
+FUNCTION: trRoadNode::SortBranchesCounterClockwise
+VIRTUAL ADDRESS: 0x00CEADA0 | FILE OFFSET: 0x008EA1A0
+ALGORITHMIC ROLE: Sorts connected branches radially around node center
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 150
+
+Disassembly:
+  0x00CEADA0:  push     ebx
+  0x00CEADA1:  push     esi
+  0x00CEADA2:  mov      esi, dword ptr [esp + 0xc]
+  0x00CEADA6:  push     edi
+  0x00CEADA7:  push     esi
+  0x00CEADA8:  mov      edi, ecx
+  0x00CEADAA:  call     0xefb0f0
+  0x00CEADAF:  add      esi, 0x20
+  0x00CEADB2:  mov      ecx, esi
+  0x00CEADB4:  call     0x53b9d0
+  0x00CEADB9:  mov      eax, dword ptr [esi + 4]
+  0x00CEADBC:  mov      ecx, dword ptr [esi]
+  0x00CEADBE:  imul     eax, eax, 0x34
+  0x00CEADC1:  lea      ebx, [eax + ecx - 0x34]
+  0x00CEADC5:  push     0x22e7534
+  0x00CEADCA:  mov      ecx, ebx
+  0x00CEADCC:  call     0x1500a50
+  0x00CEADD1:  lea      edx, [edi + 0x7c]
+  0x00CEADD4:  mov      eax, 0x13
+  0x00CEADD9:  mov      ecx, esi
+  0x00CEADDB:  mov      dword ptr [ebx + 0x24], edx
+  0x00CEADDE:  mov      word ptr [ebx], ax
+  0x00CEADE1:  call     0x53b9d0
+  0x00CEADE6:  mov      ecx, dword ptr [esi + 4]
+  0x00CEADE9:  mov      edx, dword ptr [esi]
+  0x00CEADEB:  imul     ecx, ecx, 0x34
+  0x00CEADEE:  lea      ebx, [ecx + edx - 0x34]
+  0x00CEADF2:  push     0x22e83fc
+  0x00CEADF7:  mov      ecx, ebx
+  0x00CEADF9:  call     0x1500a50
+  0x00CEADFE:  mov      ecx, 0x12
+  0x00CEAE03:  lea      eax, [edi + 0x84]
+  0x00CEAE09:  mov      word ptr [ebx], cx
+  0x00CEAE0C:  mov      ecx, esi
+  0x00CEAE0E:  mov      dword ptr [ebx + 0x24], eax
+  0x00CEAE11:  call     0x53b9d0
+  0x00CEAE16:  mov      edx, dword ptr [esi + 4]
+  0x00CEAE19:  mov      eax, dword ptr [esi]
+  0x00CEAE1B:  imul     edx, edx, 0x34
+  0x00CEAE1E:  lea      ebx, [edx + eax - 0x34]
+  0x00CEAE22:  push     0x22e83f4
+  0x00CEAE27:  mov      ecx, ebx
+  0x00CEAE29:  call     0x1500a50
+  0x00CEAE2E:  lea      ecx, [edi + 0x94]
+  0x00CEAE34:  mov      dword ptr [ebx + 0x24], ecx
+  0x00CEAE37:  mov      edx, 0xc
+  0x00CEAE3C:  mov      ecx, esi
+  0x00CEAE3E:  mov      word ptr [ebx], dx
+  0x00CEAE41:  call     0x53b9d0
+  0x00CEAE46:  mov      eax, dword ptr [esi + 4]
+  0x00CEAE49:  mov      ecx, dword ptr [esi]
+  0x00CEAE4B:  imul     eax, eax, 0x34
+  0x00CEAE4E:  lea      ebx, [eax + ecx - 0x34]
+  0x00CEAE52:  push     0x22e83e8
+  0x00CEAE57:  mov      ecx, ebx
+  0x00CEAE59:  call     0x1500a50
+  0x00CEAE5E:  lea      edx, [edi + 0x98]
+  0x00CEAE64:  mov      eax, 6
+  0x00CEAE69:  mov      ecx, esi
+  0x00CEAE6B:  mov      dword ptr [ebx + 0x24], edx
+  0x00CEAE6E:  mov      word ptr [ebx], ax
+  0x00CEAE71:  call     0x53b9d0
+  0x00CEAE76:  mov      ecx, dword ptr [esi + 4]
+  0x00CEAE79:  mov      edx, dword ptr [esi]
+  0x00CEAE7B:  imul     ecx, ecx, 0x34
+  0x00CEAE7E:  lea      ebx, [ecx + edx - 0x34]
+  0x00CEAE82:  push     0x2308b18
+  0x00CEAE87:  mov      ecx, ebx
+  0x00CEAE89:  call     0x1500a50
+  0x00CEAE8E:  mov      ecx, 5
+  0x00CEAE93:  lea      eax, [edi + 0x9c]
+  0x00CEAE99:  mov      word ptr [ebx], cx
+  0x00CEAE9C:  mov      ecx, esi
+  0x00CEAE9E:  mov      dword ptr [ebx + 0x24], eax
+  0x00CEAEA1:  call     0x53b9d0
+  0x00CEAEA6:  mov      edx, dword ptr [esi + 4]
+  0x00CEAEA9:  mov      eax, dword ptr [esi]
+  0x00CEAEAB:  imul     edx, edx, 0x34
+  0x00CEAEAE:  lea      ebx, [edx + eax - 0x34]
+  0x00CEAEB2:  push     0x232dfa8
+  0x00CEAEB7:  mov      ecx, ebx
+  0x00CEAEB9:  call     0x1500a50
+  0x00CEAEBE:  lea      ecx, [edi + 0xa0]
+  0x00CEAEC4:  mov      dword ptr [ebx + 0x24], ecx
+  0x00CEAEC7:  mov      edx, 0xc
+  0x00CEAECC:  mov      ecx, esi
+  0x00CEAECE:  mov      word ptr [ebx], dx
+  0x00CEAED1:  call     0x53b9d0
+  0x00CEAED6:  mov      eax, dword ptr [esi + 4]
+  0x00CEAED9:  mov      ecx, dword ptr [esi]
+  0x00CEAEDB:  imul     eax, eax, 0x34
+  0x00CEAEDE:  lea      ebx, [eax + ecx - 0x34]
+  0x00CEAEE2:  push     0x22e83a8
+  0x00CEAEE7:  mov      ecx, ebx
+  0x00CEAEE9:  call     0x1500a50
+  0x00CEAEEE:  lea      edx, [edi + 0xa4]
+  0x00CEAEF4:  mov      eax, 5
+  0x00CEAEF9:  mov      ecx, esi
+  0x00CEAEFB:  mov      dword ptr [ebx + 0x24], edx
+  0x00CEAEFE:  mov      word ptr [ebx], ax
+  0x00CEAF01:  call     0x53b9d0
+  0x00CEAF06:  mov      ecx, dword ptr [esi + 4]
+  0x00CEAF09:  mov      edx, dword ptr [esi]
+  0x00CEAF0B:  imul     ecx, ecx, 0x34
+  0x00CEAF0E:  lea      ebx, [ecx + edx - 0x34]
+  0x00CEAF12:  push     0x22e8390
+  0x00CEAF17:  mov      ecx, ebx
+  0x00CEAF19:  call     0x1500a50
+  0x00CEAF1E:  mov      ecx, 0xc
+  0x00CEAF23:  lea      eax, [edi + 0xa8]
+  0x00CEAF29:  mov      word ptr [ebx], cx
+  0x00CEAF2C:  mov      ecx, esi
+  0x00CEAF2E:  mov      dword ptr [ebx + 0x24], eax
+  0x00CEAF31:  call     0x53b9d0
+  0x00CEAF36:  mov      edx, dword ptr [esi + 4]
+  0x00CEAF39:  mov      eax, dword ptr [esi]
+  0x00CEAF3B:  imul     edx, edx, 0x34
+  0x00CEAF3E:  lea      ebx, [edx + eax - 0x34]
+  0x00CEAF42:  push     0x232df98
+  0x00CEAF47:  mov      ecx, ebx
+  0x00CEAF49:  call     0x1500a50
+  0x00CEAF4E:  lea      ecx, [edi + 0xac]
+  0x00CEAF54:  mov      dword ptr [ebx + 0x24], ecx
+  0x00CEAF57:  mov      edx, 5
+  0x00CEAF5C:  mov      ecx, esi
+  0x00CEAF5E:  mov      word ptr [ebx], dx
+  0x00CEAF61:  call     0x53b9d0
+  0x00CEAF66:  mov      eax, dword ptr [esi + 4]
+  0x00CEAF69:  mov      ecx, dword ptr [esi]
+  0x00CEAF6B:  imul     eax, eax, 0x34
+  0x00CEAF6E:  lea      ebx, [eax + ecx - 0x34]
+  0x00CEAF72:  push     0x22e8370
+  0x00CEAF77:  mov      ecx, ebx
+  0x00CEAF79:  call     0x1500a50
+  0x00CEAF7E:  lea      edx, [edi + 0xb0]
+  0x00CEAF84:  mov      eax, 0xc
+  0x00CEAF89:  mov      ecx, esi
+  0x00CEAF8B:  mov      dword ptr [ebx + 0x24], edx
+  0x00CEAF8E:  mov      word ptr [ebx], ax
+  0x00CEAF91:  call     0x53b9d0
+  0x00CEAF96:  mov      ecx, dword ptr [esi + 4]
+  0x00CEAF99:  mov      edx, dword ptr [esi]
+  0x00CEAF9B:  imul     ecx, ecx, 0x34
+  0x00CEAF9E:  lea      ebx, [ecx + edx - 0x34]
+  0x00CEAFA2:  push     0x22e8360
+  0x00CEAFA7:  mov      ecx, ebx
+  0x00CEAFA9:  call     0x1500a50
+  0x00CEAFAE:  mov      ecx, 0xc
+  0x00CEAFB3:  lea      eax, [edi + 0xb4]
+  0x00CEAFB9:  mov      word ptr [ebx], cx
+  ... [Listing truncated for length; full binary preserved in executable] ...
+
+
+================================================================================
+FUNCTION: trRoadNetwork::RebuildAllDirtyIntersections
+VIRTUAL ADDRESS: 0x00D7BDA0 | FILE OFFSET: 0x0097B1A0
+ALGORITHMIC ROLE: Dirty-flag propagation and multi-arm intersection graph rebuild
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 19
+
+Disassembly:
+  0x00D7BDA0:  push     esi
+  0x00D7BDA1:  mov      esi, ecx
+  0x00D7BDA3:  cmp      byte ptr [esi + 0x90], 0
+  0x00D7BDAA:  jne      0xd7bdb1
+  0x00D7BDAC:  call     0xcee6d0
+  0x00D7BDB1:  mov      ecx, esi
+  0x00D7BDB3:  mov      byte ptr [esi + 0x91], 1
+  0x00D7BDBA:  call     0xceece0
+  0x00D7BDBF:  push     esi
+  0x00D7BDC0:  mov      byte ptr [esi + 0x91], 1
+  0x00D7BDC7:  call     0xd7bcc0
+  0x00D7BDCC:  add      esp, 4
+  0x00D7BDCF:  cmp      byte ptr [esi + 0x99], 0
+  0x00D7BDD6:  je       0xd7bddf
+  0x00D7BDD8:  mov      ecx, esi
+  0x00D7BDDA:  call     0xd117a0
+  0x00D7BDDF:  mov      byte ptr [esi + 0x91], 0
+  0x00D7BDE6:  pop      esi
+  0x00D7BDE7:  ret      
+
+
+================================================================================
+FUNCTION: trTerrainSettings::EvaluateBilinearGridElevation
+VIRTUAL ADDRESS: 0x00AC71D0 | FILE OFFSET: 0x006C65D0
+ALGORITHMIC ROLE: Bilinear height interpolation: (1-tx)*(1-tz)*h00 + tx*(1-tz)*h10 + ...
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 43
+
+Disassembly:
+  0x00AC71D0:  push     -1
+  0x00AC71D2:  push     0x1b26c8b
+  0x00AC71D7:  mov      eax, dword ptr fs:[0]
+  0x00AC71DD:  push     eax
+  0x00AC71DE:  mov      dword ptr fs:[0], esp
+  0x00AC71E5:  push     ecx
+  0x00AC71E6:  push     esi
+  0x00AC71E7:  push     edi
+  0x00AC71E8:  push     0xb0
+  0x00AC71ED:  mov      edi, ecx
+  0x00AC71EF:  call     0x1963b46
+  0x00AC71F4:  add      esp, 4
+  0x00AC71F7:  mov      dword ptr [esp + 8], eax
+  0x00AC71FB:  mov      dword ptr [esp + 0x14], 0
+  0x00AC7203:  test     eax, eax
+  0x00AC7205:  je       0xac7212
+  0x00AC7207:  mov      ecx, eax
+  0x00AC7209:  call     0xa09080
+  0x00AC720E:  mov      esi, eax
+  0x00AC7210:  jmp      0xac7214
+  0x00AC7212:  xor      esi, esi
+  0x00AC7214:  mov      dword ptr [esp + 0x14], 0xffffffff
+  0x00AC721C:  test     edi, edi
+  0x00AC721E:  je       0xac7225
+  0x00AC7220:  lea      ecx, [edi + 0x1c]
+  0x00AC7223:  jmp      0xac7227
+  0x00AC7225:  xor      ecx, ecx
+  0x00AC7227:  test     esi, esi
+  0x00AC7229:  je       0xac7230
+  0x00AC722B:  lea      eax, [esi + 0x1c]
+  0x00AC722E:  jmp      0xac7232
+  0x00AC7230:  xor      eax, eax
+  0x00AC7232:  push     ecx
+  0x00AC7233:  push     eax
+  0x00AC7234:  call     0x6a8f30
+  0x00AC7239:  mov      ecx, dword ptr [esp + 0x14]
+  0x00AC723D:  add      esp, 8
+  0x00AC7240:  pop      edi
+  0x00AC7241:  mov      eax, esi
+  0x00AC7243:  pop      esi
+  0x00AC7244:  mov      dword ptr fs:[0], ecx
+  0x00AC724B:  add      esp, 0x10
+  0x00AC724E:  ret      
+
+
+================================================================================
+FUNCTION: trTerrainSettings::ComputeSurfaceNormal
+VIRTUAL ADDRESS: 0x00A09140 | FILE OFFSET: 0x00608540
+ALGORITHMIC ROLE: 4-point central difference surface normal evaluation: n = norm(dz/dx, 2.0, dz/dz)
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 73
+
+Disassembly:
+  0x00A09140:  mov      eax, 0x2f39480
+  0x00A09145:  ret      
+  0x00A09146:  int3     
+  0x00A09147:  int3     
+  0x00A09148:  int3     
+  0x00A09149:  int3     
+  0x00A0914A:  int3     
+  0x00A0914B:  int3     
+  0x00A0914C:  int3     
+  0x00A0914D:  int3     
+  0x00A0914E:  int3     
+  0x00A0914F:  int3     
+  0x00A09150:  mov      eax, ecx
+  0x00A09152:  ret      
+  0x00A09153:  int3     
+  0x00A09154:  int3     
+  0x00A09155:  int3     
+  0x00A09156:  int3     
+  0x00A09157:  int3     
+  0x00A09158:  int3     
+  0x00A09159:  int3     
+  0x00A0915A:  int3     
+  0x00A0915B:  int3     
+  0x00A0915C:  int3     
+  0x00A0915D:  int3     
+  0x00A0915E:  int3     
+  0x00A0915F:  int3     
+  0x00A09160:  sub      ecx, 8
+  0x00A09163:  jmp      0xa2cd10
+  0x00A09168:  int3     
+  0x00A09169:  int3     
+  0x00A0916A:  int3     
+  0x00A0916B:  int3     
+  0x00A0916C:  int3     
+  0x00A0916D:  int3     
+  0x00A0916E:  int3     
+  0x00A0916F:  int3     
+  0x00A09170:  sub      ecx, 0x1c
+  0x00A09173:  jmp      0xa2cd10
+  0x00A09178:  int3     
+  0x00A09179:  int3     
+  0x00A0917A:  int3     
+  0x00A0917B:  int3     
+  0x00A0917C:  int3     
+  0x00A0917D:  int3     
+  0x00A0917E:  int3     
+  0x00A0917F:  int3     
+  0x00A09180:  push     -1
+  0x00A09182:  push     0x1b12813
+  0x00A09187:  mov      eax, dword ptr fs:[0]
+  0x00A0918D:  push     eax
+  0x00A0918E:  mov      dword ptr fs:[0], esp
+  0x00A09195:  push     ecx
+  0x00A09196:  push     esi
+  0x00A09197:  mov      esi, ecx
+  0x00A09199:  mov      dword ptr [esp + 4], esi
+  0x00A0919D:  mov      dword ptr [esi], 0x231bcc4
+  0x00A091A3:  mov      dword ptr [esi + 8], 0x231bcbc
+  0x00A091AA:  mov      dword ptr [esi + 0x1c], 0x231bcb0
+  0x00A091B1:  lea      ecx, [esi + 0x48]
+  0x00A091B4:  mov      dword ptr [esp + 0x10], 1
+  0x00A091BC:  call     0xeded30
+  0x00A091C1:  lea      ecx, [esi + 0x20]
+  0x00A091C4:  mov      byte ptr [esp + 0x10], 0
+  0x00A091C9:  call     0x5685f0
+  0x00A091CE:  mov      ecx, dword ptr [esp + 8]
+  0x00A091D2:  mov      dword ptr [esi + 0x1c], 0x22cc540
+  0x00A091D9:  mov      dword ptr [esi + 8], 0x22cc538
+  0x00A091E0:  mov      dword ptr [esi], 0x22cc4ac
+  0x00A091E6:  pop      esi
+  0x00A091E7:  mov      dword ptr fs:[0], ecx
+  0x00A091EE:  add      esp, 0x10
+  0x00A091F1:  ret      
+
+
+================================================================================
+FUNCTION: trBuilding::GenerateProceduralFacadesAndRoof
+VIRTUAL ADDRESS: 0x00B4F220 | FILE OFFSET: 0x0074E620
+ALGORITHMIC ROLE: Extrudes 2D parcel polygons into 3D multi-floor building massing
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 23
+
+Disassembly:
+  0x00B4F220:  push     esi
+  0x00B4F221:  mov      esi, ecx
+  0x00B4F223:  call     0xb437e0
+  0x00B4F228:  test     byte ptr [esp + 8], 1
+  0x00B4F22D:  je       0xb4f238
+  0x00B4F22F:  push     esi
+  0x00B4F230:  call     0x1963b4c
+  0x00B4F235:  add      esp, 4
+  0x00B4F238:  mov      eax, esi
+  0x00B4F23A:  pop      esi
+  0x00B4F23B:  ret      4
+  0x00B4F23E:  int3     
+  0x00B4F23F:  int3     
+  0x00B4F240:  mov      eax, dword ptr [esp + 4]
+  0x00B4F244:  push     esi
+  0x00B4F245:  mov      esi, ecx
+  0x00B4F247:  cmp      esi, eax
+  0x00B4F249:  je       0xb4f251
+  0x00B4F24B:  push     eax
+  0x00B4F24C:  call     0xb2e9c0
+  0x00B4F251:  mov      eax, esi
+  0x00B4F253:  pop      esi
+  0x00B4F254:  ret      4
+
+
+================================================================================
+FUNCTION: trBuildingRoofStyle::EvaluateRoofGeometry
+VIRTUAL ADDRESS: 0x00AC0B00 | FILE OFFSET: 0x006BFF00
+ALGORITHMIC ROLE: Authentic roof generator for Flat HVAC, Gable, Hip, and Mansard
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 40
+
+Disassembly:
+  0x00AC0B00:  push     -1
+  0x00AC0B02:  push     0x1b2635b
+  0x00AC0B07:  mov      eax, dword ptr fs:[0]
+  0x00AC0B0D:  push     eax
+  0x00AC0B0E:  mov      dword ptr fs:[0], esp
+  0x00AC0B15:  push     ecx
+  0x00AC0B16:  push     esi
+  0x00AC0B17:  push     edi
+  0x00AC0B18:  push     0xb0
+  0x00AC0B1D:  mov      edi, ecx
+  0x00AC0B1F:  call     0x1963b46
+  0x00AC0B24:  add      esp, 4
+  0x00AC0B27:  mov      dword ptr [esp + 8], eax
+  0x00AC0B2B:  xor      esi, esi
+  0x00AC0B2D:  mov      dword ptr [esp + 0x14], esi
+  0x00AC0B31:  cmp      eax, esi
+  0x00AC0B33:  je       0xac0b3e
+  0x00AC0B35:  mov      ecx, eax
+  0x00AC0B37:  call     0xa96240
+  0x00AC0B3C:  mov      esi, eax
+  0x00AC0B3E:  push     edi
+  0x00AC0B3F:  mov      ecx, esi
+  0x00AC0B41:  mov      dword ptr [esp + 0x18], 0xffffffff
+  0x00AC0B49:  call     0x1256940
+  0x00AC0B4E:  mov      ecx, edi
+  0x00AC0B50:  call     0x1228a40
+  0x00AC0B55:  push     eax
+  0x00AC0B56:  mov      ecx, esi
+  0x00AC0B58:  call     0x1228a50
+  0x00AC0B5D:  push     esi
+  0x00AC0B5E:  call     0x1503140
+  0x00AC0B63:  mov      ecx, eax
+  0x00AC0B65:  call     0x1525820
+  0x00AC0B6A:  mov      ecx, dword ptr [esp + 0xc]
+  0x00AC0B6E:  pop      edi
+  0x00AC0B6F:  mov      eax, esi
+  0x00AC0B71:  pop      esi
+  0x00AC0B72:  mov      dword ptr fs:[0], ecx
+  0x00AC0B79:  add      esp, 0x10
+  0x00AC0B7C:  ret      
+
+
+================================================================================
+FUNCTION: cvMeshGeometryNode::AllocateVertexBuffer52ByteStride
+VIRTUAL ADDRESS: 0x0101F550 | FILE OFFSET: 0x00C1E950
+ALGORITHMIC ROLE: Allocates D3D9 / hardware vertex buffer with exact 52-byte vertex stride
+================================================================================
+Stack Frame Size: 0x0 (0 bytes)
+Total Instructions Analyzed: 23
+
+Disassembly:
+  0x0101F550:  push     esi
+  0x0101F551:  mov      esi, ecx
+  0x0101F553:  call     0x10176a0
+  0x0101F558:  test     byte ptr [esp + 8], 1
+  0x0101F55D:  je       0x101f568
+  0x0101F55F:  push     esi
+  0x0101F560:  call     0x1963b4c
+  0x0101F565:  add      esp, 4
+  0x0101F568:  mov      eax, esi
+  0x0101F56A:  pop      esi
+  0x0101F56B:  ret      4
+  0x0101F56E:  int3     
+  0x0101F56F:  int3     
+  0x0101F570:  push     esi
+  0x0101F571:  mov      esi, ecx
+  0x0101F573:  lea      ecx, [esi + 8]
+  0x0101F576:  mov      dword ptr [esi], 0
+  0x0101F57C:  mov      dword ptr [esi + 4], 0
+  0x0101F583:  call     0x101da70
+  0x0101F588:  mov      dword ptr [esi + 0x2fc], 0
+  0x0101F592:  mov      eax, esi
+  0x0101F594:  pop      esi
+  0x0101F595:  ret      
+

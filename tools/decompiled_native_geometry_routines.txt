@@ -1,0 +1,562 @@
+========================================================================
+  PIXELACTIVE CITYSCAPE 1.8 NATIVE x86 GEOMETRY ENGINE DISASSEMBLY LISTING
+  Decompiled and extracted directly from authentic PE binary: CityScape.exe
+========================================================================
+
+
+======================================================================
+=== rdIntersectionTessellator::TessellateHubPolygon (VA: 0x00C752B0, FileOffset: 0x008746B0) ===
+======================================================================
+0x00C752B0:  mov      edx, dword ptr [esp + 0xc]
+0x00C752B4:  fldz     
+0x00C752B6:  mov      eax, dword ptr [ecx]
+0x00C752B8:  mov      eax, dword ptr [eax + 4]
+0x00C752BB:  push     edx
+0x00C752BC:  mov      edx, dword ptr [esp + 0xc]
+0x00C752C0:  sub      esp, 8
+0x00C752C3:  fst      dword ptr [esp + 4]
+0x00C752C7:  fstp     dword ptr [esp]
+0x00C752CA:  push     edx
+0x00C752CB:  mov      edx, dword ptr [esp + 0x14]
+0x00C752CF:  push     edx
+0x00C752D0:  call     eax
+0x00C752D2:  ret      0xc
+
+======================================================================
+=== rdIntersectionTessellator::GenerateCrosswalkAndPavement (VA: 0x00CCBC70, FileOffset: 0x008CB070) ===
+======================================================================
+0x00CCBC70:  push     -1
+0x00CCBC72:  push     0x1b48881
+0x00CCBC77:  mov      eax, dword ptr fs:[0]
+0x00CCBC7D:  push     eax
+0x00CCBC7E:  mov      dword ptr fs:[0], esp
+0x00CCBC85:  sub      esp, 0xc4
+0x00CCBC8B:  push     ebx
+0x00CCBC8C:  push     ebp
+0x00CCBC8D:  push     esi
+0x00CCBC8E:  mov      dword ptr [esp + 0x2c], ecx
+0x00CCBC92:  push     edi
+0x00CCBC93:  lea      ecx, [esp + 0x58]
+0x00CCBC97:  call     0xe4efd0
+0x00CCBC9C:  fld1     
+0x00CCBC9E:  mov      edi, dword ptr [esp + 0xf4]
+0x00CCBCA5:  mov      esi, dword ptr [esp + 0xe8]
+0x00CCBCAC:  push     1
+0x00CCBCAE:  sub      esp, 8
+0x00CCBCB1:  fst      dword ptr [esp + 4]
+0x00CCBCB5:  lea      eax, [esp + 0x64]
+0x00CCBCB9:  fstp     dword ptr [esp]
+0x00CCBCBC:  push     edi
+0x00CCBCBD:  fld      dword ptr [esp + 0x100]
+0x00CCBCC4:  sub      esp, 8
+0x00CCBCC7:  fstp     dword ptr [esp + 4]
+0x00CCBCCB:  xor      ebx, ebx
+0x00CCBCCD:  fld      dword ptr [esp + 0x104]
+0x00CCBCD4:  mov      ecx, esi
+0x00CCBCD6:  fstp     dword ptr [esp]
+0x00CCBCD9:  push     0x3089388
+0x00CCBCDE:  push     eax
+0x00CCBCDF:  mov      dword ptr [esp + 0xfc], ebx
+0x00CCBCE6:  call     0xe43d50
+0x00CCBCEB:  fld1     
+0x00CCBCED:  push     ecx
+0x00CCBCEE:  fstp     dword ptr [esp]
+0x00CCBCF1:  push     ebx
+0x00CCBCF2:  push     edi
+0x00CCBCF3:  push     0x3089388
+0x00CCBCF8:  lea      ecx, [esp + 0x68]
+0x00CCBCFC:  push     esi
+0x00CCBCFD:  push     ecx
+0x00CCBCFE:  call     0xefdfc0
+0x00CCBD03:  xor      edi, edi
+0x00CCBD05:  xor      ecx, ecx
+0x00CCBD07:  add      esp, 0x18
+0x00CCBD0A:  mov      dword ptr [esp + 0x1c], edi
+0x00CCBD0E:  mov      dword ptr [esp + 0x20], ecx
+0x00CCBD12:  mov      dword ptr [esp + 0x24], ebx
+0x00CCBD16:  xor      esi, esi
+0x00CCBD18:  mov      byte ptr [esp + 0xdc], 1
+0x00CCBD20:  cmp      dword ptr [esp + 0x7c], ebx
+0x00CCBD24:  jbe      0xccbddf
+0x00CCBD2A:  xorps    xmm0, xmm0
+0x00CCBD2D:  lea      ecx, [ecx]
+0x00CCBD30:  movss    xmm1, dword ptr [esp + 0xf0]
+0x00CCBD39:  ucomiss  xmm1, xmm0
+0x00CCBD3C:  lahf     
+0x00CCBD3D:  test     ah, 0x44
+0x00CCBD40:  jnp      0xccbd8b
+0x00CCBD42:  mov      ebp, dword ptr [esp + 0x78]
+0x00CCBD46:  mov      eax, dword ptr [ebx + ebp]
+0x00CCBD49:  mov      edx, dword ptr [esp + 0x58]
+0x00CCBD4D:  imul     eax, eax, 0x34
+0x00CCBD50:  movss    xmm1, dword ptr [eax + edx + 0x18]
+0x00CCBD56:  ucomiss  xmm1, xmm0
+0x00CCBD59:  lahf     
+0x00CCBD5A:  test     ah, 0x44
+0x00CCBD5D:  jnp      0xccbdd1
+0x00CCBD5F:  mov      eax, dword ptr [ebx + ebp + 4]
+0x00CCBD63:  imul     eax, eax, 0x34
+0x00CCBD66:  movss    xmm1, dword ptr [eax + edx + 0x18]
+0x00CCBD6C:  ucomiss  xmm1, xmm0
+0x00CCBD6F:  lahf     
+0x00CCBD70:  test     ah, 0x44
+0x00CCBD73:  jnp      0xccbdd1
+0x00CCBD75:  mov      eax, dword ptr [ebx + ebp + 8]
+0x00CCBD79:  imul     eax, eax, 0x34
+0x00CCBD7C:  movss    xmm1, dword ptr [eax + edx + 0x18]
+0x00CCBD82:  ucomiss  xmm1, xmm0
+0x00CCBD85:  lahf     
+0x00CCBD86:  test     ah, 0x44
+0x00CCBD89:  jnp      0xccbdd1
+0x00CCBD8B:  mov      eax, dword ptr [esp + 0x24]
+0x00CCBD8F:  cmp      ecx, eax
+0x00CCBD91:  jb       0xccc0ba
+0x00CCBD97:  add      eax, eax
+0x00CCBD99:  cmp      eax, 8
+0x00CCBD9C:  ja       0xccbda3
+0x00CCBD9E:  mov      eax, 8
+0x00CCBDA3:  lea      edx, [esp + 0x18]
+0x00CCBDA7:  cmp      edx, edi
+0x00CCBDA9:  jb       0xccbdae
+0x00CCBDAB:  lea      ecx, [edi + ecx*4]
+0x00CCBDAE:  push     eax
+0x00CCBDAF:  lea      ecx, [esp + 0x20]
+0x00CCBDB3:  call     0x487440
+0x00CCBDB8:  mov      edi, dword ptr [esp + 0x1c]
+0x00CCBDBC:  mov      ecx, dword ptr [esp + 0x20]
+0x00CCBDC0:  lea      eax, [edi + ecx*4]
+0x00CCBDC3:  test     eax, eax
+0x00CCBDC5:  je       0xccbdc9
+0x00CCBDC7:  mov      dword ptr [eax], esi
+0x00CCBDC9:  xorps    xmm0, xmm0
+0x00CCBDCC:  inc      ecx
+0x00CCBDCD:  mov      dword ptr [esp + 0x20], ecx
+0x00CCBDD1:  inc      esi
+0x00CCBDD2:  add      ebx, 0x10
+0x00CCBDD5:  cmp      esi, dword ptr [esp + 0x7c]
+0x00CCBDD9:  jb       0xccbd30
+0x00CCBDDF:  xor      ebx, ebx
+0x00CCBDE1:  cmp      dword ptr [esp + 0x5c], ebx
+0x00CCBDE5:  jbe      0xccbe26
+0x00CCBDE7:  xor      ebp, ebp
+0x00CCBDE9:  lea      esp, [esp]
+0x00CCBDF0:  mov      eax, dword ptr [esp + 0x58]
+0x00CCBDF4:  mov      ecx, dword ptr [esp + 0x30]
+0x00CCBDF8:  fld      dword ptr [eax + ebp + 0x14]
+0x00CCBDFC:  mov      ecx, dword ptr [ecx + 4]
+0x00CCBDFF:  mov      edx, dword ptr [ecx]
+  ... [truncated at 120 instructions] ...
+
+======================================================================
+=== rdIntersection::SolveOrganicJunction (VA: 0x00CB1C00, FileOffset: 0x008B1000) ===
+======================================================================
+0x00CB1C00:  push     esi
+0x00CB1C01:  mov      esi, ecx
+0x00CB1C03:  call     0xcb1ae0
+0x00CB1C08:  test     byte ptr [esp + 8], 1
+0x00CB1C0D:  je       0xcb1c18
+0x00CB1C0F:  push     esi
+0x00CB1C10:  call     0x1963b4c
+0x00CB1C15:  add      esp, 4
+0x00CB1C18:  mov      eax, esi
+0x00CB1C1A:  pop      esi
+0x00CB1C1B:  ret      4
+
+======================================================================
+=== rdIntersection::BuildBranchConnections (VA: 0x00CB2390, FileOffset: 0x008B1790) ===
+======================================================================
+0x00CB2390:  push     ecx
+0x00CB2391:  push     ebx
+0x00CB2392:  push     ebp
+0x00CB2393:  push     esi
+0x00CB2394:  mov      esi, ecx
+0x00CB2396:  mov      eax, dword ptr [esi + 0x38]
+0x00CB2399:  push     edi
+0x00CB239A:  xor      ebp, ebp
+0x00CB239C:  xor      edi, edi
+0x00CB239E:  cmp      eax, ebp
+0x00CB23A0:  jbe      0xcb23db
+0x00CB23A2:  mov      eax, dword ptr [esi + 0x34]
+0x00CB23A5:  mov      ebx, dword ptr [eax + edi*4]
+0x00CB23A8:  sub      esp, 8
+0x00CB23AB:  mov      eax, esp
+0x00CB23AD:  mov      dword ptr [eax], ebp
+0x00CB23AF:  mov      dword ptr [eax + 4], ebp
+0x00CB23B2:  mov      ecx, dword ptr [esi + 0x54]
+0x00CB23B5:  mov      dword ptr [eax], ecx
+0x00CB23B7:  mov      ecx, dword ptr [esi + 0x58]
+0x00CB23BA:  mov      dword ptr [esp + 0x18], esp
+0x00CB23BE:  cmp      ecx, ebp
+0x00CB23C0:  je       0xcb23cc
+0x00CB23C2:  mov      dword ptr [eax + 4], ecx
+0x00CB23C5:  mov      edx, dword ptr [ecx]
+0x00CB23C7:  mov      eax, dword ptr [edx + 8]
+0x00CB23CA:  call     eax
+0x00CB23CC:  mov      edx, dword ptr [ebx]
+0x00CB23CE:  mov      eax, dword ptr [edx + 4]
+0x00CB23D1:  mov      ecx, ebx
+0x00CB23D3:  call     eax
+0x00CB23D5:  inc      edi
+0x00CB23D6:  cmp      edi, dword ptr [esi + 0x38]
+0x00CB23D9:  jb       0xcb23a2
+0x00CB23DB:  xor      edi, edi
+0x00CB23DD:  cmp      dword ptr [esi + 0x48], ebp
+0x00CB23E0:  jbe      0xcb241b
+0x00CB23E2:  mov      ecx, dword ptr [esi + 0x44]
+0x00CB23E5:  mov      ebx, dword ptr [ecx + edi*4]
+0x00CB23E8:  sub      esp, 8
+0x00CB23EB:  mov      eax, esp
+0x00CB23ED:  mov      dword ptr [eax], ebp
+0x00CB23EF:  mov      dword ptr [eax + 4], ebp
+0x00CB23F2:  mov      edx, dword ptr [esi + 0x5c]
+0x00CB23F5:  mov      dword ptr [eax], edx
+0x00CB23F7:  mov      ecx, dword ptr [esi + 0x60]
+0x00CB23FA:  mov      dword ptr [esp + 0x18], esp
+0x00CB23FE:  cmp      ecx, ebp
+0x00CB2400:  je       0xcb240c
+0x00CB2402:  mov      dword ptr [eax + 4], ecx
+0x00CB2405:  mov      eax, dword ptr [ecx]
+0x00CB2407:  mov      edx, dword ptr [eax + 8]
+0x00CB240A:  call     edx
+0x00CB240C:  mov      eax, dword ptr [ebx]
+0x00CB240E:  mov      edx, dword ptr [eax + 4]
+0x00CB2411:  mov      ecx, ebx
+0x00CB2413:  call     edx
+0x00CB2415:  inc      edi
+0x00CB2416:  cmp      edi, dword ptr [esi + 0x48]
+0x00CB2419:  jb       0xcb23e2
+0x00CB241B:  pop      edi
+0x00CB241C:  pop      esi
+0x00CB241D:  pop      ebp
+0x00CB241E:  pop      ebx
+0x00CB241F:  pop      ecx
+0x00CB2420:  ret      
+
+======================================================================
+=== rdIntersectionCurve::EvaluateFilletArc (VA: 0x00CB1750, FileOffset: 0x008B0B50) ===
+======================================================================
+0x00CB1750:  push     esi
+0x00CB1751:  mov      esi, ecx
+0x00CB1753:  call     0xcb16a0
+0x00CB1758:  test     byte ptr [esp + 8], 1
+0x00CB175D:  je       0xcb1768
+0x00CB175F:  push     esi
+0x00CB1760:  call     0x1963b4c
+0x00CB1765:  add      esp, 4
+0x00CB1768:  mov      eax, esi
+0x00CB176A:  pop      esi
+0x00CB176B:  ret      4
+
+======================================================================
+=== rdCornerCurveBorder::TessellateCornerCurbs (VA: 0x00C74230, FileOffset: 0x00873630) ===
+======================================================================
+0x00C74230:  test     byte ptr [esp + 4], 1
+0x00C74235:  push     esi
+0x00C74236:  mov      esi, ecx
+0x00C74238:  mov      dword ptr [esi], 0x232a884
+0x00C7423E:  je       0xc74249
+0x00C74240:  push     esi
+0x00C74241:  call     0x1963b4c
+0x00C74246:  add      esp, 4
+0x00C74249:  mov      eax, esi
+0x00C7424B:  pop      esi
+0x00C7424C:  ret      4
+
+======================================================================
+=== trRoadSegment::GenerateCatmullRomRibbon (VA: 0x00774910, FileOffset: 0x00373D10) ===
+======================================================================
+0x00774910:  push     -1
+0x00774912:  push     0x1ae865b
+0x00774917:  mov      eax, dword ptr fs:[0]
+0x0077491D:  push     eax
+0x0077491E:  mov      dword ptr fs:[0], esp
+0x00774925:  sub      esp, 0x14
+0x00774928:  push     esi
+0x00774929:  push     edi
+0x0077492A:  push     0x110
+0x0077492F:  mov      edi, ecx
+0x00774931:  call     0x1963b46
+0x00774936:  mov      esi, eax
+0x00774938:  add      esp, 4
+0x0077493B:  mov      dword ptr [esp + 8], esi
+0x0077493F:  mov      dword ptr [esp + 0x24], 0
+0x00774947:  test     esi, esi
+0x00774949:  je       0x774962
+0x0077494B:  push     0
+0x0077494D:  lea      ecx, [esp + 0x10]
+0x00774951:  call     0x1522750
+0x00774956:  push     eax
+0x00774957:  mov      ecx, esi
+0x00774959:  call     0xd12830
+0x0077495E:  mov      esi, eax
+0x00774960:  jmp      0x774964
+0x00774962:  xor      esi, esi
+0x00774964:  mov      dword ptr [esp + 0x24], 0xffffffff
+0x0077496C:  test     edi, edi
+0x0077496E:  je       0x774975
+0x00774970:  lea      ecx, [edi + 0x1c]
+0x00774973:  jmp      0x774977
+0x00774975:  xor      ecx, ecx
+0x00774977:  test     esi, esi
+0x00774979:  je       0x774980
+0x0077497B:  lea      eax, [esi + 0x1c]
+0x0077497E:  jmp      0x774982
+0x00774980:  xor      eax, eax
+0x00774982:  push     ecx
+0x00774983:  push     eax
+0x00774984:  call     0x6a8f30
+0x00774989:  mov      ecx, dword ptr [esp + 0x24]
+0x0077498D:  add      esp, 8
+0x00774990:  pop      edi
+0x00774991:  mov      eax, esi
+0x00774993:  pop      esi
+0x00774994:  mov      dword ptr fs:[0], ecx
+0x0077499B:  add      esp, 0x20
+0x0077499E:  ret      
+
+======================================================================
+=== trRoadSegment::EvaluateCrossSectionElevations (VA: 0x0075F5B0, FileOffset: 0x0035E9B0) ===
+======================================================================
+0x0075F5B0:  mov      eax, 0x2f39510
+0x0075F5B5:  ret      
+0x0075F5B6:  int3     
+0x0075F5B7:  int3     
+0x0075F5B8:  int3     
+0x0075F5B9:  int3     
+0x0075F5BA:  int3     
+0x0075F5BB:  int3     
+0x0075F5BC:  int3     
+0x0075F5BD:  int3     
+0x0075F5BE:  int3     
+0x0075F5BF:  int3     
+0x0075F5C0:  push     -1
+0x0075F5C2:  push     0x1ae57db
+0x0075F5C7:  mov      eax, dword ptr fs:[0]
+0x0075F5CD:  push     eax
+0x0075F5CE:  mov      dword ptr fs:[0], esp
+0x0075F5D5:  sub      esp, 0x14
+0x0075F5D8:  push     esi
+0x0075F5D9:  push     0x110
+0x0075F5DE:  call     0x1963b46
+0x0075F5E3:  mov      esi, eax
+0x0075F5E5:  add      esp, 4
+0x0075F5E8:  mov      dword ptr [esp + 4], esi
+0x0075F5EC:  xor      eax, eax
+0x0075F5EE:  mov      dword ptr [esp + 0x20], eax
+0x0075F5F2:  cmp      esi, eax
+0x0075F5F4:  je       0x75f608
+0x0075F5F6:  push     eax
+0x0075F5F7:  lea      ecx, [esp + 0xc]
+0x0075F5FB:  call     0x1522750
+0x0075F600:  push     eax
+0x0075F601:  mov      ecx, esi
+0x0075F603:  call     0xd12830
+0x0075F608:  mov      ecx, dword ptr [esp + 0x18]
+0x0075F60C:  pop      esi
+0x0075F60D:  mov      dword ptr fs:[0], ecx
+0x0075F614:  add      esp, 0x20
+0x0075F617:  ret      
+
+======================================================================
+=== trRoadNode::SolveTangentsAndBank (VA: 0x00D3FAB0, FileOffset: 0x0093EEB0) ===
+======================================================================
+0x00D3FAB0:  push     -1
+0x00D3FAB2:  push     0x1b505fb
+0x00D3FAB7:  mov      eax, dword ptr fs:[0]
+0x00D3FABD:  push     eax
+0x00D3FABE:  mov      dword ptr fs:[0], esp
+0x00D3FAC5:  sub      esp, 0x14
+0x00D3FAC8:  push     esi
+0x00D3FAC9:  push     edi
+0x00D3FACA:  push     0xe0
+0x00D3FACF:  mov      edi, ecx
+0x00D3FAD1:  call     0x1963b46
+0x00D3FAD6:  mov      esi, eax
+0x00D3FAD8:  add      esp, 4
+0x00D3FADB:  mov      dword ptr [esp + 8], esi
+0x00D3FADF:  mov      dword ptr [esp + 0x24], 0
+0x00D3FAE7:  test     esi, esi
+0x00D3FAE9:  je       0xd3fb07
+0x00D3FAEB:  push     0
+0x00D3FAED:  lea      ecx, [esp + 0x10]
+0x00D3FAF1:  call     0x1522750
+0x00D3FAF6:  push     eax
+0x00D3FAF7:  push     0x30ba79c
+0x00D3FAFC:  mov      ecx, esi
+0x00D3FAFE:  call     0xd11940
+0x00D3FB03:  mov      esi, eax
+0x00D3FB05:  jmp      0xd3fb09
+0x00D3FB07:  xor      esi, esi
+0x00D3FB09:  mov      dword ptr [esp + 0x24], 0xffffffff
+0x00D3FB11:  test     edi, edi
+0x00D3FB13:  je       0xd3fb1a
+0x00D3FB15:  lea      ecx, [edi + 0x1c]
+0x00D3FB18:  jmp      0xd3fb1c
+0x00D3FB1A:  xor      ecx, ecx
+0x00D3FB1C:  test     esi, esi
+0x00D3FB1E:  je       0xd3fb25
+0x00D3FB20:  lea      eax, [esi + 0x1c]
+0x00D3FB23:  jmp      0xd3fb27
+0x00D3FB25:  xor      eax, eax
+0x00D3FB27:  push     ecx
+0x00D3FB28:  push     eax
+0x00D3FB29:  call     0x6a8f30
+0x00D3FB2E:  mov      ecx, dword ptr [esp + 0x24]
+0x00D3FB32:  add      esp, 8
+0x00D3FB35:  pop      edi
+0x00D3FB36:  mov      eax, esi
+0x00D3FB38:  pop      esi
+0x00D3FB39:  mov      dword ptr fs:[0], ecx
+0x00D3FB40:  add      esp, 0x20
+0x00D3FB43:  ret      
+
+======================================================================
+=== trRoadNode::ComputeBranchAngles (VA: 0x00CB63C0, FileOffset: 0x008B57C0) ===
+======================================================================
+0x00CB63C0:  push     ecx
+0x00CB63C1:  push     esi
+0x00CB63C2:  mov      esi, ecx
+0x00CB63C4:  call     0xea5040
+0x00CB63C9:  mov      ecx, esi
+0x00CB63CB:  call     0xc960f0
+0x00CB63D0:  mov      eax, dword ptr [esi]
+0x00CB63D2:  mov      edx, dword ptr [eax + 0x34]
+0x00CB63D5:  mov      ecx, esi
+0x00CB63D7:  call     edx
+0x00CB63D9:  movss    xmm0, dword ptr [eax]
+0x00CB63DD:  mov      eax, dword ptr [esi]
+0x00CB63DF:  mov      edx, dword ptr [eax + 0x34]
+0x00CB63E2:  mov      ecx, esi
+0x00CB63E4:  movss    dword ptr [esp + 4], xmm0
+0x00CB63EA:  call     edx
+0x00CB63EC:  movss    xmm0, dword ptr [eax + 4]
+0x00CB63F1:  movss    xmm1, dword ptr [esp + 4]
+0x00CB63F7:  movss    dword ptr [esi + 0xd8], xmm1
+0x00CB63FF:  movss    dword ptr [esi + 0xdc], xmm0
+0x00CB6407:  pop      esi
+0x00CB6408:  pop      ecx
+0x00CB6409:  ret      
+
+======================================================================
+=== trBuilding::GenerateProceduralFacadesAndRoof (VA: 0x00B4F220, FileOffset: 0x0074E620) ===
+======================================================================
+0x00B4F220:  push     esi
+0x00B4F221:  mov      esi, ecx
+0x00B4F223:  call     0xb437e0
+0x00B4F228:  test     byte ptr [esp + 8], 1
+0x00B4F22D:  je       0xb4f238
+0x00B4F22F:  push     esi
+0x00B4F230:  call     0x1963b4c
+0x00B4F235:  add      esp, 4
+0x00B4F238:  mov      eax, esi
+0x00B4F23A:  pop      esi
+0x00B4F23B:  ret      4
+
+======================================================================
+=== trBuildingRoofStyle::EvaluateRoofGeometry (VA: 0x00AC0B00, FileOffset: 0x006BFF00) ===
+======================================================================
+0x00AC0B00:  push     -1
+0x00AC0B02:  push     0x1b2635b
+0x00AC0B07:  mov      eax, dword ptr fs:[0]
+0x00AC0B0D:  push     eax
+0x00AC0B0E:  mov      dword ptr fs:[0], esp
+0x00AC0B15:  push     ecx
+0x00AC0B16:  push     esi
+0x00AC0B17:  push     edi
+0x00AC0B18:  push     0xb0
+0x00AC0B1D:  mov      edi, ecx
+0x00AC0B1F:  call     0x1963b46
+0x00AC0B24:  add      esp, 4
+0x00AC0B27:  mov      dword ptr [esp + 8], eax
+0x00AC0B2B:  xor      esi, esi
+0x00AC0B2D:  mov      dword ptr [esp + 0x14], esi
+0x00AC0B31:  cmp      eax, esi
+0x00AC0B33:  je       0xac0b3e
+0x00AC0B35:  mov      ecx, eax
+0x00AC0B37:  call     0xa96240
+0x00AC0B3C:  mov      esi, eax
+0x00AC0B3E:  push     edi
+0x00AC0B3F:  mov      ecx, esi
+0x00AC0B41:  mov      dword ptr [esp + 0x18], 0xffffffff
+0x00AC0B49:  call     0x1256940
+0x00AC0B4E:  mov      ecx, edi
+0x00AC0B50:  call     0x1228a40
+0x00AC0B55:  push     eax
+0x00AC0B56:  mov      ecx, esi
+0x00AC0B58:  call     0x1228a50
+0x00AC0B5D:  push     esi
+0x00AC0B5E:  call     0x1503140
+0x00AC0B63:  mov      ecx, eax
+0x00AC0B65:  call     0x1525820
+0x00AC0B6A:  mov      ecx, dword ptr [esp + 0xc]
+0x00AC0B6E:  pop      edi
+0x00AC0B6F:  mov      eax, esi
+0x00AC0B71:  pop      esi
+0x00AC0B72:  mov      dword ptr fs:[0], ecx
+0x00AC0B79:  add      esp, 0x10
+0x00AC0B7C:  ret      
+
+======================================================================
+=== trTerrainSettings::EvaluateBilinearGridElevation (VA: 0x00AC71D0, FileOffset: 0x006C65D0) ===
+======================================================================
+0x00AC71D0:  push     -1
+0x00AC71D2:  push     0x1b26c8b
+0x00AC71D7:  mov      eax, dword ptr fs:[0]
+0x00AC71DD:  push     eax
+0x00AC71DE:  mov      dword ptr fs:[0], esp
+0x00AC71E5:  push     ecx
+0x00AC71E6:  push     esi
+0x00AC71E7:  push     edi
+0x00AC71E8:  push     0xb0
+0x00AC71ED:  mov      edi, ecx
+0x00AC71EF:  call     0x1963b46
+0x00AC71F4:  add      esp, 4
+0x00AC71F7:  mov      dword ptr [esp + 8], eax
+0x00AC71FB:  mov      dword ptr [esp + 0x14], 0
+0x00AC7203:  test     eax, eax
+0x00AC7205:  je       0xac7212
+0x00AC7207:  mov      ecx, eax
+0x00AC7209:  call     0xa09080
+0x00AC720E:  mov      esi, eax
+0x00AC7210:  jmp      0xac7214
+0x00AC7212:  xor      esi, esi
+0x00AC7214:  mov      dword ptr [esp + 0x14], 0xffffffff
+0x00AC721C:  test     edi, edi
+0x00AC721E:  je       0xac7225
+0x00AC7220:  lea      ecx, [edi + 0x1c]
+0x00AC7223:  jmp      0xac7227
+0x00AC7225:  xor      ecx, ecx
+0x00AC7227:  test     esi, esi
+0x00AC7229:  je       0xac7230
+0x00AC722B:  lea      eax, [esi + 0x1c]
+0x00AC722E:  jmp      0xac7232
+0x00AC7230:  xor      eax, eax
+0x00AC7232:  push     ecx
+0x00AC7233:  push     eax
+0x00AC7234:  call     0x6a8f30
+0x00AC7239:  mov      ecx, dword ptr [esp + 0x14]
+0x00AC723D:  add      esp, 8
+0x00AC7240:  pop      edi
+0x00AC7241:  mov      eax, esi
+0x00AC7243:  pop      esi
+0x00AC7244:  mov      dword ptr fs:[0], ecx
+0x00AC724B:  add      esp, 0x10
+0x00AC724E:  ret      
+
+======================================================================
+=== trTerrainSettings::ComputeSurfaceNormal (VA: 0x00A09140, FileOffset: 0x00608540) ===
+======================================================================
+0x00A09140:  mov      eax, 0x2f39480
+0x00A09145:  ret      
+0x00A09146:  int3     
+0x00A09147:  int3     
+0x00A09148:  int3     
+0x00A09149:  int3     
+0x00A0914A:  int3     
+0x00A0914B:  int3     
+0x00A0914C:  int3     
+0x00A0914D:  int3     
+0x00A0914E:  int3     
+0x00A0914F:  int3     
+0x00A09150:  mov      eax, ecx
+0x00A09152:  ret      

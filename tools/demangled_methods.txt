@@ -1,0 +1,138 @@
+
+====================================
+=== rdGeometryGenerator (3 symbols) ===
+====================================
+?AV?$arAdapter1@ABV?$prNetworkArgs@V?$prNetworkImp@VtrRoadNode@@VtrRoadSegment@@@@@@V?$arBinder@XV?$arMemFunc1@XVrdGeometryGenerator@@ABV?$prNetworkArgs@V?$prNetworkImp@VtrRoadNode@@VtrRoadSegment@@@@@@@@V?$arBindList2@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@@@@@@@  -->  ?AV?$arAdapter1@ABV?$prNetworkArgs@V?$prNetworkImp@VtrRoadNode@@VtrRoadSegment@@@@@@V?$arBinder@XV?$arMemFunc1@XVrdGeometryGenerator@@ABV?$prNetworkArgs@V?$prNetworkImp@VtrRoadNode@@VtrRoadSegment@@@@@@@@V?$arBindList2@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@@@@@@@
+?AV?$arAdapter1@ABVtrRoadLod@@V?$arBinder@XV?$arMemFunc1@XVrdGeometryGenerator@@ABVtrRoadLod@@@@V?$arBindList2@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@@@@@@@  -->  ?AV?$arAdapter1@ABVtrRoadLod@@V?$arBinder@XV?$arMemFunc1@XVrdGeometryGenerator@@ABVtrRoadLod@@@@V?$arBindList2@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@@@@@@@
+?AV?$arAdapter2@AAV?$prMeshImpl@M@@ABV?$mtAlignedBox2Impl@M@@V?$arBinder@XV?$arMemFunc2@XVrdGeometryGenerator@@AAV?$prMeshImpl@M@@ABV?$mtAlignedBox2Impl@M@@@@V?$arBindList3@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@V?$arBindArg@$01@@@@@@@@  -->  ?AV?$arAdapter2@AAV?$prMeshImpl@M@@ABV?$mtAlignedBox2Impl@M@@V?$arBinder@XV?$arMemFunc2@XVrdGeometryGenerator@@AAV?$prMeshImpl@M@@ABV?$mtAlignedBox2Impl@M@@@@V?$arBindList3@V?$arBindValue@PAVrdGeometryGenerator@@@@V?$arBindArg@$00@@V?$arBindArg@$01@@@@@@@@
+
+====================================
+=== cvStandardExporter (1 symbols) ===
+====================================
+?AVcvStandardExporter@@  -->   ?? AVcvStandardExporter
+
+====================================
+=== cvMeshGeometryNode (1 symbols) ===
+====================================
+?AVcvMeshGeometryNode@@  -->   ?? AVcvMeshGeometryNode
+
+====================================
+=== cvPolyhedronGeometryNode (1 symbols) ===
+====================================
+?AVcvPolyhedronGeometryNode@@  -->   ?? AVcvPolyhedronGeometryNode
+
+====================================
+=== coColladaExport (1 symbols) ===
+====================================
+?AVcoColladaExport@@  -->   ?? AVcoColladaExport
+
+====================================
+=== trTerrainExporter (1 symbols) ===
+====================================
+?AVExtraExportOptions@trTerrainExporter@@  -->   ?? trTerrainExporter::AVExtraExportOptions
+
+====================================
+=== fbExporterFbx (1 symbols) ===
+====================================
+?AVfbExporterFbx@@  -->   ?? AVfbExporterFbx
+
+====================================
+=== ofOpenFlightExport (1 symbols) ===
+====================================
+?AVofOpenFlightExport@@  -->   ?? AVofOpenFlightExport
+
+====================================
+=== edExportRoadAccessor (1 symbols) ===
+====================================
+?AVedExportRoadAccessor@@  -->   ?? AVedExportRoadAccessor
+
+====================================
+=== edExportRoadNetworkAccessor (1 symbols) ===
+====================================
+?AVedExportRoadNetworkAccessor@@  -->   ?? AVedExportRoadNetworkAccessor
+
+====================================
+=== edExportSegment (9 symbols) ===
+====================================
+?AV?$arAdapter3@AAVprNetworkModifiable@@W4EnumModifyType@1@IV?$arBinder@XV?$arMemFunc3@XV?$prNetworkImp@VedExportNode@@VedExportSegment@@@@AAVprNetworkModifiable@@W4EnumModifyType@2@I@@V?$arBindList4@V?$arBindValue@PAV?$prNetworkImp@VedExportNode@@VedExportSegment@@@@@@V?$arBindArg@$00@@V?$arBindArg@$01@@V?$arBindArg@$02@@@@@@@@  -->  ?AV?$arAdapter3@AAVprNetworkModifiable@@W4EnumModifyType@1@IV?$arBinder@XV?$arMemFunc3@XV?$prNetworkImp@VedExportNode@@VedExportSegment@@@@AAVprNetworkModifiable@@W4EnumModifyType@2@I@@V?$arBindList4@V?$arBindValue@PAV?$prNetworkImp@VedExportNode@@VedExportSegment@@@@@@V?$arBindArg@$00@@V?$arBindArg@$01@@V?$arBindArg@$02@@@@@@@@
+?AV?$arEvent@ABV?$prNetworkArgs@V?$prNetworkImp@VedExportNode@@VedExportSegment@@@@@@UarEventUnusedStruct@@U2@U2@U2@U2@U2@U2@@@  -->  ?AV?$arEvent@ABV?$prNetworkArgs@V?$prNetworkImp@VedExportNode@@VedExportSegment@@@@@@UarEventUnusedStruct@@U2@U2@U2@U2@U2@U2@@@
+?AV?$arParserContainerHelper@V?$arVector@PAVedExportSegment@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@PAVedExportSegment@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@PAVedExportSegment@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@PAVedExportSegment@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserObjectCreateHelper@VedExportSegment@@@@  -->  ?AV?$arParserObjectCreateHelper@VedExportSegment@@@@
+?AV?$arParserObjectHelper@VedExportSegment@@@@  -->  ?AV?$arParserObjectHelper@VedExportSegment@@@@
+?AV?$arTrackedEvent@V?$arEvent@ABV?$prNetworkArgs@V?$prNetworkImp@VedExportNode@@VedExportSegment@@@@@@UarEventUnusedStruct@@U2@U2@U2@U2@U2@U2@@@@@  -->  ?AV?$arTrackedEvent@V?$arEvent@ABV?$prNetworkArgs@V?$prNetworkImp@VedExportNode@@VedExportSegment@@@@@@UarEventUnusedStruct@@U2@U2@U2@U2@U2@U2@@@@@
+?AV?$prNetworkImp@VedExportNode@@VedExportSegment@@@@  -->  ?AV?$prNetworkImp@VedExportNode@@VedExportSegment@@@@
+?AVedExportSegment@@  -->   ?? AVedExportSegment
+
+====================================
+=== edTrafficExport (45 symbols) ===
+====================================
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCorridor@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCorridor@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCorridor@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCorridor@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCurveSegment@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCurveSegment@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCurveSegment@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportCurveSegment@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportEdgeCurve@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportEdgeCurve@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportEdgeCurve@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportEdgeCurve@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportHermite@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportHermite@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportHermite@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportHermite@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportID@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportID@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportID@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportID@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportIntersection@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportIntersection@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportIntersection@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportIntersection@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportLane@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportLane@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportLane@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportLane@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportPhase@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportPhase@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportPhase@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportPhase@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportRoadSegment@@VarAllocator@@@@UarReservableSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportRoadSegment@@VarAllocator@@@@UarReservableSequenceTag@@@@
+?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportRoadSegment@@VarAllocator@@@@UarSequenceTag@@@@  -->  ?AV?$arParserContainerHelper@V?$arVector@VedTrafficExportRoadSegment@@VarAllocator@@@@UarSequenceTag@@@@
+?AV?$arParserObjectHelper@VedTrafficExportCorridor@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportCorridor@@@@
+?AV?$arParserObjectHelper@VedTrafficExportCurveSegment@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportCurveSegment@@@@
+?AV?$arParserObjectHelper@VedTrafficExportEdgeCurve@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportEdgeCurve@@@@
+?AV?$arParserObjectHelper@VedTrafficExportHermite@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportHermite@@@@
+?AV?$arParserObjectHelper@VedTrafficExportID@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportID@@@@
+?AV?$arParserObjectHelper@VedTrafficExportIntersection@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportIntersection@@@@
+?AV?$arParserObjectHelper@VedTrafficExportLane@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportLane@@@@
+?AV?$arParserObjectHelper@VedTrafficExportPhase@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportPhase@@@@
+?AV?$arParserObjectHelper@VedTrafficExportRoadSegment@@@@  -->  ?AV?$arParserObjectHelper@VedTrafficExportRoadSegment@@@@
+?AVedTrafficExportCorridor@@  -->   ?? AVedTrafficExportCorridor
+?AVedTrafficExportCurveSegment@@  -->   ?? AVedTrafficExportCurveSegment
+?AVedTrafficExportData@@  -->   ?? AVedTrafficExportData
+?AVedTrafficExportEdgeCurve@@  -->   ?? AVedTrafficExportEdgeCurve
+?AVedTrafficExportFilter@@  -->   ?? AVedTrafficExportFilter
+?AVedTrafficExportHermite@@  -->   ?? AVedTrafficExportHermite
+?AVedTrafficExportID@@  -->   ?? AVedTrafficExportID
+?AVedTrafficExportIOBase@@  -->   ?? AVedTrafficExportIOBase
+?AVedTrafficExportIntersection@@  -->   ?? AVedTrafficExportIntersection
+?AVedTrafficExportLane@@  -->   ?? AVedTrafficExportLane
+?AVedTrafficExportNetwork@@  -->   ?? AVedTrafficExportNetwork
+?AVedTrafficExportNodeNormalComputer@@  -->   ?? AVedTrafficExportNodeNormalComputer
+?AVedTrafficExportNormalComputer@@  -->   ?? AVedTrafficExportNormalComputer
+?AVedTrafficExportPhase@@  -->   ?? AVedTrafficExportPhase
+?AVedTrafficExportProducer@@  -->   ?? AVedTrafficExportProducer
+?AVedTrafficExportRoadSegment@@  -->   ?? AVedTrafficExportRoadSegment
+?AVedTrafficExportSegmentNormalComputer@@  -->   ?? AVedTrafficExportSegmentNormalComputer
+?AVedTrafficExporter@@  -->   ?? AVedTrafficExporter
+
+====================================
+=== cvExporter (1 symbols) ===
+====================================
+?AVcvExporter@@  -->   ?? AVcvExporter
+
+====================================
+=== gxVertexBuffer (7 symbols) ===
+====================================
+?AVgxVertexBuffer@@  -->   ?? AVgxVertexBuffer
+?AVgxVertexBufferData@@  -->   ?? AVgxVertexBufferData
+?AVgxVertexBufferResource@@  -->   ?? AVgxVertexBufferResource
+?AVgxVertexBufferSerializerBase@@  -->   ?? AVgxVertexBufferSerializerBase
+?AVgxVertexBufferSerializerD3D@@  -->   ?? AVgxVertexBufferSerializerD3D
+?AVgxVertexBufferSerializerPS3@@  -->   ?? AVgxVertexBufferSerializerPS3
+?AVgxVertexBufferSerializerWii@@  -->   ?? AVgxVertexBufferSerializerWii
+
+====================================
+=== gxIndexBuffer (4 symbols) ===
+====================================
+?AVgxIndexBuffer@@  -->   ?? AVgxIndexBuffer
+?AVgxIndexBufferData@@  -->   ?? AVgxIndexBufferData
+?AVgxIndexBufferResource@@  -->   ?? AVgxIndexBufferResource
+?AVgxIndexBufferSerializerBase@@  -->   ?? AVgxIndexBufferSerializerBase
