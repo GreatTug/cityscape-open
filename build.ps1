@@ -153,6 +153,20 @@ if (Test-Path "tools\test_lifecycle.cs") {
     }
 }
 
+if (Test-Path "tools\test_terrain_resolution.cs") {
+    $csc = "$env:SystemRoot\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+    if (Test-Path $csc) {
+        Write-Host "`n---> Compiling test_terrain_resolution.exe..." -ForegroundColor Yellow
+        & $csc /target:exe /nologo /out:"$binDist\test_terrain_resolution.exe" `
+            /reference:"$binDist\palDotNet.dll" `
+            /reference:"$binDist\edEditorDotNet.dll" `
+            /reference:System.Windows.Forms.dll `
+            /reference:System.Drawing.dll `
+            /reference:System.dll `
+            "tools\test_terrain_resolution.cs"
+    }
+}
+
 # Apply surgical native in-place unlock patch to CityScape.exe
 if (Test-Path "tools\apply_native_patch.py") {
     Write-Host "`n---> Applying native terrain unlock patch to CityScape.exe..." -ForegroundColor Yellow

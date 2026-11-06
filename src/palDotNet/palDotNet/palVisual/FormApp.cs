@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
@@ -271,6 +271,7 @@ public class FormApp : FormAppBase
 		palDotNet.palWidgets.Menu.VisualCreator = (EventHandler)Delegate.Combine(palDotNet.palWidgets.Menu.VisualCreator, (EventHandler)delegate(object s, EventArgs ea)
 		{
 			TheMenuStrip.AddMenuItem(s as palDotNet.palWidgets.Menu);
+			EnsureWindowMenu();
 		});
 		palDotNet.palWidgets.Menu.MenuStripLayoutDelegate = delegate(bool suspend)
 		{
@@ -302,7 +303,7 @@ public class FormApp : FormAppBase
 
 	public void LoadLayout()
 	{
-		if (base.InvokeRequired)
+		if (base.InvokeRequired && Application.MessageLoop)
 		{
 			Invoke(new theDelNoArgs(LoadLayout));
 			return;
@@ -314,6 +315,11 @@ public class FormApp : FormAppBase
 		LoadLayoutCalled = true;
 
 		bool flag = false;
+		if (!string.IsNullOrEmpty(Settings.DockPanelLayout) &&
+			!Settings.DockPanelLayout.ToLower().Contains("05675b1b-b72d-4b56-9d16-f3e940bcff90"))
+		{
+			Settings.DockPanelLayout = string.Empty;
+		}
 		if (LoadedSettings && !string.IsNullOrEmpty(Settings.DockPanelLayout))
 		{
 			byte[] bytes = Encoding.UTF8.GetBytes(Settings.DockPanelLayout);
@@ -386,6 +392,37 @@ public class FormApp : FormAppBase
 		{
 			TheViewDocument.Show(dockPanel1, DockState.Document);
 		}
+		PalDockContent tabbedContent = PalDockContent.Find(new Guid("05675B1B-B72D-4b56-9D16-F3E940BCFF90"));
+		if (tabbedContent != null)
+		{
+			if (tabbedContent.DockPanel == null || !dockPanel1.Contents.Contains(tabbedContent))
+			{
+				tabbedContent.Show(dockPanel1, DockState.DockBottom);
+			}
+			if (tabbedContent.DockState == DockState.Hidden)
+			{
+				tabbedContent.DockState = DockState.DockBottom;
+			}
+		}
+		if (TheToolWidgets != null)
+		{
+			if (TheToolWidgets.DockPanel == null || !dockPanel1.Contents.Contains(TheToolWidgets))
+			{
+				TheToolWidgets.Show(dockPanel1, DockState.DockRight);
+			}
+			if (TheToolWidgets.DockState == DockState.Hidden)
+			{
+				TheToolWidgets.DockState = DockState.DockRight;
+			}
+		}
+		if (TheToolOutput != null)
+		{
+			if (TheToolOutput.DockPanel == null || !dockPanel1.Contents.Contains(TheToolOutput))
+			{
+				TheToolOutput.Show(dockPanel1, DockState.DockBottom);
+			}
+		}
+		EnsureWindowMenu();
 		WidgetMgr.Instance.SendMsg(WidgetBase.CoreMessages.eLoadLayout);
 		TheViewDocument.Focus();
 	}
@@ -927,4 +964,301 @@ public class FormApp : FormAppBase
 		base.ResumeLayout(false);
 		base.PerformLayout();
 	}
+
+	private ToolStripMenuItem windowMenuItem;
+
+	public void EnsureWindowMenu()
+	{
+		if (base.InvokeRequired && Application.MessageLoop)
+		{
+			Invoke(new theDelNoArgs(EnsureWindowMenu));
+			return;
+		}
+		if (base.MainMenuStrip == null)
+		{
+			return;
+		}
+		if (windowMenuItem == null)
+		{
+			windowMenuItem = new ToolStripMenuItem("&Window");
+			
+			ToolStripMenuItem resetItem = new ToolStripMenuItem("&Reset Window Layout", null, delegate
+			{
+				ResetWindowLayout();
+			});
+			resetItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.R;
+			
+			ToolStripMenuItem saveItem = new ToolStripMenuItem("&Save Window Layout as Default", null, delegate
+			{
+				SaveCurrentLayout();
+				MessageBox.Show(this, "Current window layout has been saved as the default.", "Window Layout", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			});
+			
+			ToolStripMenuItem roadItem = new ToolStripMenuItem("Road && &Bridge Style Browser", null, delegate
+			{
+				ShowLibraryTab(new Guid("05675B1B-B72D-4b56-9D16-F3E940BCFF90"));
+			});
+			roadItem.ShortcutKeys = Keys.Control | Keys.D1;
+			
+			ToolStripMenuItem bldItem = new ToolStripMenuItem("Building && &Architecture Browser", null, delegate
+			{
+				ShowLibraryTab(new Guid("c9cfc57b-f9a0-4025-b884-fa10a4f9628a"));
+			});
+			bldItem.ShortcutKeys = Keys.Control | Keys.D2;
+			
+			ToolStripMenuItem propItem = new ToolStripMenuItem("&Prop && Foliage Library", null, delegate
+			{
+				ShowLibraryTab(new Guid("DE0A0C0E-DC18-48c5-8320-8F4E1990C0AE"));
+			});
+			propItem.ShortcutKeys = Keys.Control | Keys.D3;
+			
+			ToolStripMenuItem propGridItem = new ToolStripMenuItem("Properties &Inspector", null, delegate
+			{
+				ShowPropertiesInspector();
+			});
+			propGridItem.ShortcutKeys = Keys.Control | Keys.D4;
+			
+			ToolStripMenuItem outputWinItem = new ToolStripMenuItem("&Output Log Window", null, delegate
+			{
+				ShowOutputWindow();
+			});
+			outputWinItem.ShortcutKeys = Keys.Control | Keys.D5;
+			
+			windowMenuItem.DropDownItems.Add(resetItem);
+			windowMenuItem.DropDownItems.Add(saveItem);
+			windowMenuItem.DropDownItems.Add(new ToolStripSeparator());
+			windowMenuItem.DropDownItems.Add(roadItem);
+			windowMenuItem.DropDownItems.Add(bldItem);
+			windowMenuItem.DropDownItems.Add(propItem);
+			windowMenuItem.DropDownItems.Add(propGridItem);
+			windowMenuItem.DropDownItems.Add(outputWinItem);
+		}
+		if (!base.MainMenuStrip.Items.Contains(windowMenuItem))
+		{
+			int helpIndex = -1;
+			for (int i = 0; i < base.MainMenuStrip.Items.Count; i++)
+			{
+				if (base.MainMenuStrip.Items[i].Text.Replace("&", "").Trim().Equals("Help", StringComparison.OrdinalIgnoreCase))
+				{
+					helpIndex = i;
+					break;
+				}
+			}
+			if (helpIndex >= 0)
+			{
+				base.MainMenuStrip.Items.Insert(helpIndex, windowMenuItem);
+			}
+			else
+			{
+				base.MainMenuStrip.Items.Add(windowMenuItem);
+			}
+		}
+	}
+
+	public void ShowLibraryTab(Guid guid)
+	{
+		PalDockContent dc = PalDockContent.Find(new Guid("05675B1B-B72D-4b56-9D16-F3E940BCFF90"));
+		if (dc is PalTabbedView tabbedView)
+		{
+			if (tabbedView.DockPanel == null || !dockPanel1.Contents.Contains(tabbedView))
+			{
+				tabbedView.Show(dockPanel1, DockState.DockBottom);
+			}
+			if (tabbedView.DockState == DockState.Hidden)
+			{
+				tabbedView.DockState = DockState.DockBottom;
+			}
+			tabbedView.Show();
+			tabbedView.Activate();
+			tabbedView.SwitchToPanel(guid);
+		}
+		else
+		{
+			WidgetMgr.Instance.SendLayoutCreatePanel(guid);
+			PalDockContent dcNew = PalDockContent.Find(guid);
+			if (dcNew is PalTabbedView tv)
+			{
+				tv.Show(dockPanel1, DockState.DockBottom);
+				tv.Activate();
+				tv.SwitchToPanel(guid);
+			}
+		}
+	}
+
+	public void ShowPropertiesInspector()
+	{
+		if (TheToolWidgets != null)
+		{
+			if (TheToolWidgets.DockPanel == null || !dockPanel1.Contents.Contains(TheToolWidgets))
+			{
+				TheToolWidgets.Show(dockPanel1, DockState.DockRight);
+			}
+			if (TheToolWidgets.DockState == DockState.Hidden)
+			{
+				TheToolWidgets.DockState = DockState.DockRight;
+			}
+			TheToolWidgets.Show();
+			TheToolWidgets.Activate();
+		}
+	}
+
+	public void ShowOutputWindow()
+	{
+		if (TheToolOutput != null)
+		{
+			if (TheToolOutput.DockPanel == null || !dockPanel1.Contents.Contains(TheToolOutput))
+			{
+				TheToolOutput.Show(dockPanel1, DockState.DockBottom);
+			}
+			if (TheToolOutput.DockState == DockState.Hidden)
+			{
+				TheToolOutput.DockState = DockState.DockBottom;
+			}
+			TheToolOutput.Show();
+			TheToolOutput.Activate();
+		}
+	}
+
+	public void ResetWindowLayout()
+	{
+		if (base.InvokeRequired && Application.MessageLoop)
+		{
+			Invoke(new theDelNoArgs(ResetWindowLayout));
+			return;
+		}
+		dockPanel1.SuspendLayout(allWindows: true);
+		Settings.DockPanelLayout = string.Empty;
+		try
+		{
+			Settings.Default.Save();
+		}
+		catch
+		{
+		}
+		List<IDockContent> list = new List<IDockContent>();
+		foreach (IDockContent content in dockPanel1.Contents)
+		{
+			if (content != TheViewDocument)
+			{
+				list.Add(content);
+			}
+		}
+		foreach (IDockContent item in list)
+		{
+			if (item is DockContent dc)
+			{
+				dc.DockPanel = null;
+			}
+		}
+		string text = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "CityScape.DefaultLayout.xml");
+		if (!File.Exists(text))
+		{
+			text = "CityScape.DefaultLayout.xml";
+		}
+		bool flag = false;
+		if (File.Exists(text))
+		{
+			try
+			{
+				using StreamReader streamReader = new StreamReader(text);
+				dockPanel1.LoadFromXml(streamReader.BaseStream, GetContentFromPersistString);
+				flag = true;
+			}
+			catch
+			{
+				flag = false;
+			}
+		}
+		if (!flag)
+		{
+			try
+			{
+				Assembly assembly = typeof(FormApp).Assembly;
+				Stream manifestResourceStream = assembly.GetManifestResourceStream("palDotNet.palVisual.DefaultLayout.xml");
+				if (manifestResourceStream != null)
+				{
+					dockPanel1.LoadFromXml(manifestResourceStream, GetContentFromPersistString);
+				}
+			}
+			catch
+			{
+			}
+		}
+		if (TheViewDocument != null && (TheViewDocument.DockPanel == null || !dockPanel1.Contents.Contains(TheViewDocument)))
+		{
+			TheViewDocument.Show(dockPanel1, DockState.Document);
+		}
+		PalDockContent dcTabbed = PalDockContent.Find(new Guid("05675B1B-B72D-4b56-9D16-F3E940BCFF90"));
+		if (dcTabbed != null)
+		{
+			if (dcTabbed.DockPanel == null || !dockPanel1.Contents.Contains(dcTabbed))
+			{
+				dcTabbed.Show(dockPanel1, DockState.DockBottom);
+			}
+			dcTabbed.DockState = DockState.DockBottom;
+			dcTabbed.Show();
+		}
+		if (TheToolWidgets != null)
+		{
+			if (TheToolWidgets.DockPanel == null || !dockPanel1.Contents.Contains(TheToolWidgets))
+			{
+				TheToolWidgets.Show(dockPanel1, DockState.DockRight);
+			}
+			TheToolWidgets.DockState = DockState.DockRight;
+			TheToolWidgets.Show();
+		}
+		if (TheToolOutput != null)
+		{
+			if (TheToolOutput.DockPanel == null || !dockPanel1.Contents.Contains(TheToolOutput))
+			{
+				TheToolOutput.Show(dockPanel1, DockState.DockBottom);
+			}
+			TheToolOutput.DockState = DockState.DockBottom;
+			TheToolOutput.Show();
+		}
+		dockPanel1.ResumeLayout(performLayout: true, allWindows: true);
+		TheViewDocument?.Focus();
+		SaveCurrentLayout();
+	}
+
+	public void SaveCurrentLayout()
+	{
+		try
+		{
+			using MemoryStream memoryStream = new MemoryStream();
+			dockPanel1.SaveAsXml(memoryStream, Encoding.ASCII);
+			byte[] buffer = memoryStream.GetBuffer();
+			char[] array = Encoding.ASCII.GetChars(buffer);
+			for (int num = array.Length - 1; num >= 0; num--)
+			{
+				if (array[num] != 0)
+				{
+					Array.Resize(ref array, num + 1);
+					break;
+				}
+			}
+			string layoutStr = new string(array).Trim();
+			Settings.DockPanelLayout = layoutStr;
+			Settings.FileVersion = 4;
+			try
+			{
+				Settings.Default.Save();
+			}
+			catch
+			{
+			}
+			try
+			{
+				string text = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "CityScape.DefaultLayout.xml");
+				File.WriteAllText(text, layoutStr, Encoding.ASCII);
+			}
+			catch
+			{
+			}
+		}
+		catch
+		{
+		}
+	}
+
 }

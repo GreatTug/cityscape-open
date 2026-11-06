@@ -202,20 +202,56 @@ public class PalTabbedView : PalDockContent
 		}
 	}
 
-	private void WidgetPanel_ShowPanel(object sender, EventArgs args)
+	public void SwitchToPanel(Guid guid)
+	{
+		if (base.DockState == DockState.Hidden)
+		{
+			base.DockState = (PrevDockState != DockState.Hidden && PrevDockState != DockState.Unknown) ? PrevDockState : DockState.DockBottom;
+		}
+		Show();
+		Activate();
+		foreach (IWidgetPanelControl widgetPanelControl in WidgetPanelControls)
+		{
+			if (widgetPanelControl.WidgetPanel != null && widgetPanelControl.WidgetPanel.Guid == guid)
+			{
+				WidgetPanel_ShowPanel(widgetPanelControl.WidgetPanel, EventArgs.Empty);
+				break;
+			}
+		}
+	}
+
+	public void WidgetPanel_ShowPanel(object sender, EventArgs args)
 	{
 		WidgetPanel widgetPanel = sender as WidgetPanel;
+		if (widgetPanel == null) return;
+
+		if (base.DockState == DockState.Hidden)
+		{
+			base.DockState = (PrevDockState != DockState.Hidden && PrevDockState != DockState.Unknown) ? PrevDockState : DockState.DockBottom;
+		}
+		if (base.DockPanel != null)
+		{
+			Show();
+			Activate();
+		}
+
 		foreach (IWidgetPanelControl widgetPanelControl2 in WidgetPanelControls)
 		{
 			if (widgetPanelControl2.WidgetPanel == widgetPanel)
 			{
-				if (!base.Controls.Contains(widgetPanelControl2 as Control))
+				if (base.Controls.Count == 0 || !base.Controls.Contains(widgetPanelControl2 as Control))
 				{
 					SuspendLayout();
-					IWidgetPanelControl widgetPanelControl = base.Controls[0] as IWidgetPanelControl;
-					PropagateSettings();
-					widgetPanelControl.Visible = false;
-					base.Controls.Clear();
+					if (base.Controls.Count > 0)
+					{
+						IWidgetPanelControl widgetPanelControl = base.Controls[0] as IWidgetPanelControl;
+						PropagateSettings();
+						if (widgetPanelControl != null)
+						{
+							widgetPanelControl.Visible = false;
+						}
+						base.Controls.Clear();
+					}
 					base.Controls.Add(widgetPanelControl2 as Control);
 					ResumeLayout();
 					widgetPanelControl2.Visible = true;

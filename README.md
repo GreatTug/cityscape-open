@@ -29,7 +29,10 @@ CityScape pioneered procedural road networks, multi-arm radial angular intersect
 This repository is a **complete open-source preservation, reverse engineering, and modernization endeavor**:
 * **100% Decompiled & Modernized C# Managed Assemblies**: The entire user interface, dockable workspaces, project serialization, GIS streaming, and toolkit libraries (`palDotNet`, `edEditorDotNet`, `ktKitDotNet`, `gisImageryDotNet`, `BugReporter`) have been decompiled, syntax-repaired, and retargeted to **.NET Framework 4.8** with **0 build errors and 0 warnings**.
 * **Authentic 49 MB Mixed-Mode 3D Engine (`CityScape.exe`)**: Preserves the genuine Direct3D 9 hardware viewport, the authentic 52-byte vertex buffer pipeline (`0x34` stride), Catmull-Rom road splines, Hermite curve tangents, and CDLOD elevation math.
-* **Surgical Native Patches & Feature Unlocking**:
+* **Surgical Native Patches & Modernized Systems**:
+  * **High-Detail Terrain Resolution & Road Seating Precision**: Default sampling distance modernized from legacy coarse 2.00m to **1.00m** (1 vert/m²), with support down to **0.10m** (Ultra Detail). Eliminates roadway clipping, curb floating, and elevation facet tears.
+  * **Terrain Quality Presets & Real-Time Density Metrics**: Integrated Quality Preset dropdown (Ultra 0.50m, High 1.00m, Standard 2.00m, Coarse 4.00m, Custom) with live road-conformance ratings and bidirectional multi-tile size synchronization.
+  * **Dockable Window Recovery & Top-Level `&Window` Menu**: Auto-healing tool windows (Road & Bridge Style Browser, Tile Palette, Object Browser) with dynamic "Reset to Default Layout" and "Save Current Layout" options in the top menu bar.
   * **Large Address Aware (LAA)**: Expands 32-bit virtual memory address space from 2 GB to **4 GB** on 64-bit Windows.
   * **Massive Terrain Extent Unlock**: Eliminates the legacy 1,600m promotional boundary limit, enabling terrain sizes up to **10,000,000 meters** (10,000 km).
   * **Multi-Tile Grid Unlocking**: Unlocks multi-tile terrain creation (2×2, 4×4, 8×8 grids).
@@ -77,6 +80,8 @@ This repository is a **complete open-source preservation, reverse engineering, a
 | **`BugReporter.exe`** | Closed .NET 2.0 utility | ✅ **100% Open-Source C# (.NET 4.8)** | Diagnostics, system info gatherer, and crash reporting tool. |
 | **Virtual Memory Limit** | 2 GB Virtual Address Space | ✅ **Unlocked to 4 GB (LAA)** | Enabled PE `IMAGE_FILE_LARGE_ADDRESS_AWARE` (`0x0020`) for large urban scenes. |
 | **Terrain Bounds** | Clamped to 1,600m & 1 tile | ✅ **Unlocked to 10,000,000m & Multi-Tile** | Patched float constants, jump branches, and hooked dynamic grid caves. |
+| **Terrain Resolution** | Coarse 2.00m default (locked) | ✅ **High-Res (1.00m / 0.50m) & Presets** | Unlocked range [0.10m - 100m], road-seating presets, bidirectional tile sync. |
+| **Window Layout System** | Fragile layout / lost tool panels | ✅ **Auto-Healing & Window Menu** | Added top-level `&Window` menu with layout reset, restore, and auto-dock healing. |
 | **Graphics Pipeline** | Legacy Direct3D 9 only | ✅ **Vulkan 1.3 / DX12 / D3D9** | Integrated DXVK 2.2 and dgVoodoo2 with `switch_graphics.bat`. |
 | **Asset Archive (`.parc`)**| Proprietary zlib container | ✅ **100% Verified & Extracted** | All 110 assets (HLSL shaders, celestial catalogs, textures) verified by `parc_tool.py`. |
 | **3D Models (`.gob`)** | Proprietary binary format | ✅ **123/123 Authentic Models Preserved** | All 123 models (trees, buildings, cars, street lights) mapped and verified. |

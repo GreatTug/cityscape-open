@@ -266,7 +266,7 @@ public class PalDockContent : DockContent, ISupportsToolStrip, IPersistComponent
 			switch (e.DockingType)
 			{
 			case EventHideArgs.EnumDockingType.ePrevState:
-				base.DockState = PrevDockState;
+				base.DockState = (PrevDockState != DockState.Hidden && PrevDockState != DockState.Unknown) ? PrevDockState : ProcessDockState(DockState.DockBottom);
 				break;
 			case EventHideArgs.EnumDockingType.eBottom:
 				base.DockState = ProcessDockState(DockState.DockBottom);
@@ -282,13 +282,17 @@ public class PalDockContent : DockContent, ISupportsToolStrip, IPersistComponent
 				break;
 			}
 			PrevDockState = DockState.Unknown;
+			Show();
 			break;
 		}
 	}
 
 	private DockState ProcessDockState(DockState newState)
 	{
-		if (newState == DockState.DockBottom && (base.DockAreas & DockAreas.DockBottom) == DockAreas.DockBottom && newState == DockState.DockTop && (base.DockAreas & DockAreas.DockTop) == DockAreas.DockTop && newState == DockState.DockLeft && (base.DockAreas & DockAreas.DockLeft) == DockAreas.DockLeft && newState == DockState.DockRight && (base.DockAreas & DockAreas.DockRight) == DockAreas.DockRight)
+		if ((newState == DockState.DockBottom && (base.DockAreas & DockAreas.DockBottom) == DockAreas.DockBottom) ||
+			(newState == DockState.DockTop && (base.DockAreas & DockAreas.DockTop) == DockAreas.DockTop) ||
+			(newState == DockState.DockLeft && (base.DockAreas & DockAreas.DockLeft) == DockAreas.DockLeft) ||
+			(newState == DockState.DockRight && (base.DockAreas & DockAreas.DockRight) == DockAreas.DockRight))
 		{
 			return newState;
 		}
@@ -296,11 +300,19 @@ public class PalDockContent : DockContent, ISupportsToolStrip, IPersistComponent
 		{
 			return DockState.Document;
 		}
-		if ((base.DockAreas & DockAreas.Float) == DockAreas.Document)
+		if ((base.DockAreas & DockAreas.Float) == DockAreas.Float)
 		{
 			return DockState.Float;
 		}
-		return DockState.Unknown;
+		if ((base.DockAreas & DockAreas.DockBottom) != 0)
+		{
+			return DockState.DockBottom;
+		}
+		if ((base.DockAreas & DockAreas.DockRight) != 0)
+		{
+			return DockState.DockRight;
+		}
+		return DockState.DockBottom;
 	}
 
 	internal static void RegisterInternal(DockPanel dockPanel, Type widgetType, Type controlType)

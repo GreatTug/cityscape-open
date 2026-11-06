@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
@@ -849,19 +849,35 @@ public class WidgetMgr
 	{
 		WidgetPanel.IsSerializingLayout = true;
 		HasFoundPanelWidget = null;
-		Writer.Begin();
-		uint inst = 111u;
-		Writer.Serialize(ref inst);
-		string inst2 = guid.ToString();
-		Writer.Serialize(ref inst2);
-		Writer.End(clearIndex: false);
-		Reader.End(clearIndex: false);
+		if (Writer != null)
+		{
+			Writer.Begin();
+			uint inst = 111u;
+			Writer.Serialize(ref inst);
+			string inst2 = guid.ToString();
+			Writer.Serialize(ref inst2);
+			Writer.End(clearIndex: false);
+		}
+		int enterCount = (Reader != null) ? Reader.EnterCount : 0;
+		if (enterCount > 0)
+		{
+			Reader.End(clearIndex: false);
+		}
+		int retries = 0;
 		do
 		{
 			Update();
+			retries++;
+			if (retries > 20 && !HasFoundPanelWidget.HasValue)
+			{
+				break;
+			}
 		}
 		while (!HasFoundPanelWidget.HasValue);
-		Reader.Begin();
+		if (enterCount > 0)
+		{
+			Reader.Begin();
+		}
 		WidgetPanel.IsSerializingLayout = false;
 	}
 }

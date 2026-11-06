@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
@@ -78,6 +78,12 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 	private DialogNumericUpDownFloat SamplingDistanceInput;
 
 	private DialogLabel SamplingDistanceLabel;
+
+	private DialogLabel ResolutionPresetLabel;
+	private ComboBox ResolutionPresetComboBox;
+	private DialogLabel ResolutionRatioInfoLabel;
+	private bool mIsUpdatingTileCount;
+	private bool mIsUpdatingPreset;
 
 	private Button ClearRegionBtn;
 
@@ -277,6 +283,9 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.TerrainPropertiesGroupBox = new System.Windows.Forms.GroupBox();
 		this.MaxTerrainSizeInfo = new palDotNet.palDialog.DialogLabel();
 		this.SamplingDistanceInput = new palDotNet.palDialog.DialogNumericUpDownFloat();
+		this.ResolutionPresetLabel = new palDotNet.palDialog.DialogLabel();
+		this.ResolutionPresetComboBox = new System.Windows.Forms.ComboBox();
+		this.ResolutionRatioInfoLabel = new palDotNet.palDialog.DialogLabel();
 		this.SamplingDistanceLabel = new palDotNet.palDialog.DialogLabel();
 		this.MaxTerrainSizeLabel = new palDotNet.palDialog.DialogLabel();
 		this.TileCountYInput = new palDotNet.palDialog.DialogNumericUpDownInt();
@@ -333,6 +342,9 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.TerrainPropertiesGroupBox.Controls.Add(this.MaxTerrainSizeInfo);
 		this.TerrainPropertiesGroupBox.Controls.Add(this.SamplingDistanceInput);
 		this.TerrainPropertiesGroupBox.Controls.Add(this.SamplingDistanceLabel);
+		this.TerrainPropertiesGroupBox.Controls.Add(this.ResolutionPresetLabel);
+		this.TerrainPropertiesGroupBox.Controls.Add(this.ResolutionPresetComboBox);
+		this.TerrainPropertiesGroupBox.Controls.Add(this.ResolutionRatioInfoLabel);
 		this.TerrainPropertiesGroupBox.Controls.Add(this.MaxTerrainSizeLabel);
 		this.TerrainPropertiesGroupBox.Controls.Add(this.TileCountYInput);
 		this.TerrainPropertiesGroupBox.Controls.Add(this.TileCountXInput);
@@ -362,21 +374,56 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.MaxTerrainSizeInfo.Size = new System.Drawing.Size(70, 13);
 		this.MaxTerrainSizeInfo.TabIndex = 15;
 		this.MaxTerrainSizeInfo.Text = "--- km x --- km";
+		this.ResolutionPresetLabel.AutoSize = true;
+		this.ResolutionPresetLabel.Location = new System.Drawing.Point(25, 227);
+		this.ResolutionPresetLabel.Name = "ResolutionPresetLabel";
+		this.ResolutionPresetLabel.SaveToConfig = false;
+		this.ResolutionPresetLabel.Size = new System.Drawing.Size(95, 13);
+		this.ResolutionPresetLabel.TabIndex = 12;
+		this.ResolutionPresetLabel.Text = "Quality Preset:";
+		this.ResolutionPresetComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+		this.ResolutionPresetComboBox.FormattingEnabled = true;
+		this.ResolutionPresetComboBox.Items.AddRange(new object[5]
+		{
+			"Ultra (0.50m - Best for Roads)",
+			"High (1.00m - Recommended)",
+			"Standard (2.00m)",
+			"Coarse (4.00m)",
+			"Custom..."
+		});
+		this.ResolutionPresetComboBox.Location = new System.Drawing.Point(185, 224);
+		this.ResolutionPresetComboBox.Name = "ResolutionPresetComboBox";
+		this.ResolutionPresetComboBox.Size = new System.Drawing.Size(120, 21);
+		this.ResolutionPresetComboBox.TabIndex = 13;
+		this.ResolutionPresetComboBox.SelectedIndex = 1;
+		this.ResolutionPresetComboBox.SelectedIndexChanged += new System.EventHandler(ResolutionPresetComboBox_SelectedIndexChanged);
 		this.SamplingDistanceInput.DecimalPlaces = 2;
-		this.SamplingDistanceInput.Increment = new decimal(new int[4] { 1, 0, 0, 65536 });
-		this.SamplingDistanceInput.Location = new System.Drawing.Point(185, 259);
+		this.SamplingDistanceInput.Increment = new decimal(new int[4] { 25, 0, 0, 131072 });
+		this.SamplingDistanceInput.Location = new System.Drawing.Point(185, 252);
 		this.SamplingDistanceInput.Name = "SamplingDistanceInput";
 		this.SamplingDistanceInput.SaveToConfig = true;
 		this.SamplingDistanceInput.Size = new System.Drawing.Size(100, 20);
-		this.SamplingDistanceInput.TabIndex = 13;
-		this.SamplingDistanceInput.Value = new decimal(new int[4] { 2, 0, 0, 0 });
+		this.SamplingDistanceInput.TabIndex = 15;
+		this.SamplingDistanceInput.Minimum = new decimal(new int[4] { 1, 0, 0, 65536 });
+		this.SamplingDistanceInput.Maximum = new decimal(new int[4] { 100, 0, 0, 0 });
+		this.SamplingDistanceInput.Value = new decimal(new int[4] { 1, 0, 0, 0 });
+		this.SamplingDistanceInput.ValueChanged += new System.EventHandler(SamplingDistanceInput_ValueChanged);
 		this.SamplingDistanceLabel.AutoSize = true;
-		this.SamplingDistanceLabel.Location = new System.Drawing.Point(25, 261);
+		this.SamplingDistanceLabel.Location = new System.Drawing.Point(25, 254);
 		this.SamplingDistanceLabel.Name = "SamplingDistanceLabel";
 		this.SamplingDistanceLabel.SaveToConfig = false;
 		this.SamplingDistanceLabel.Size = new System.Drawing.Size(136, 13);
-		this.SamplingDistanceLabel.TabIndex = 12;
+		this.SamplingDistanceLabel.TabIndex = 14;
 		this.SamplingDistanceLabel.Text = "Sampling distance (meters):";
+		this.ResolutionRatioInfoLabel.AutoSize = true;
+		this.ResolutionRatioInfoLabel.Font = new System.Drawing.Font("Segoe UI", 7.5f, System.Drawing.FontStyle.Regular);
+		this.ResolutionRatioInfoLabel.ForeColor = System.Drawing.Color.DarkGreen;
+		this.ResolutionRatioInfoLabel.Location = new System.Drawing.Point(25, 278);
+		this.ResolutionRatioInfoLabel.Name = "ResolutionRatioInfoLabel";
+		this.ResolutionRatioInfoLabel.SaveToConfig = false;
+		this.ResolutionRatioInfoLabel.Size = new System.Drawing.Size(260, 26);
+		this.ResolutionRatioInfoLabel.TabIndex = 16;
+		this.ResolutionRatioInfoLabel.Text = "1.00 verts/m² • Road Fit: Excellent (Recommended)";
 		this.MaxTerrainSizeLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
 		this.MaxTerrainSizeLabel.AutoSize = true;
 		this.MaxTerrainSizeLabel.Location = new System.Drawing.Point(25, 320);
@@ -385,16 +432,20 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		this.MaxTerrainSizeLabel.Size = new System.Drawing.Size(83, 13);
 		this.MaxTerrainSizeLabel.TabIndex = 14;
 		this.MaxTerrainSizeLabel.Text = "Max terrain size:";
-		this.TileCountYInput.Enabled = false;
+		this.TileCountYInput.Enabled = true;
 		this.TileCountYInput.Location = new System.Drawing.Point(185, 192);
 		this.TileCountYInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
+		this.TileCountYInput.Minimum = new decimal(new int[4] { 1, 0, 0, 0 });
+		this.TileCountYInput.Value = new decimal(new int[4] { 1, 0, 0, 0 });
 		this.TileCountYInput.Name = "TileCountYInput";
 		this.TileCountYInput.SaveToConfig = true;
 		this.TileCountYInput.Size = new System.Drawing.Size(100, 20);
 		this.TileCountYInput.TabIndex = 11;
-		this.TileCountXInput.Enabled = false;
+		this.TileCountXInput.Enabled = true;
 		this.TileCountXInput.Location = new System.Drawing.Point(185, 165);
 		this.TileCountXInput.Maximum = new decimal(new int[4] { 10000, 0, 0, 0 });
+		this.TileCountXInput.Minimum = new decimal(new int[4] { 1, 0, 0, 0 });
+		this.TileCountXInput.Value = new decimal(new int[4] { 1, 0, 0, 0 });
 		this.TileCountXInput.Name = "TileCountXInput";
 		this.TileCountXInput.SaveToConfig = true;
 		this.TileCountXInput.Size = new System.Drawing.Size(100, 20);
@@ -755,6 +806,150 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 		ComputeTileCountValues();
 	}
 
+	private void ResolutionPresetComboBox_SelectedIndexChanged(object sender, EventArgs e)
+	{
+		if (mIsUpdatingPreset) return;
+		try
+		{
+			mIsUpdatingPreset = true;
+			switch (ResolutionPresetComboBox.SelectedIndex)
+			{
+				case 0:
+					SamplingDistanceInput.Value = 0.50m;
+					break;
+				case 1:
+					SamplingDistanceInput.Value = 1.00m;
+					break;
+				case 2:
+					SamplingDistanceInput.Value = 2.00m;
+					break;
+				case 3:
+					SamplingDistanceInput.Value = 4.00m;
+					break;
+			}
+		}
+		finally
+		{
+			mIsUpdatingPreset = false;
+		}
+		UpdateResolutionHelperText();
+		OnTerrainValueChanged(new EventArgs());
+	}
+
+	private void SamplingDistanceInput_ValueChanged(object sender, EventArgs e)
+	{
+		if (!mIsUpdatingPreset && ResolutionPresetComboBox != null)
+		{
+			try
+			{
+				mIsUpdatingPreset = true;
+				decimal v = SamplingDistanceInput.Value;
+				if (v == 0.50m) ResolutionPresetComboBox.SelectedIndex = 0;
+				else if (v == 1.00m) ResolutionPresetComboBox.SelectedIndex = 1;
+				else if (v == 2.00m) ResolutionPresetComboBox.SelectedIndex = 2;
+				else if (v == 4.00m) ResolutionPresetComboBox.SelectedIndex = 3;
+				else ResolutionPresetComboBox.SelectedIndex = 4;
+			}
+			finally
+			{
+				mIsUpdatingPreset = false;
+			}
+		}
+		UpdateResolutionHelperText();
+		OnTerrainValueChanged(new EventArgs());
+	}
+
+	private void TileCountX_ValueChanged(object sender, EventArgs e)
+	{
+		if (mIsUpdatingTileCount || ForceSingleTile || !EnableComputeTileCountValues) return;
+		try
+		{
+			mIsUpdatingTileCount = true;
+			decimal count = Math.Max(1, TileCountXInput.Value);
+			TileCountYInput.Value = count;
+			decimal newTileSize = Math.Round(TerrainSizeXInput.Value / count, 2);
+			if (newTileSize >= TileSizeXInput.Minimum && newTileSize <= TileSizeXInput.Maximum)
+			{
+				mIsUpdatingTileSize = true;
+				TileSizeXInput.Value = newTileSize;
+				TileSizeYInput.Value = newTileSize;
+				mIsUpdatingTileSize = false;
+			}
+		}
+		finally
+		{
+			mIsUpdatingTileCount = false;
+		}
+		UpdateResolutionHelperText();
+		OnTerrainValueChanged(new EventArgs());
+	}
+
+	private void TileCountY_ValueChanged(object sender, EventArgs e)
+	{
+		if (mIsUpdatingTileCount || ForceSingleTile || !EnableComputeTileCountValues) return;
+		try
+		{
+			mIsUpdatingTileCount = true;
+			decimal count = Math.Max(1, TileCountYInput.Value);
+			TileCountXInput.Value = count;
+			decimal newTileSize = Math.Round(TerrainSizeYInput.Value / count, 2);
+			if (newTileSize >= TileSizeXInput.Minimum && newTileSize <= TileSizeXInput.Maximum)
+			{
+				mIsUpdatingTileSize = true;
+				TileSizeXInput.Value = newTileSize;
+				TileSizeYInput.Value = newTileSize;
+				mIsUpdatingTileSize = false;
+			}
+		}
+		finally
+		{
+			mIsUpdatingTileCount = false;
+		}
+		UpdateResolutionHelperText();
+		OnTerrainValueChanged(new EventArgs());
+	}
+
+	private void UpdateResolutionHelperText()
+	{
+		if (SamplingDistanceInput == null || ResolutionRatioInfoLabel == null) return;
+		decimal dist = SamplingDistanceInput.Value;
+		if (dist <= 0m) dist = 1m;
+		decimal density = Math.Round(1m / (dist * dist), 2);
+		string roadRating = "";
+		System.Drawing.Color textColor = System.Drawing.Color.DarkGreen;
+
+		if (dist <= 0.50m)
+		{
+			roadRating = "Road Fit: Perfect (Ultra Detail)";
+			textColor = System.Drawing.Color.DarkGreen;
+		}
+		else if (dist <= 1.00m)
+		{
+			roadRating = "Road Fit: Excellent (Recommended)";
+			textColor = System.Drawing.Color.DarkGreen;
+		}
+		else if (dist <= 2.00m)
+		{
+			roadRating = "Road Fit: Standard (May show facets)";
+			textColor = System.Drawing.Color.DarkGoldenrod;
+		}
+		else
+		{
+			roadRating = "Road Fit: Coarse (Elevation gap risk)";
+			textColor = System.Drawing.Color.DarkRed;
+		}
+
+		decimal terrainMax = Math.Max(TerrainSizeXInput.Value, TerrainSizeYInput.Value);
+		string recTile = "";
+		if (terrainMax >= 4000m)
+		{
+			recTile = " • Rec. Tile: 1000m-2000m";
+		}
+
+		ResolutionRatioInfoLabel.ForeColor = textColor;
+		ResolutionRatioInfoLabel.Text = string.Format("{0} verts/m² • {1}{2}", density, roadRating, recTile);
+	}
+
 	private void HandleForceSingleTile()
 	{
 		if (ForceSingleTile)
@@ -860,8 +1055,24 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 
 	public void SetTessellationSampleDistRange(float minSampleDist, float maxSampleDist)
 	{
-		SamplingDistanceInput.Minimum = (decimal)minSampleDist;
-		SamplingDistanceInput.Maximum = (decimal)maxSampleDist;
+		decimal min = (minSampleDist > 0.001f) ? (decimal)minSampleDist : 0.10m;
+		decimal max = (maxSampleDist > (float)min) ? (decimal)maxSampleDist : 100.0m;
+		if (min >= max)
+		{
+			min = 0.10m;
+			max = 100.0m;
+		}
+
+		if (min > SamplingDistanceInput.Maximum)
+		{
+			SamplingDistanceInput.Maximum = max;
+			SamplingDistanceInput.Minimum = min;
+		}
+		else
+		{
+			SamplingDistanceInput.Minimum = min;
+			SamplingDistanceInput.Maximum = max;
+		}
 	}
 
 	public void SetForceSingleTile(bool bForceSingleTile)
@@ -906,7 +1117,7 @@ public class TerrainSettingsPanel : UserControl, IDialogContainer
 
 	protected virtual void OnTerrainValueChanged(EventArgs e)
 	{
-		TerrainValueChanged(this, e);
+		TerrainValueChanged?.Invoke(this, e);
 	}
 
 	public void SetEnableComputeTileCountValues(bool bEnabled)
