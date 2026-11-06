@@ -23,6 +23,8 @@ This document serves as the **official state-of-the-art audit, gap analysis, and
 | :--- | :--- | :--- |
 | **WinForms Shell (`palDotNet.palVisual.FormApp`)** | ✅ 100% Complete | Full Office 2007 docking UI, menu bar, status strip, toolbars. |
 | **Docking Panels (`WeifenLuo.WinFormsUI.Docking`)** | ✅ 100% Complete | Persisted docking layouts, floating panes, tool windows. |
+| **Window Layout Auto-Healing** | ✅ 100% Complete | Top-level `&Window` menu with instant layout reset (Ctrl+Shift+R), default saving, and auto-dock healing. |
+| **Material & Fence Browsers** | ✅ 100% Complete | Material Browser (`BBA17DEF`) & Fence Browser integrated into dock tabs and Window menu (Ctrl+4/5). |
 | **Property Grid (`SmartPropertyGrid`)** | ✅ 100% Complete | Real-time attribute inspector for roads, lots, buildings, terrain. |
 | **Toolbars (`edEditorDotNet`)** | ✅ 100% Complete | Road spline, height tool, tangent manipulator, building, lot, prop, terrain, sky, water toolbars. |
 | **Localization & Units (`palUnit`)** | ✅ 100% Complete | Metric (meters, km) and Imperial (feet, miles) conversion. |
@@ -38,6 +40,8 @@ This document serves as the **official state-of-the-art audit, gap analysis, and
 | Component | Status | Details |
 | :--- | :--- | :--- |
 | **1,600m Boundary Limit** | ✅ Unlocked (10,000,000m) | Surgical native patch replaces `1600.0f` constant in `.rdata` with `10,000,000.0f` and patches boundary checks. |
+| **Terrain Resolution & Presets** | ✅ High-Res (1.00m / 0.50m) | Precision range [0.10m - 100m], road-seating presets, bidirectional tile synchronization. |
+| **Global Water Plane (`trWaterPlane`)** | ✅ Unlocked (10,000,000m) | Dynamic tessellation, planar reflection/refraction shaders (`waterplane.fxo`, `water.fxo`), GIS water polygon import. |
 | **Single-Tile Limitation** | ✅ Unlocked (Multi-Tile) | Unlocked 2×2, 4×4, and multi-tile terrain creation in `TerrainSettingsPanel` and native solver. |
 | **Dynamic Elevation Board Sync** | ✅ Hooked & Synced | Hooked code caves at `0x006E4D96` and `0x00AE3A00` to expand the workable white elevation grid dynamically. |
 | **DEM Elevation Sampling (`trTerrainSettings`)** | 🟡 Disassembled & Mapped | Bilinear height interpolation and 4-point central difference surface normals mapped. Ready for C++20 port. |

@@ -32,7 +32,9 @@ This repository is a **complete open-source preservation, reverse engineering, a
 * **Surgical Native Patches & Modernized Systems**:
   * **High-Detail Terrain Resolution & Road Seating Precision**: Default sampling distance modernized from legacy coarse 2.00m to **1.00m** (1 vert/m²), with support down to **0.10m** (Ultra Detail). Eliminates roadway clipping, curb floating, and elevation facet tears.
   * **Terrain Quality Presets & Real-Time Density Metrics**: Integrated Quality Preset dropdown (Ultra 0.50m, High 1.00m, Standard 2.00m, Coarse 4.00m, Custom) with live road-conformance ratings and bidirectional multi-tile size synchronization.
-  * **Dockable Window Recovery & Top-Level `&Window` Menu**: Auto-healing tool windows (Road & Bridge Style Browser, Tile Palette, Object Browser) with dynamic "Reset to Default Layout" and "Save Current Layout" options in the top menu bar.
+  * **Dockable Window Recovery & Top-Level `&Window` Menu**: Auto-healing tool windows (Road & Bridge Style Browser, Building Browser, Prop Library, Material Browser, Fence Style Browser) with dynamic "Reset to Default Layout" and "Save Current Layout" options in the top menu bar.
+  * **Global Water Plane Scaling & Planar Shaders**: Dynamic extent scaling for `trWaterPlane` up to 10,000,000m without horizon clipping, featuring real-time reflection/refraction shaders (`waterplane.fxo`, `water.fxo`), elevation control, and GIS water polygon import.
+  * **Material & Fence Style Browsers**: Fully restored `Material Browser` (GUID: `BBA17DEF-5C19-4B30-B908-DE547D5811B4`) and `Fence Style Browser` into the default bottom docking panel and top `&Window` menu (Ctrl+4, Ctrl+5) with on-demand tab creation.
   * **Large Address Aware (LAA)**: Expands 32-bit virtual memory address space from 2 GB to **4 GB** on 64-bit Windows.
   * **Massive Terrain Extent Unlock**: Eliminates the legacy 1,600m promotional boundary limit, enabling terrain sizes up to **10,000,000 meters** (10,000 km).
   * **Multi-Tile Grid Unlocking**: Unlocks multi-tile terrain creation (2×2, 4×4, 8×8 grids).
@@ -82,6 +84,8 @@ This repository is a **complete open-source preservation, reverse engineering, a
 | **Terrain Bounds** | Clamped to 1,600m & 1 tile | ✅ **Unlocked to 10,000,000m & Multi-Tile** | Patched float constants, jump branches, and hooked dynamic grid caves. |
 | **Terrain Resolution** | Coarse 2.00m default (locked) | ✅ **High-Res (1.00m / 0.50m) & Presets** | Unlocked range [0.10m - 100m], road-seating presets, bidirectional tile sync. |
 | **Window Layout System** | Fragile layout / lost tool panels | ✅ **Auto-Healing & Window Menu** | Added top-level `&Window` menu with layout reset, restore, and auto-dock healing. |
+| **Global Water System** | Clamped to 1,600m / hidden GIS | ✅ **10,000,000m Scaling & Planar Shaders** | Dynamic tessellation, planar reflection/refraction shaders (`waterplane.fxo`, `water.fxo`), GIS water import. |
+| **Material Assignment** | Missing Material/Fence browsers | ✅ **Restored Browsers & Splatting** | Restored Material Browser (`BBA17DEF`) & Fence Browser into layout, multi-layer terrain splatting (`blend1.fxo`). |
 | **Graphics Pipeline** | Legacy Direct3D 9 only | ✅ **Vulkan 1.3 / DX12 / D3D9** | Integrated DXVK 2.2 and dgVoodoo2 with `switch_graphics.bat`. |
 | **Asset Archive (`.parc`)**| Proprietary zlib container | ✅ **100% Verified & Extracted** | All 110 assets (HLSL shaders, celestial catalogs, textures) verified by `parc_tool.py`. |
 | **3D Models (`.gob`)** | Proprietary binary format | ✅ **123/123 Authentic Models Preserved** | All 123 models (trees, buildings, cars, street lights) mapped and verified. |
