@@ -58,6 +58,10 @@ patches = [
     ("Promo limit msg",  0x1ee7250, b"%s is not supported in this promotional version of CityScape.", b"%s".ljust(61, b"\x00")),
     # Autodesk copyright line
     ("Autodesk copyright", 0x1fddd14, b" Copyright (C) 1997-2008 Autodesk Inc. and/or its licensors.", b"\x00" * 60),
+    # Enable Global Water Plane by default in all 3 trWaterPlane constructors ([esi+0x50] = 1)
+    ("trWaterPlane ctor 1 default Enabled=1", 0x00759603, b"\xc6\x46\x50\x00", b"\xc6\x46\x50\x01"),
+    ("trWaterPlane ctor 2 default Enabled=1", 0x0076128d, b"\xc6\x46\x50\x00", b"\xc6\x46\x50\x01"),
+    ("trWaterPlane ctor 3 default Enabled=1", 0x00764322, b"\xc6\x46\x50\x00", b"\xc6\x46\x50\x01"),
 ]
 
 default_targets = [

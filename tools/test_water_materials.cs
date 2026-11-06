@@ -94,6 +94,32 @@ class Program
                 // Test switching to Fence Browser
                 form.ShowLibraryTab(new Guid("FA693083-A805-40B0-953E-B1C74AF4CE74"));
                 Console.WriteLine("  [PASS] ShowLibraryTab(Fence Style Browser) executed cleanly!");
+
+                // Step 5: Test Water Menu & Tool Mode Activation
+                form.EnsureWaterMenu();
+                form.ActivateWaterMode();
+                Console.WriteLine("  [PASS] FormApp.ActivateWaterMode() ('W') dispatched cleanly!");
+
+                form.ActivateWaterPolygonMode();
+                Console.WriteLine("  [PASS] FormApp.ActivateWaterPolygonMode() ('P') dispatched cleanly!");
+            }
+
+            // Step 6: Verify Native trWaterPlane.Enabled = 1 default in CityScape.exe
+            Console.WriteLine("Step 6: Verifying Native trWaterPlane.Enabled binary patch...");
+            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CityScape.exe");
+            if (!File.Exists(exePath)) exePath = "CityScape.exe";
+            if (File.Exists(exePath))
+            {
+                byte[] exeBytes = File.ReadAllBytes(exePath);
+                int[] offsets = new int[] { 0x00759603, 0x0076128d, 0x00764322 };
+                foreach (int off in offsets)
+                {
+                    if (exeBytes[off] != 0xC6 || exeBytes[off+1] != 0x46 || exeBytes[off+2] != 0x50 || exeBytes[off+3] != 0x01)
+                    {
+                        throw new Exception(string.Format("Water Plane Enabled patch missing at offset 0x{0:X8}!", off));
+                    }
+                }
+                Console.WriteLine("  [PASS] Native trWaterPlane constructors verified: Enabled = 1 (true) by default!");
             }
 
             Console.WriteLine("==================================================");

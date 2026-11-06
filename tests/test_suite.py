@@ -200,7 +200,11 @@ def test_all():
     assert b"\x80\x96\x18\x4b" in exe_data, "10,000,000.0f float constant not found in binary"
     # Check promotional title replacement
     assert b"PixelActive CityScape 1.8\x00" in exe_data, "Patched window title not found"
-    print("  [PASS] 1600m extent limit unlocked to 10,000,000m; promotional branding cleanly neutralized")
+    # Check trWaterPlane.Enabled = 1 default patch (c6 46 50 01)
+    water_patch_offsets = [0x00759603, 0x0076128d, 0x00764322]
+    for off in water_patch_offsets:
+        assert exe_data[off:off+4] == b"\xc6\x46\x50\x01", f"Water plane enabled patch missing at offset {hex(off)}"
+    print("  [PASS] 1600m extent unlocked to 10M m; Global Water enabled by default (c6 46 50 01)")
 
     # 10. 3D Graphics Backend Switching Verification
     print("\n[TEST 10] Verifying 3D Graphics Backend Switcher (Vulkan 1.3 / DirectX 12 / D3D9)...")
